@@ -4,8 +4,17 @@ project(pdsolver)
 
 find_package(CUDA REQUIRED)
 
-set(CUDA_HOST_COMPILER /usr/bin/clang)
-set(CMAKE_CXX_FLAGS "-stdlib=libstdc++")
+if(APPLE)
+  set(CUDA_HOST_COMPILER /usr/bin/clang)
+  set(CMAKE_CXX_FLAGS "-stdlib=libstdc++")
+endif()
+
+if(UNIX)
+  set(CMAKE_CXX_FLAGS "-fPIC")
+endif()
+
+set(CUDA_NVCC_FLAGS "-arch=compute_30 -code=sm_30 --use_fast_math -O3")
+
 file(GLOB SRC_SOLVER
   "pdsolver/*.cpp"
   "pdsolver/*.cu"

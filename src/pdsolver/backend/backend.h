@@ -40,12 +40,23 @@ enum pdhg_type
   kAdapt,
 };
 
+enum precond_type
+{
+  kPrecondOff,
+  kPrecondDiagonal,
+  kPrecondEquilibrate
+};
+
 struct solver_options {
   backend_type type;
 
   int max_iters;
   int cb_iters;
   real tolerance;
+
+  // parameters for preconditioner
+  precond_type precond;
+  real precond_alpha;
 
   // parameters for primal-dual
   pdhg_type pdhg;

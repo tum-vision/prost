@@ -24,6 +24,7 @@
 #include <cuda_runtime.h>
 #include <cusparse.h>
 #include <cmath>
+#include <cstdlib>
 
 #include "cuwrapper.h"
 
