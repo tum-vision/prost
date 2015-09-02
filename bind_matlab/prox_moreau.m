@@ -1,5 +1,6 @@
 function [prox] = prox_moreau(child)
-
-prox = child; % @todo implement me
+    
+data = { child };
+prox = { 'moreau', 0, 0, 0, 0, 0, data };
 
 end

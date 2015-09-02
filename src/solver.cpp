@@ -1,6 +1,7 @@
 #include "solver.hpp"
 
 #include <iostream>
+#include <sstream>
 #include "solver_backend.hpp"
 #include "solver_backend_pdhg.hpp"
 #include "util/util.hpp"
@@ -18,12 +19,12 @@ void Solver::SetMatrix(SparseMatrix<real>* mat) {
   problem_.ncols = mat->ncols();
 }
 
-void Solver::AddProx_g(Prox* prox) {
-  problem_.prox_g.push_back(prox);
+void Solver::SetProx_g(const std::vector<Prox*>& prox) {
+  problem_.prox_g = prox;
 }
 
-void Solver::AddProx_hc(Prox* prox) {
-  problem_.prox_hc.push_back(prox);
+void Solver::SetProx_hc(const std::vector<Prox*>& prox) {
+  problem_.prox_hc = prox;
 }
 
 void Solver::SetOptions(const SolverOptions& opts) {
@@ -115,8 +116,61 @@ void Solver::Solve() {
 
 void Solver::Release() {
   backend_->Release();
+
+  for(int i = 0; i < problem_.prox_g.size(); i++)
+    delete problem_.prox_g[i];
+
+  for(int i = 0; i < problem_.prox_hc.size(); i++)
+    delete problem_.prox_hc[i];
   
   delete [] h_primal_;
   delete [] h_dual_;
   delete problem_.precond;
+  delete problem_.mat;
+}
+
+std::string SolverOptions::get_string() const {
+  std::stringstream ss;
+
+  ss << "Specified solver options:" << std::endl;
+  ss << " - backend:";
+  if(backend == kBackendPDHG) {
+    ss << " PDHG,";
+
+    switch(pdhg) {
+      case kPDHGAlg1:
+        ss << " with constant steps (Alg. 1)." << std::endl;
+        break;
+
+      case kPDHGAlg2:
+        ss << " accelerated version for strongly convex problems (Alg. 2). gamma = " << gamma << std::endl;
+        break;
+
+      case kPDHGAdapt:
+        ss << " adaptive step sizes. (alpha0 = " << alpha0;
+        ss << ", nu = " << nu;
+        ss << ", delta = " << delta;
+        ss << ", s = " << s << ")." << std::endl;
+        break;
+    }
+  }
+  ss << " - max_iters: " << max_iters << std::endl;
+  ss << " - cb_iters: " << cb_iters << std::endl;
+  ss << " - tolerance: " << tolerance << std::endl;
+  ss << " - verbose: " << verbose << std::endl;
+  ss << " - preconditioning: ";
+
+  switch(precond) {
+    case kPrecondScalar:
+      ss << "scalar." << std::endl;
+      break;
+    case kPrecondAlpha:
+      ss << "diagonal (alpha = " << precond_alpha << ")." << std::endl;
+      break;
+    case kPrecondEquil:
+      ss << "matrix equilibration." << std::endl;
+      break;
+  }
+  
+  return ss.str();
 }

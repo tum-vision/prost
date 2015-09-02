@@ -42,6 +42,8 @@ struct SolverOptions {
     delta = 0;
     s = 0;
   }
+
+  std::string get_string() const;
   
   SolverBackendType backend;
 
@@ -85,10 +87,14 @@ class Solver {
 public:
   Solver();
   virtual ~Solver();
-  
+
+  // Solver takes ownership of mat
   void SetMatrix(SparseMatrix<real>* mat);
-  void AddProx_g(Prox* prox);
-  void AddProx_hc(Prox* prox);
+
+  // Solver takes ownership of prox
+  void SetProx_g(const std::vector<Prox*>& prox);
+  void SetProx_hc(const std::vector<Prox*>& prox);
+  
   void SetOptions(const SolverOptions& opts);
   void SetCallback(SolverCallbackPtr cb); 
 
