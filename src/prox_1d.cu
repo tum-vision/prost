@@ -5,7 +5,7 @@
 #include <iostream>
 
 // TODO: should this be handled inside bind_matlab code?
-Prox1DFunction ProxFunctionFromString(std::string name) {
+Prox1DFunction Prox1DFunctionFromString(std::string name) {
   std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
   static std::string names[] = {

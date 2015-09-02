@@ -1,4 +1,4 @@
-#include "factories.hpp"
+#include "factory_mex.hpp"
 
 #include "prox.hpp"
 #include "prox_1d.hpp"
@@ -44,7 +44,7 @@ SparseMatrix<real> *MatrixFromMatlab(const mxArray *pm) {
  * @brief Reads an option struct from MATLAB.
  */
 // TODO: handle non-existing fields
-void OptsFromMatlab(const mxArray *pm, SolverOptions& opts) {
+void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts) {
 
   std::string be_name(mxArrayToString(mxGetField(pm, 0, "backend")));
   std::string pdhg_type(mxArrayToString(mxGetField(pm, 0, "pdhg_type")));
@@ -70,7 +70,7 @@ void OptsFromMatlab(const mxArray *pm, SolverOptions& opts) {
   opts.verbose = (bool) mxGetScalar(mxGetField(pm, 0, "verbose"));
 
   if("pdhg" == be_name)
-    opts.type = kBackendPDHG;
+    opts.backend = kBackendPDHG;
   else
     mexErrMsgIdAndTxt("pdsolver", "Unknown backend.");
 
@@ -100,8 +100,8 @@ void Prox1DCoefficientsFromMatlab(const mxArray *pm, Prox1DCoefficients& coeffs)
 
   // Loop starts at 1 because cell 0 is prox-name.
   for(int i = 1; i <= 5; ++i) {
-    dims = mxGetDimensions(mxGetCell(ptr, i));
-    val = mxGetPr(mxGetCell(ptr, i));
+    dims = mxGetDimensions(mxGetCell(pm, i));
+    val = mxGetPr(mxGetCell(pm, i));
 
     for(int j = 0; j < dims[0]; j++)
       (*coeff_array[i - 1]).push_back((real)val[j]);
@@ -145,7 +145,7 @@ ProxNorm2 *ProxNorm2FromMatlab(
     return NULL;
 
   Prox1DCoefficients prox_coeffs;
-  Prox1DCoefficientsFromMatlab(prox_coeffs, data);
+  Prox1DCoefficientsFromMatlab(data, prox_coeffs);
   
   return new ProxNorm2(idx, count, dim, interleaved, prox_coeffs, func);
 }
@@ -192,15 +192,15 @@ ProxSimplex* ProxSimplexFromMatlab(
  * @brief ...
  */
 Prox* ProxFromMatlab(const mxArray *pm) {
-  std::string name(mxArrayToString(mxGetCell(prox_cell, 0)));
+  std::string name(mxArrayToString(mxGetCell(pm, 0)));
   transform(name.begin(), name.end(), name.begin(), ::tolower);
 
-  int idx = (int) mxGetScalar(mxGetCell(prox_cell, 1));
-  int count = (int) mxGetScalar(mxGetCell(prox_cell, 2));
-  int dim = (int) mxGetScalar(mxGetCell(prox_cell, 3));
-  bool interleaved = (bool) mxGetScalar(mxGetCell(prox_cell, 4));
-  bool diagsteps = (bool) mxGetScalar(mxGetCell(prox_cell, 5));
-  mxArray *data = mxGetCell(prox_cell, 6);
+  int idx = (int) mxGetScalar(mxGetCell(pm, 1));
+  int count = (int) mxGetScalar(mxGetCell(pm, 2));
+  int dim = (int) mxGetScalar(mxGetCell(pm, 3));
+  bool interleaved = (bool) mxGetScalar(mxGetCell(pm, 4));
+  bool diagsteps = (bool) mxGetScalar(mxGetCell(pm, 5));
+  mxArray *data = mxGetCell(pm, 6);
 
   mexPrintf("Attempting to create prox<'%s',idx=%d,cnt=%d,dim=%d,interleaved=%d,diagsteps=%d>...",
             name.c_str(), idx, count, dim, interleaved, diagsteps);

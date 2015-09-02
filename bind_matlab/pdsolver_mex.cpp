@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "factories_mex.hpp"
+#include "factory_mex.hpp"
 
 /**
  * @brief Calls the specified MATLAB callback function 
@@ -32,7 +32,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   solver.SetMatrix(mat);
 
   // set options
-  OptsFromMatlab(prhs[3], opts);
+  SolverOptionsFromMatlab(prhs[3], opts);
   solver.SetOptions(opts);
   std::cout << opts.get_string() << std::endl;
 
@@ -48,8 +48,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     
     solver.Solve();
 
-    real *primal = solver.get_primal_iterate();
-    real *dual = solver.get_dual_iterate();
+    real *primal = solver.primal_iterate();
+    real *dual = solver.dual_iterate();
 
     int m, n;
     m = mat->nrows();

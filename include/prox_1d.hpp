@@ -57,7 +57,7 @@ protected:
   std::vector<real *> d_coeffs_;
 };
 
-Prox1DFunction ProxFunctionFromString(std::string name);
+extern "C" Prox1DFunction Prox1DFunctionFromString(std::string name);
 
 // implementation of 1D prox operators
 #ifdef __CUDACC__ 

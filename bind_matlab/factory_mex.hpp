@@ -1,5 +1,5 @@
-#ifndef FACTORIES_HPP_
-#define FACTORIES_HPP_
+#ifndef FACTORY_MEX_HPP_
+#define FACTORY_MEX_HPP_
 
 #include "mex.h"
 
