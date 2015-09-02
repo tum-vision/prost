@@ -218,26 +218,10 @@ Prox* ProxFromMatlab(const mxArray *pm) {
     p = ProxSimplexFromMatlab(idx, count, dim, interleaved, data);
 
   if(NULL == p) 
-    mexErrMsgIdAndTxt("pdsolver", " proximal operator not recognized!");
+    mexPrintf(" failure!\n");
   else
     mexPrintf(" done!\n");
 
   return p;
 }
 
-/**
- * @brief ...
- */
-std::vector<Prox *> ProxListFromMatlab(const mxArray *pm) {
-  std::vector<Prox *> result;
-
-  const mwSize *dims = mxGetDimensions(pm);
-  int num_proxs = dims[0];
-
-  for(int i = 0; i < num_proxs; i++) {
-    mxArray *prox_cell = mxGetCell(pm, i);
-    result.push_back(ProxFromMatlab(prox_cell));
-  }
-
-  return result;
-}

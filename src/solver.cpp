@@ -65,32 +65,30 @@ bool Solver::Initialize() {
       return false;
   }
 
-  // calculate memory requirements
-  size_t gpu_mem = 0;
-  for(int i = 0; i < problem_.prox_g.size(); ++i)
-    gpu_mem += problem_.prox_g[i]->gpu_mem_amount();
-
-  for(int i = 0; i < problem_.prox_hc.size(); ++i)
-    gpu_mem += problem_.prox_hc[i]->gpu_mem_amount();
-
-  gpu_mem += backend_->gpu_mem_amount();
-  gpu_mem += problem_.mat->gpu_mem_amount();
-  gpu_mem += problem_.precond->gpu_mem_amount();
-
-  std::cout << "Total GPU memory required: " << gpu_mem / (1024 * 1024) << "MB." << std::endl;
-
-  size_t gpu_mem_avail, gpu_mem_free;
-  cudaMemGetInfo(&gpu_mem_free, &gpu_mem_avail);
-  
-  if(gpu_mem > gpu_mem_avail) {
-    std::cout << "Out of memory! Only " << gpu_mem_avail / (1024 * 1024) << "MB available." << std::endl;
-    return false;
-  }
 
   if(!backend_->Initialize())
     return false;
 
   return true;
+}
+
+void Solver::gpu_mem_amount(size_t& gpu_mem_required, size_t& gpu_mem_avail) {
+  // calculate memory requirements
+  gpu_mem_required = 0;
+  gpu_mem_avail = 0;
+  size_t gpu_mem_free;
+  
+  for(int i = 0; i < problem_.prox_g.size(); ++i)
+    gpu_mem_required += problem_.prox_g[i]->gpu_mem_amount();
+
+  for(int i = 0; i < problem_.prox_hc.size(); ++i)
+    gpu_mem_required += problem_.prox_hc[i]->gpu_mem_amount();
+
+  gpu_mem_required += backend_->gpu_mem_amount();
+  gpu_mem_required += problem_.mat->gpu_mem_amount();
+  gpu_mem_required += problem_.precond->gpu_mem_amount();
+
+  cudaMemGetInfo(&gpu_mem_free, &gpu_mem_avail);
 }
 
 void Solver::Solve() {

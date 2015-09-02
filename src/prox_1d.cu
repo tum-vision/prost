@@ -14,7 +14,7 @@ Prox1DFunction Prox1DFunctionFromString(std::string name) {
     "square",
     "indicator_leq",
     "indicator_eq",
-    "indicator_abs_leq" };
+    "indicator_absleq" };
 
   static Prox1DFunction funcs[] = {
     kZero,

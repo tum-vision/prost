@@ -102,6 +102,7 @@ public:
   void Solve();
   void Release();
 
+  void gpu_mem_amount(size_t& gpu_mem_required, size_t& gpu_mem_avail);
   real *primal_iterate() const { return h_primal_; }
   real *dual_iterate() const { return h_dual_; }
   

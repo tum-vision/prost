@@ -6,11 +6,11 @@ find_package(CUDA REQUIRED)
 
 if(APPLE)
   set(CUDA_HOST_COMPILER /usr/bin/clang)
-  set(CMAKE_CXX_FLAGS "-stdlib=libstdc++ -std=c++11")
+  set(CMAKE_CXX_FLAGS "-stdlib=libstdc++ -std=c++11 -g")
 endif()
 
 if(UNIX)
-  set(CMAKE_CXX_FLAGS "-fPIC")
+  set(CMAKE_CXX_FLAGS "-fPIC -g")
 endif()
 
 set(CUDA_NVCC_FLAGS "-arch=compute_30 -code=sm_30 --use_fast_math -O3")
