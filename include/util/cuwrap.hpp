@@ -1,29 +1,9 @@
-/*
- * This file is part of pdsolver.
- *
- * Copyright (C) 2015 Thomas Möllenhoff <thomas.moellenhoff@in.tum.de> 
- *
- * pdsolver is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * pdsolver is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with pdsolver. If not, see <http://www.gnu.org/licenses/>.
- *
- */
-
-#ifndef CUWRAPPER_H
-#define CUWRAPPER_H
+#ifndef CUWRAP_HPP_
+#define CUWRAP_HPP_
 
 #include <cublas_v2.h>
 
-namespace cuwrapper
+namespace cuwrap
 {
 
 // functions
@@ -76,9 +56,12 @@ inline void asum(cublasHandle_t handle, double *x, int n, double *result) {
 
 // math functions
 template<typename T> inline __host__ __device__ T sqrt(const T& x);
+template<typename T> inline __host__ __device__ T max(const T& x, const T& y);
 
 template<> inline __host__ __device__ float sqrt(const float& x) { return sqrtf(x); }
 template<> inline __host__ __device__ double sqrt(const double& x) { return sqrt(x); }
+template<> inline __host__ __device__ float max(const float& x, const float& y) { return fmaxf(x, y); }
+template<> inline __host__ __device__ double max(const double& x, const double& y) { return max(x, y); }
 
 }
 

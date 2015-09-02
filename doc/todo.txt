@@ -1,0 +1,96 @@
+TODOs:
+ o MATLAB callback, output primal-dual gap in ex_rof.m
+ o Output Memory Requirement for Solver
+ o Diagonal Preconditioner Options (off/on/equilibration), only "off" for now
+ o Adaptive Steps for PDHG backend
+ o Stopping Criterion
+ o Reference MATLAB implementation of backends/proxs for debugging?
+ o Simplex Projection prox, CCP multilabel example, denoising/stereo
+ o (Multi-GPU implementation, should be difficult due to communication
+    between GPUs, challenge: overlap computation with memcopies,
+    matvec product seems impossible to do efficiently in general...)
+ o Epigraph prox, continuous relaxation 
+ o Adapt to google C++ style guide, use lint?
+ o run with valgrind/gdb to check for memleaks
+ o Graph Projection Splitting backend with preconditioned CG solver
+ o Check for Memory Leaks and Out-Of-Bounds accesses in CUDA kernels.
+
+TODOs Prox-Operators:
+ o l_infty norms, l1 ball
+ o mixed matrix norms
+ o nuclear norm
+ o spectral norm
+ o function of singular values?
+ o nonconvex nuclear norm
+ o l^q (0<=q<infty) 1d, nuclear & 2-norm
+ o mumford-shah 1d & 2-norm
+ o smooth mumford-shah 1d & 2-norm
+ o linear operator (1/2) ||Ax-b||^2 with cuFFT
+ o linear operator (preconditioned) conjugate gradient
+ o x^T A x + b^T x + c
+ o halfspace
+ o second order cone projection
+ o elastic net
+ o ... ?
+
+Refactoring:
+ o renaming/google c++ style guide
+ o try to avoid references
+ o come up with a good way to handle prox_coefficients struct
+ o comment/debug mex code
+ o add check if prox's cover the whole data
+ o write CMakeLists.txt and pdsolver_build.m properly
+ o doxygen comments
+ o debug/verbose flag
+ o real(1) really necessary?
+
+
+
+
+
+data/
+  ...
+
+examples/
+  grad_forw_2d.m
+  ex_rof.m
+  ex_multilabel.m
+
+src/
+  config.hpp
+
+src/bind_matlab
+  pdsolver_mex.cpp
+  pdsolver_build.m
+  prox_moreau.m
+  prox_1d.m
+  prox_norm2.m
+  prox_simplex.m
+  prox_epi_poly.m
+  
+src/solver
+  solver.hpp
+  solver.cpp
+  solver_backend.hpp
+  solver_backend_pdhg.hpp 
+  solver_backend_pdhg.cu
+  solver_backend_graph.hpp
+  solver_backend_graph.cu
+  preconditioner.hpp
+  preconditioner.cpp 
+  prox.hpp 
+  prox_1d.hpp
+  prox_1d.cu
+  prox_norm2.hpp
+  prox_norm2.cu
+  prox_simplex.hpp
+  prox_simplex.cu
+  prox_epi_poly.hpp
+  prox_epi_poly.cu
+
+src/util
+  sparse_matrix.hpp
+  cuwrap.hpp
+
+doc/
+  notes.tex

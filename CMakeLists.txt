@@ -14,19 +14,14 @@ if(UNIX)
 endif()
 
 set(CUDA_NVCC_FLAGS "-arch=compute_30 -code=sm_30 --use_fast_math -O3")
+include_directories("include")
+include_directories("include/util")
 
-file(GLOB SRC_SOLVER
-  "pdsolver/*.cpp"
-  "pdsolver/*.cu"
-  "pdsolver/*.h"
-  "pdsolver/backend/*.cpp"
-  "pdsolver/backend/*.cu"
-  "pdsolver/backend/*.h"
-  "pdsolver/prox/*.cpp"
-  "pdsolver/prox/*.cu"
-  "pdsolver/prox/*.h"
+file(GLOB SOURCES
+  "src/*.cpp"
+  "src/*.cu"
+  "include/*.hpp"
+  "include/util/*.hpp"
   )
   
-cuda_add_library(pdsolver STATIC ${SRC_SOLVER})
-
-
+cuda_add_library(pdsolver STATIC ${SOURCES})
