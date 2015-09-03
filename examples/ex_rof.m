@@ -11,9 +11,9 @@ lmb = 0.5; % regularization constant in front of TV
 prox_g = { prox_1d(0, nx * ny, 'square', 1, f, 1, 0, 0) };
 
 % anisotropic tv
-prox_hstar = { prox_1d(0, 2 * nx * ny, 'indicator_absleq', 1 / lmb, 0, 1, 0 ,0) }; 
+%prox_hstar = { prox_1d(0, 2 * nx * ny, 'indicator_absleq', 1 / lmb, 0, 1, 0 ,0) }; 
 % isotropic tv
-%prox_hstar = { prox_norm2(0, nx * ny, 2, false, 'indicator_leq', 1 / lmb, 0, 1, 0, 0) }; 
+prox_hstar = { prox_norm2(0, nx * ny, 2, false, 'indicator_leq', 1 / lmb, 0, 1, 0, 0) }; 
 
 %% run algorithm
 % TODO: handle this more nicely, put solver_callback into opts

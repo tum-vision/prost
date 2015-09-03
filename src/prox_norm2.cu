@@ -134,7 +134,7 @@ void ProxNorm2::Evaluate(
             d_tau, \
             Func<real>(), \
             d_coeffs_[0], d_coeffs_[1], d_coeffs_[2], d_coeffs_[3], d_coeffs_[4], \
-            coeffs_.a[0], coeffs_.b[1], coeffs_.c[2], coeffs_.d[3], coeffs_.e[4], \
+            coeffs_.a[0], coeffs_.b[0], coeffs_.c[0], coeffs_.d[0], coeffs_.e[0], \
             index_, count_, dim_, interleaved_, invert_step)
   
   switch(func_) {
