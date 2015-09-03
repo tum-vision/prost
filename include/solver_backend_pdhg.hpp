@@ -45,6 +45,7 @@ protected:
   real tau_; // primal step size
   real sigma_; // dual step size
   real theta_; // overrelaxation parameter
+  real alpha_; // adaptive step size parameter
   real res_primal_; // summed primal residual
   real res_dual_; // summed dual residual
 };

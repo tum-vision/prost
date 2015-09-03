@@ -1,28 +1,37 @@
 TODOs:
- o Resolve all TODOs in code
- o ProxNorm2 is broken, fix it
  o Add check if prox operators cover the whole primal/dual domain
+ o Simplex Projection prox, lifted rof denoising/stereo
+ o Write helper functions for interleaved index calculation and double
+ => real conversion
+ o Diagonal Preconditioning a la Pock
+ o Epigraph prox, continuous relaxation
+
+ o Test Moreau prox
+ o Stopping Criterion
+ o Write proper error handling/checking code
+ o Resolve all TODOs in code
  o Implement debug/verbose flag where solver outputs lots of stuff
  o Write CMakeLists.txt and pdsolver_build.m properly so it builds
    nicely everywhere
  o Check coding style with lint
  o Investigate why everything crashes when MATLAB GUI is on but works
    with console
- o Adaptive Steps for PDHG backend
- o Stopping Criterion
  o Reference MATLAB implementation of backends/proxs for debugging?
- o Simplex Projection prox, CCP multilabel example, denoising/stereo
- o Epigraph prox, continuous relaxation 
  o run with valgrind to check for memleaks
  o Graph Projection Splitting backend with preconditioned CG solver
  o Check for Memory Leaks and Out-Of-Bounds accesses in CUDA kernels.
  o Add doxygen comments
  o -Werror, -Wall compiler flags
+ o Unit tests for prox operators, etc
 
+Done:
  x Adapt to google C++ style guide
  x MATLAB callback, output primal-dual gap in ex_rof.m
  x Output Memory Requirement for Solver
  x Diagonal Preconditioner Options (off/on/equilibration), only "off" for now
+ x ProxNorm2 is broken, fix it
+ x Test with double precision
+ x Adaptive Steps for PDHG backend
 
 TODO prox:
  o constraint sets from lifting papers

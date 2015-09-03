@@ -12,6 +12,12 @@
  *
  *        where delta_dim denotes the dim-dimensional simplex.
  *        See http://arxiv.org/pdf/1101.6081v2.pdf.
+ *
+ *        WARNING: Only efficient for small values of dim, because
+ *        of limited amount of shared memory on GPUs. Might not work
+ *        for too high values of dim (>32) or (>16 with double precision)
+ *        because there's not enough shared mem. Sorting in global mem
+ *        would be much too slow.
  */
 class ProxSimplex : public Prox {
 public:

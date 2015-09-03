@@ -9,7 +9,7 @@
 % nc: number of channels
 %
 
-function K = gradForw2D(nx, ny, nc)
+function K = grad_forw_2d(nx, ny, nc)
     dy = spdiags([[-ones(ny - 1, 1); 0], ones(ny, 1)], [0, 1], ny, ny);
     dy = kron(speye(nx), dy);
     

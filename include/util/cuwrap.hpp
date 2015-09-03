@@ -59,7 +59,7 @@ template<typename T> inline __host__ __device__ T sqrt(const T& x);
 template<typename T> inline __host__ __device__ T max(const T& x, const T& y);
 
 template<> inline __host__ __device__ float sqrt(const float& x) { return sqrtf(x); }
-template<> inline __host__ __device__ double sqrt(const double& x) { return sqrt(x); }
+template<> inline __host__ __device__ double sqrt(const double& x) { return sqrtf(x); }
 template<> inline __host__ __device__ float max(const float& x, const float& y) { return fmaxf(x, y); }
 template<> inline __host__ __device__ double max(const double& x, const double& y) { return max(x, y); }
 

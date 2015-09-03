@@ -5,22 +5,25 @@
 
 #include "factory_mex.hpp"
 
-int m, n;
-mxArray *cb_rhs[4];
+// global variables for callback
+int mat_nrows, mat_ncols;
+mxArray *cb_func_handle = NULL;
 
 /**
  * @brief Calls the specified MATLAB callback function 
  */
 void SolverCallback(int it, real *x, real *y, bool is_converged) {
+  mxArray *cb_rhs[4];
+  cb_rhs[0] = cb_func_handle;
   cb_rhs[1] = mxCreateDoubleScalar(it);
-  cb_rhs[2] = mxCreateDoubleMatrix(n, 1, mxREAL); 
-  cb_rhs[3] = mxCreateDoubleMatrix(m, 1, mxREAL);
+  cb_rhs[2] = mxCreateDoubleMatrix(mat_ncols, 1, mxREAL); 
+  cb_rhs[3] = mxCreateDoubleMatrix(mat_nrows, 1, mxREAL);
 
-  double *matlab_primal = mxGetPr(cb_rhs[2]);
-  double *matlab_dual = mxGetPr(cb_rhs[3]);
+  double *prim = mxGetPr(cb_rhs[2]);
+  double *dual = mxGetPr(cb_rhs[3]);
     
-  for(int i = 0; i < n; ++i) matlab_primal[i] = (double)x[i];    
-  for(int i = 0; i < m; ++i) matlab_dual[i] = (double)y[i];
+  for(int i = 0; i < mat_ncols; ++i) prim[i] = (double) x[i];    
+  for(int i = 0; i < mat_nrows; ++i) dual[i] = (double) y[i];
   
   mexCallMATLAB(0, NULL, 4, cb_rhs, "feval");
 }
@@ -41,9 +44,9 @@ void ProxListFromMatlab(const mxArray *pm, std::vector<Prox *>& proxs) {
 }
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-
-  if(nrhs < 5)
-    mexErrMsgTxt("At least five inputs required.");
+  
+  if(nrhs < 4)
+    mexErrMsgTxt("At least four inputs required.");
 
   if(!mxIsSparse(prhs[0]))
     mexErrMsgTxt("The constraint matrix must be sparse.");
@@ -57,11 +60,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   // set matrix
   SparseMatrix<real> *mat = MatrixFromMatlab(prhs[0]);
   solver.SetMatrix(mat);
-  m = mat->nrows();
-  n = mat->ncols();
+  mat_nrows = mat->nrows();
+  mat_ncols = mat->ncols();
 
   // set options
-  SolverOptionsFromMatlab(prhs[3], opts);
+  SolverOptionsFromMatlab(prhs[3], opts, &cb_func_handle);
   solver.SetOptions(opts);
   //std::cout << opts.get_string() << std::endl;
   mexPrintf("%s", opts.get_string().c_str());
@@ -75,7 +78,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   // set callback
   solver.SetCallback(&SolverCallback);
-  cb_rhs[0] = const_cast<mxArray *>(prhs[4]);
   
   // init and run solver
   if(solver.Initialize()) {
@@ -90,19 +92,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
     solver.Solve();
 
-    real *primal = solver.primal_iterate();
+    real *prim = solver.primal_iterate();
     real *dual = solver.dual_iterate();
 
     // allocate output
-    plhs[0] = mxCreateDoubleMatrix(n, 1, mxREAL); 
-    plhs[1] = mxCreateDoubleMatrix(m, 1, mxREAL); 
+    plhs[0] = mxCreateDoubleMatrix(mat_ncols, 1, mxREAL); 
+    plhs[1] = mxCreateDoubleMatrix(mat_nrows, 1, mxREAL); 
     
     // convert result to double and write back to matlab
-    double *matlab_primal = mxGetPr(plhs[0]);
-    double *matlab_dual = mxGetPr(plhs[1]);
+    double *mat_prim = mxGetPr(plhs[0]);
+    double *mat_dual = mxGetPr(plhs[1]);
     
-    for(int i = 0; i < n; ++i) matlab_primal[i] = (double)primal[i];    
-    for(int i = 0; i < m; ++i) matlab_dual[i] = (double)dual[i];
+    for(int i = 0; i < mat_ncols; ++i) mat_prim[i] = (double)prim[i];    
+    for(int i = 0; i < mat_nrows; ++i) mat_dual[i] = (double)dual[i];
     
     solver.Release();
   }

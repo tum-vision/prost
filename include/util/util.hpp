@@ -1,6 +1,7 @@
 #ifndef UTIL_HPP_
 #define UTIL_HPP_
 
+#include <ctime>
 #include <list>
 
 template<typename T>
@@ -18,5 +19,36 @@ std::list<double> linspace(T start_in, T end_in, int num_in) {
   
   return linspaced;
 }
+
+// measuring time
+class Timer
+{
+ public:
+  Timer() : tStart(0), running(false), sec(0.f)
+  {
+  }
+  void start()
+  {
+    tStart = clock();
+    running = true;
+  }
+  void end()
+  {
+    if (!running) { sec = 0; return; }
+    cudaDeviceSynchronize();
+    clock_t tEnd = clock();
+    sec = (float)(tEnd - tStart) / CLOCKS_PER_SEC;
+    running = false;
+  }
+  float get()
+  {
+    if (running) end();
+    return sec;
+  }
+ private:
+  clock_t tStart;
+  bool running;
+  float sec;
+};
 
 #endif

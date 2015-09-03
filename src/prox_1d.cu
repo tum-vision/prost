@@ -67,7 +67,7 @@ void Prox1DKernel(
 
     // handle preconditioners
     if(d_tau != 0)
-      tau *= d_tau[th_idx];
+      tau *= d_tau[global_idx];
 
     if(invert_step)
       tau = 1. / tau;

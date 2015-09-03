@@ -1,4 +1,4 @@
-function [prox] = prox_1d( idx, count, fn, a, b, c, d, e )
+function [prox] = prox_1d(idx, count, fn, a, b, c, d, e)
 % computes prox of general class of functions
 % sum_{i=1}^{count} c*f(ax - b) + dx + 0.5ex^2 
 % fn is a string describing the 1d function f

@@ -1,11 +1,8 @@
 #ifndef CONFIG_HPP_
 #define CONFIG_HPP_
 
-#if defined DOUBLE_PREC
-  typedef double real;
-#else
-  typedef float real;
-#endif
+//typedef double real;
+typedef float real;
 
 static const int kBlockSizeCUDA = 128;
 

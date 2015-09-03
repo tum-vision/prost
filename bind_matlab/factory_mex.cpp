@@ -6,6 +6,7 @@
 #include "prox_moreau.hpp"
 #include "prox_norm2.hpp"
 #include "prox_simplex.hpp"
+#include "prox_zero.hpp"
 
 /**
  * @brief Creates a SparseMatrix<real> instance from a MATLAB sparse matrix
@@ -44,7 +45,7 @@ SparseMatrix<real> *MatrixFromMatlab(const mxArray *pm) {
  * @brief Reads an option struct from MATLAB.
  */
 // TODO: handle non-existing fields
-void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts) {
+void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **cb_func_handle) {
 
   std::string be_name(mxArrayToString(mxGetField(pm, 0, "backend")));
   std::string pdhg_type(mxArrayToString(mxGetField(pm, 0, "pdhg_type")));
@@ -82,6 +83,8 @@ void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts) {
     opts.pdhg = kPDHGAdapt;
   else
     mexErrMsgIdAndTxt("pdsolver", "Unknown PDHG variant.");
+
+  *cb_func_handle = mxGetField(pm, 0, "callback");
 }
 
 /**
@@ -183,10 +186,27 @@ ProxSimplex* ProxSimplexFromMatlab(
     bool interleaved,
     const mxArray *data)
 {
-  // TODO: implement me!
+  const mwSize *dims;
+  double *val;
   
-  return NULL;
+  dims = mxGetDimensions(mxGetCell(data, 0));
+  val = mxGetPr(mxGetCell(data, 0));
+
+  std::vector<real> coeffs;
+  
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.push_back((real)val[j]);
+  
+  return new ProxSimplex(idx, count, dim, interleaved, coeffs);
 }
+
+/**
+ * @brief ...
+ */
+ProxZero* ProxZeroFromMatlab(int idx, int count) {
+  return new ProxZero(idx, count);
+}
+
 
 /**
  * @brief ...
@@ -216,6 +236,8 @@ Prox* ProxFromMatlab(const mxArray *pm) {
     p = ProxMoreauFromMatlab(data);
   else if("simplex" == name)
     p = ProxSimplexFromMatlab(idx, count, dim, interleaved, data);
+  else if("zero" == name)
+    p = ProxZeroFromMatlab(idx, count);
 
   if(NULL == p) 
     mexPrintf(" failure!\n");

@@ -172,7 +172,7 @@ void SolverBackendPDHG::PerformIteration() {
   cuwrap::asum<real>(cublas_handle_, d_res_primal_, n, &res_primal_);
   cuwrap::asum<real>(cublas_handle_, d_res_dual_, m, &res_dual_);
 
-  //std::cout << res_primal << "," << res_dual << std::endl;
+  //std::cout << res_primal_ << "," << res_dual_ << std::endl;
   
   // adapt step-sizes according to chosen algorithm
   switch(opts_.pdhg) {
@@ -184,7 +184,18 @@ void SolverBackendPDHG::PerformIteration() {
       break;
 
     case kPDHGAdapt: { // adapt based on residuals
-      // TODO: implement me!
+
+      if(res_primal_ > opts_.s * res_dual_ * opts_.delta) {
+        tau_ = tau_ / (1 - alpha_);
+        sigma_ = sigma_ * (1 - alpha_);
+        alpha_ = alpha_ * opts_.nu;
+      }
+      if(res_primal_ < opts_.s * res_dual_ / opts_.delta) {
+        tau_ = tau_ * (1 - alpha_);
+        sigma_ = sigma_ / (1 - alpha_);
+        alpha_ = alpha_ * opts_.nu;
+      }
+
     } break;
   }
 }
@@ -208,6 +219,7 @@ bool SolverBackendPDHG::Initialize() {
 
   tau_ = sigma_ = 1;
   theta_ = 1;
+  alpha_ = opts_.alpha0;
 
   // TODO: add possibility for non-zero initializations
   cudaMemset(d_x_, 0, n * sizeof(real));
