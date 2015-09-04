@@ -109,6 +109,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     solver.Release();
   }
   else {
-    mexErrMsgIdAndTxt("pdsolver", "Initialization failed!");
+    mexErrMsgTxt("Initialization failed!");
   }
 }

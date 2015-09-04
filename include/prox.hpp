@@ -52,6 +52,7 @@ public:
   int count() const { return count_; }
   bool interleaved() const { return interleaved_; }
   bool diagsteps() const { return diagsteps_; }
+  int end() const { return index_ + count_ * dim_ - 1; }
   
 protected:
   int index_; 

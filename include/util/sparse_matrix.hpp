@@ -20,6 +20,14 @@ public:
     cudaFree(d_ind_);
     cudaFree(d_val_);
     cudaFree(d_ptr_);
+
+    delete [] h_ind_;
+    delete [] h_val_;
+    delete [] h_ptr_;
+
+    delete [] h_ind_t_;
+    delete [] h_val_t_;
+    delete [] h_ptr_t_;
   }
 
   static SparseMatrix<real> *CreateFromCSC(
@@ -54,6 +62,22 @@ public:
     cudaMemcpy(mat->d_val_t_, val, sizeof(real) * mat->nnz_, cudaMemcpyHostToDevice);
 
     mat->FillTranspose();
+
+    mat->h_ind_ = new int[mat->nnz_];
+    mat->h_ptr_ = new int[mat->m_ + 1];
+    mat->h_val_ = new real[mat->nnz_];
+
+    mat->h_ind_t_ = new int[mat->nnz_];
+    mat->h_ptr_t_ = new int[mat->n_ + 1];
+    mat->h_val_t_ = new real[mat->nnz_];
+
+    cudaMemcpy(mat->h_ind_, mat->d_ind_, sizeof(int) * mat->nnz_, cudaMemcpyDeviceToHost);
+    cudaMemcpy(mat->h_ptr_, mat->d_ptr_, sizeof(int) * (mat->m_ + 1), cudaMemcpyDeviceToHost);
+    cudaMemcpy(mat->h_val_, mat->d_val_, sizeof(int) * mat->nnz_, cudaMemcpyDeviceToHost);
+
+    cudaMemcpy(mat->h_ind_t_, mat->d_ind_t_, sizeof(int) * mat->nnz_, cudaMemcpyDeviceToHost);
+    cudaMemcpy(mat->h_ptr_t_, mat->d_ptr_t_, sizeof(int) * (mat->n_ + 1), cudaMemcpyDeviceToHost);
+    cudaMemcpy(mat->h_val_t_, mat->d_val_t_, sizeof(int) * mat->nnz_, cudaMemcpyDeviceToHost);
     
     return mat;
   }
@@ -68,6 +92,22 @@ public:
   
   int nrows() const { return m_; }
   int ncols() const { return n_; }
+
+  real row_sum(int row, real alpha) const {
+    real sum = 0;
+    for(int i = h_ptr_[row]; i < h_ptr_[row + 1]; i++)
+      sum += pow(abs(h_val_[i]), alpha);
+    
+    return sum;
+  }
+
+  real col_sum(int col, real alpha) const {
+    real sum = 0;
+    for(int i = h_ptr_t_[col]; i < h_ptr_t_[col + 1]; i++)
+      sum += pow(abs(h_val_t_[i]), alpha);
+    
+    return sum;
+  }
 
   int gpu_mem_amount() const {
     int total_bytes = 0;
@@ -92,6 +132,10 @@ protected:
   int *d_ind_, *d_ind_t_;
   int *d_ptr_, *d_ptr_t_;
   real *d_val_, *d_val_t_;
+
+  int *h_ind_, *h_ind_t_;
+  int *h_ptr_, *h_ptr_t_;
+  real *h_val_, *h_val_t_;
 };
 
 template<>

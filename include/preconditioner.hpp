@@ -23,15 +23,11 @@ public:
   virtual ~Preconditioner();
 
   void ComputeScalar();
-  void ComputeAlpha(real alpha);
-  void ComputeEquil();
-
-  // renormalizes S and T in such a way that ||S^(1/2) K T^(1/2)|| <= 1
-  // and that prox-operators which can only handle scalar steps have the
-  // same step size along the according entries in the diagonal matrix. 
-  void Renormalize(
+  void ComputeAlpha(
+      real alpha,
       const std::vector<Prox *>& prox_g,
       const std::vector<Prox *>& prox_hc);
+  void ComputeEquil();
 
   real *left() const { return d_left_; }
   real *right() const { return d_right_; }

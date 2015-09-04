@@ -48,7 +48,10 @@ bool Solver::Initialize() {
       break;
 
     case kPrecondAlpha:
-      return false; // not implemented yet
+      problem_.precond->ComputeAlpha(opts_.precond_alpha,
+                                     problem_.prox_g,
+                                     problem_.prox_hc);
+      break;
 
     case kPrecondEquil:
       return false; // not implemented yet
@@ -64,7 +67,6 @@ bool Solver::Initialize() {
     default:
       return false;
   }
-
 
   if(!backend_->Initialize())
     return false;
@@ -101,7 +103,7 @@ void Solver::Solve() {
     bool is_converged = backend_->converged();
 
     // check if we should run the callback this iteration
-    if(i >= cb_iters.front()) {
+    if(i >= cb_iters.front() || is_converged) {
       backend_->iterates(h_primal_, h_dual_);
       callback_(i + 1, h_primal_, h_dual_, false);
       cb_iters.pop_front();
@@ -149,6 +151,15 @@ std::string SolverOptions::get_string() const {
         ss << ", nu = " << nu;
         ss << ", delta = " << delta;
         ss << ", s = " << s << ")." << std::endl;
+        break;
+
+      case kPDHGBacktrack:
+        ss << " adaptive step sizes + backtracking. (alpha0 = " << alpha0;
+        ss << ", nu = " << nu;
+        ss << ", delta = " << delta;
+        ss << ", s = " << s;
+        ss << ", gamma = " << bt_gamma;
+        ss << ", beta = " << bt_beta << ")." << std::endl;
         break;
     }
   }

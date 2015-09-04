@@ -49,6 +49,7 @@ void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **c
 
   std::string be_name(mxArrayToString(mxGetField(pm, 0, "backend")));
   std::string pdhg_type(mxArrayToString(mxGetField(pm, 0, "pdhg_type")));
+  std::string precond(mxArrayToString(mxGetField(pm, 0, "precond")));
 
   std::transform(be_name.begin(),
                  be_name.end(),
@@ -58,6 +59,11 @@ void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **c
   std::transform(pdhg_type.begin(),
                  pdhg_type.end(),
                  pdhg_type.begin(),
+                 ::tolower);
+
+  std::transform(precond.begin(),
+                 precond.end(),
+                 precond.begin(),
                  ::tolower);
   
   opts.max_iters = (int) mxGetScalar(mxGetField(pm, 0, "max_iters"));
@@ -69,11 +75,14 @@ void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **c
   opts.delta = (real) mxGetScalar(mxGetField(pm, 0, "delta"));
   opts.s = (real) mxGetScalar(mxGetField(pm, 0, "s"));
   opts.verbose = (bool) mxGetScalar(mxGetField(pm, 0, "verbose"));
+  opts.bt_beta = (real) mxGetScalar(mxGetField(pm, 0, "bt_beta"));
+  opts.bt_gamma = (real) mxGetScalar(mxGetField(pm, 0, "bt_gamma"));
+  opts.precond_alpha = (real) mxGetScalar(mxGetField(pm, 0, "precond_alpha"));
 
   if("pdhg" == be_name)
     opts.backend = kBackendPDHG;
   else
-    mexErrMsgIdAndTxt("pdsolver", "Unknown backend.");
+    mexErrMsgTxt("Unknown backend.");
 
   if("alg1" == pdhg_type)
     opts.pdhg = kPDHGAlg1;
@@ -81,8 +90,19 @@ void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **c
     opts.pdhg = kPDHGAlg2;
   else if("adapt" == pdhg_type)
     opts.pdhg = kPDHGAdapt;
+  else if("backtrack" == pdhg_type)
+    opts.pdhg = kPDHGBacktrack;
   else
-    mexErrMsgIdAndTxt("pdsolver", "Unknown PDHG variant.");
+    mexErrMsgTxt("Unknown PDHG variant.");
+
+  if("off" == precond)
+    opts.precond = kPrecondScalar;
+  else if("alpha" == precond)
+    opts.precond = kPrecondAlpha;
+  else if("equil" == precond)
+    opts.precond = kPrecondEquil;
+  else
+    mexErrMsgTxt("Unknown Preconditioner.");
 
   *cb_func_handle = mxGetField(pm, 0, "callback");
 }

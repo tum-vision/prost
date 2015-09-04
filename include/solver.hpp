@@ -21,6 +21,7 @@ enum BackendPDHGType
   kPDHGAlg1,
   kPDHGAlg2,
   kPDHGAdapt,
+  kPDHGBacktrack,
 };
 
 struct SolverOptions {
@@ -29,7 +30,7 @@ struct SolverOptions {
     backend = kBackendPDHG;
     max_iters = 1000;
     cb_iters = 10;
-    tolerance = 1e-6;
+    tolerance = 0.05;
     verbose = true;
     
     precond = kPrecondScalar;
@@ -37,10 +38,13 @@ struct SolverOptions {
     
     pdhg = kPDHGAlg1;
     gamma = 0;
-    alpha0 = 0;
-    nu = 0;
-    delta = 0;
-    s = 0;
+    alpha0 = 0.5;
+    nu = 0.95;
+    delta = 1.5;
+    s = 10;
+
+    bt_beta = 0.95;
+    bt_gamma = 0.75;
   }
 
   std::string get_string() const;
@@ -59,8 +63,9 @@ struct SolverOptions {
 
   // parameters for pdhg
   BackendPDHGType pdhg;
-  real gamma;
-  real alpha0, nu, delta, s;  
+  real gamma; // strong convexity gamma
+  real alpha0, nu, delta, s;
+  real bt_beta, bt_gamma; // backtracking parameters
 };
 
 struct OptimizationProblem {

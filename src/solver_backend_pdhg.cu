@@ -7,6 +7,61 @@
 #include "util/cuwrap.hpp"
 
 __global__
+void ComputeBtNumeratorPDHG(
+    real *d_res_dual,
+    real *d_kx,
+    real *d_kx_prev,
+    real *d_y,
+    real *d_y_prev,
+    real *d_left,
+    real *d_right,
+    int m)
+{
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+  if(idx >= m)
+    return;
+
+  const real diff_y = (d_y[idx] - d_y_prev[idx]) / d_left[idx];
+  const real diff_kx = d_kx[idx] - d_kx_prev[idx];
+  d_res_dual[idx] = diff_y * diff_kx;
+}
+
+__global__
+void ComputeBtDenom1PDHG(
+    real *d_res_primal,
+    real *d_x,
+    real *d_x_prev,
+    real *d_right,
+    int n)
+{
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+  if(idx >= n)
+    return;
+
+  const real nrm = (d_x[idx] - d_x_prev[idx]) / cuwrap::sqrt<real>(d_right[idx]);
+  d_res_primal[idx] = nrm * nrm;
+}
+
+__global__
+void ComputeBtDenom2PDHG(
+    real *d_res_dual,
+    real *d_y,
+    real *d_y_prev,
+    real *d_left,
+    int m)
+{
+  int idx = threadIdx.x + blockIdx.x * blockDim.x;
+
+  if(idx >= m)
+    return;
+
+  real nrm = (d_y[idx] - d_y_prev[idx]) / cuwrap::sqrt<real>(d_left[idx]);
+  d_res_dual[idx] = nrm * nrm;
+}
+
+__global__
 void ComputeProxArgPrimalPDHG(
     real *d_prox_arg,
     real *d_x,
@@ -173,6 +228,56 @@ void SolverBackendPDHG::PerformIteration() {
   cuwrap::asum<real>(cublas_handle_, d_res_dual_, m, &res_dual_);
 
   //std::cout << res_primal_ << "," << res_dual_ << std::endl;
+
+  // if backtracking is enabled, update step sizes
+  if(opts_.pdhg == kPDHGBacktrack) {
+    real num, denom1, denom2;
+    
+    // compute numerator
+    ComputeBtNumeratorPDHG<<<grid_m, block>>>(
+        d_res_dual_,
+        d_kx_,
+        d_kx_prev_,
+        d_y_,
+        d_y_prev_,
+        problem_.precond->left(),
+        problem_.precond->right(),
+        m);
+    cudaDeviceSynchronize();
+    cuwrap::asum<real>(cublas_handle_, d_res_dual_, m, &num);
+    
+    // compute denominator
+    ComputeBtDenom1PDHG<<<grid_n, block>>>(
+        d_res_primal_,
+        d_x_,
+        d_x_prev_,
+        problem_.precond->right(),
+        n);
+    cudaDeviceSynchronize();
+    cuwrap::asum<real>(cublas_handle_, d_res_primal_, n, &denom1);
+
+    ComputeBtDenom2PDHG<<<grid_m, block>>>(
+        d_res_dual_,
+        d_y_,
+        d_y_prev_,
+        problem_.precond->left(),
+        m);
+    cudaDeviceSynchronize();
+    cuwrap::asum<real>(cublas_handle_, d_res_dual_, m, &denom2);
+
+    real b = (2.0 * tau_ * sigma_ * num) / (opts_.bt_gamma * (sigma_ * denom1 + tau_ * denom2));
+
+    if(b > 1) {
+      /*
+      std::cout << "bt_gamma=" << opts_.bt_gamma << std::endl;
+      std::cout << "num=" << num << ", denom1=" << denom1 << ", denom2=" << denom2 << std::endl;
+      std::cout << b << ", " << tau_ << ", " << sigma_ << std::endl;
+      */
+
+      tau_ = opts_.bt_beta * tau_ / b;
+      sigma_ = opts_.bt_beta * sigma_ / b;
+    }
+  }
   
   // adapt step-sizes according to chosen algorithm
   switch(opts_.pdhg) {
@@ -183,6 +288,7 @@ void SolverBackendPDHG::PerformIteration() {
       // TODO: implement me!
       break;
 
+    case kPDHGBacktrack: 
     case kPDHGAdapt: { // adapt based on residuals
 
       if(res_primal_ > opts_.s * res_dual_ * opts_.delta) {
@@ -198,6 +304,8 @@ void SolverBackendPDHG::PerformIteration() {
 
     } break;
   }
+
+  //std::cout << res_primal_ << ", " << res_dual_ << std::endl;
 }
 
 bool SolverBackendPDHG::Initialize() {
@@ -261,7 +369,7 @@ void SolverBackendPDHG::iterates(real *primal, real *dual) {
 }
 
 bool SolverBackendPDHG::converged() {
-  return false; // TODO: implement stopping criteria based on residual
+  return std::max(res_primal_, res_dual_) < opts_.tolerance;
 }
 
 std::string SolverBackendPDHG::status() {
