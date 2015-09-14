@@ -68,9 +68,17 @@ void ProxNorm2Kernel(
       tau = 1. / tau;
 
     // do scaled 1d prox
+    const real arg = ( (cf_a * (norm - cf_d * tau)) / (1 + tau * cf_e) ) - cf_b;
+    const real step = (cf_c * cf_a * cf_a * tau) / (1 + tau * cf_e);
+
+    // compute prox
+    const real prox_result = (prox.Apply(arg, step) + cf_b) / cf_a;
+
+    /*    wrong
     const real arg = cf_a * (norm * tau - cf_d) / (cf_e + tau) - cf_b;
     const real step = (cf_e + tau) / (cf_c * cf_a * cf_a);
     const real prox_result = (prox.Apply(arg, step) + cf_b) / cf_a;
+    */
 
     // combine together for result
     for(int i = 0; i < dim; i++)

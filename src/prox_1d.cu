@@ -13,6 +13,7 @@ Prox1DFunction Prox1DFunctionFromString(std::string name) {
     "abs",
     "square",
     "indicator_leq",
+    "indicator_geq",
     "indicator_eq",
     "indicator_absleq" };
 
@@ -21,6 +22,7 @@ Prox1DFunction Prox1DFunctionFromString(std::string name) {
     kAbs,
     kSquare,
     kIndicatorLeq,
+    kIndicatorGeq,
     kIndicatorEq,
     kIndicatorAbsLeq };
 
@@ -65,16 +67,18 @@ void Prox1DKernel(
     if(d_d != 0) cf_d = d_d[th_idx];
     if(d_e != 0) cf_e = d_e[th_idx];
 
+    real new_tau = tau;
+
     // handle preconditioners
     if(d_tau != 0)
-      tau *= d_tau[global_idx];
+      new_tau = tau * d_tau[global_idx];
 
     if(invert_step)
-      tau = 1. / tau;
+      new_tau = 1. / new_tau;
 
-    // compute scaled prox argument and step (see e.g. Boyd/Fougner's paper)
-    const real arg = cf_a * (d_arg[global_idx] * tau - cf_d) / (cf_e + tau) - cf_b;
-    const real step = (cf_e + tau) / (cf_c * cf_a * cf_a);
+    // compute scaled prox argument and step 
+    const real arg = ( (cf_a * (d_arg[global_idx] - cf_d * new_tau)) / (1 + new_tau * cf_e) ) - cf_b;
+    const real step = (cf_c * cf_a * cf_a * new_tau) / (1 + new_tau * cf_e);
 
     // compute prox
     d_result[global_idx] = (prox.Apply(arg, step) + cf_b) / cf_a;
@@ -95,11 +99,19 @@ Prox1D::Prox1D(
     &coeffs_.c,
     &coeffs_.d,
     &coeffs_.e };
-  
+
+  //std::cout << std::endl;
   for(int i = 0; i < Prox1DCoefficients::num_coeffs(); i++) {
     const std::vector<real>& cur_elem = *(coeff_array[i]);
     
     assert(!cur_elem.empty());
+
+    /*
+    for(int j = 0; j < std::min(15, (int)cur_elem.size()); j++)
+      std::cout << cur_elem[j] << ", ";
+
+    std::cout << std::endl;
+    */
 
     real *gpu_data = NULL;
     if(cur_elem.size() > 1) { // if there is more than 1 coeff store it in a global mem.
@@ -160,6 +172,10 @@ void Prox1D::Evaluate(
 
     case kIndicatorLeq: 
       CALL_PROX1D_KERNEL(Prox1DIndicatorLeq);
+      break;
+
+    case kIndicatorGeq: 
+      CALL_PROX1D_KERNEL(Prox1DIndicatorGeq);
       break;
 
     case kIndicatorEq: 

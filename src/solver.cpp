@@ -1,10 +1,38 @@
 #include "solver.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include "solver_backend.hpp"
 #include "solver_backend_pdhg.hpp"
 #include "util/util.hpp"
+
+struct ProxCompare {
+  bool operator()(Prox* const& left, Prox* const& right) {
+    if(left->index() <= right->index())
+      return true;
+
+    return false;
+  }
+};
+
+bool CheckDomainProx(const std::vector<Prox *>& proxs, int n) {
+  int num_proxs = proxs.size();
+
+  std::vector<Prox *> sorted_proxs = proxs;
+  std::sort(sorted_proxs.begin(), sorted_proxs.end(), ProxCompare());
+
+  for(int i = 0; i < num_proxs - 1; i++) {
+    if(sorted_proxs[i]->end() != (sorted_proxs[i + 1]->index() - 1))
+      return false;
+  }
+
+  if(sorted_proxs[num_proxs - 1]->end() != (n - 1))
+    return false;
+
+  return true;
+}
+
 
 Solver::Solver()
     : backend_(NULL), h_primal_(NULL), h_dual_(NULL) { 
@@ -67,6 +95,17 @@ bool Solver::Initialize() {
     default:
       return false;
   }
+
+  // check if whole domain is covered by prox operators
+  if(!CheckDomainProx(problem_.prox_g, problem_.ncols))
+    return false;
+
+  if(!CheckDomainProx(problem_.prox_hc, problem_.nrows))
+    return false;
+
+  // sort prox operators according to their index()
+  // check if prox[i].end() == prox[i+1].index() - 1
+  // check if prox[last].end() == n - 1
 
   if(!backend_->Initialize())
     return false;

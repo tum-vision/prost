@@ -1,13 +1,13 @@
 TODOs:
- o Add check if prox operators cover the whole primal/dual domain
- o Lifted rof denoising/stereo
- o Diagonal Preconditioning a la Pock
- o Write helper functions for interleaved index calculation and double=>real conversion
+ o Lifted TV rof denoising example
+ o Lifted TV stereo example
  o Epigraph prox, continuous relaxation
- o Look into matrix equilibration preconditioner
+ o Write helper functions for interleaved index calculation and double=>real conversion
+ o Look into matrix equilibriation preconditioner, constrained equilibriation
  o Test Moreau prox
  o Stopping Criterion
- o Write proper error handling/checking code
+ o Write proper error handling/checking code, add exceptions and have
+   meaningful error messages.
  o Resolve all TODOs in code
  o Implement debug/verbose flag where solver outputs lots of stuff
  o Write CMakeLists.txt and pdsolver_build.m properly so it builds
@@ -32,8 +32,12 @@ Done:
  x Test with double precision
  x Adaptive Steps for PDHG backend
  x Simplex Projection prox (not useful due to limited shared memory)
+ x Diagonal Preconditioning a la Pock
+ x Add check if prox operators cover the whole primal/dual domain
 
 TODO prox:
+ o huber, identity, 0 <= x <= 1, x <= 0, max(0, x), pogs
+ o q>1, elastic net, ...
  o constraint sets from lifting papers
  o nuclear norm
  o x^T A x + b^T x + c

@@ -6,6 +6,9 @@
 
 #include "util/cuwrap.hpp"
 
+/**
+ * @brief ...
+ */
 __global__
 void ComputeBtNumeratorPDHG(
     real *d_res_dual,
@@ -27,6 +30,9 @@ void ComputeBtNumeratorPDHG(
   d_res_dual[idx] = diff_y * diff_kx;
 }
 
+/**
+ * @brief ...
+ */
 __global__
 void ComputeBtDenom1PDHG(
     real *d_res_primal,
@@ -44,6 +50,9 @@ void ComputeBtDenom1PDHG(
   d_res_primal[idx] = nrm * nrm;
 }
 
+/**
+ * @brief ...
+ */
 __global__
 void ComputeBtDenom2PDHG(
     real *d_res_dual,
@@ -61,6 +70,9 @@ void ComputeBtDenom2PDHG(
   d_res_dual[idx] = nrm * nrm;
 }
 
+/**
+ * @brief ...
+ */
 __global__
 void ComputeProxArgPrimalPDHG(
     real *d_prox_arg,
@@ -78,6 +90,9 @@ void ComputeProxArgPrimalPDHG(
   d_prox_arg[idx] = d_x[idx] - tau * d_right[idx] * d_kty[idx];
 }
 
+/**
+ * @brief ...
+ */
 __global__
 void ComputeProxArgDualPDHG(
     real *d_prox_arg,
@@ -98,6 +113,9 @@ void ComputeProxArgDualPDHG(
       ((1 + theta) * d_kx[idx] - theta * d_kx_prev[idx]);
 }
 
+/**
+ * @brief ...
+ */
 __global__
 void ComputePrimalResidualPDHG(
     real *d_res_primal,
@@ -119,6 +137,9 @@ void ComputePrimalResidualPDHG(
       (d_kty_prev[idx] - d_kty[idx]);
 }
 
+/**
+ * @brief ...
+ */
 __global__
 void ComputeDualResidualPDHG(
     real *d_res_dual,
@@ -325,7 +346,8 @@ bool SolverBackendPDHG::Initialize() {
   cudaMalloc((void **)&d_res_dual_, m * sizeof(real));
   cudaMalloc((void **)&d_prox_arg_, l * sizeof(real));  
 
-  tau_ = sigma_ = 1;
+  tau_ = 1;
+  sigma_ = 1;
   theta_ = 1;
   alpha_ = opts_.alpha0;
 
@@ -369,7 +391,7 @@ void SolverBackendPDHG::iterates(real *primal, real *dual) {
 }
 
 bool SolverBackendPDHG::converged() {
-  return std::max(res_primal_, res_dual_) < opts_.tolerance;
+  return false; //std::max(res_primal_, res_dual_) < opts_.tolerance;
 }
 
 std::string SolverBackendPDHG::status() {

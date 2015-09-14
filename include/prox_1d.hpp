@@ -10,7 +10,8 @@ enum Prox1DFunction {
   kZero = 0,               // 0      
   kAbs,                // |x|         
   kSquare,             // (1/2) x^2
-  kIndicatorLeq,       // delta(x<=1)
+  kIndicatorLeq,       // delta(x<=1) TODO: replace this to x<=0?
+  kIndicatorGeq,       // delta(x>=0)
   kIndicatorEq,        // delta(x=0)
   kIndicatorAbsLeq,    // delta(-1<=x<=1)
   
@@ -94,6 +95,17 @@ struct Prox1DIndicatorLeq
   inline __device__ real Apply(real x0, real tau) const {
     if(x0 > 1.)
       return 1.;
+
+    return x0;
+  }
+};
+
+template<typename real>
+struct Prox1DIndicatorGeq
+{
+  inline __device__ real Apply(real x0, real tau) const {
+    if(x0 < 0.)
+      return 0.;
 
     return x0;
   }
