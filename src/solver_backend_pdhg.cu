@@ -25,7 +25,7 @@ void ComputeBtNumeratorPDHG(
   if(idx >= m)
     return;
 
-  const real diff_y = (d_y[idx] - d_y_prev[idx]) / d_left[idx];
+  const real diff_y = d_y[idx] - d_y_prev[idx]; // / d_left is not needed?
   const real diff_kx = d_kx[idx] - d_kx_prev[idx];
   d_res_dual[idx] = diff_y * diff_kx;
 }
@@ -46,8 +46,8 @@ void ComputeBtDenom1PDHG(
   if(idx >= n)
     return;
 
-  const real nrm = (d_x[idx] - d_x_prev[idx]) / cuwrap::sqrt<real>(d_right[idx]);
-  d_res_primal[idx] = nrm * nrm;
+  const real diff = (d_x[idx] - d_x_prev[idx]);
+  d_res_primal[idx] = diff * diff / d_right[idx];
 }
 
 /**
@@ -66,8 +66,8 @@ void ComputeBtDenom2PDHG(
   if(idx >= m)
     return;
 
-  real nrm = (d_y[idx] - d_y_prev[idx]) / cuwrap::sqrt<real>(d_left[idx]);
-  d_res_dual[idx] = nrm * nrm;
+  const real diff = (d_y[idx] - d_y_prev[idx]);
+  d_res_dual[idx] = diff * diff / d_left[idx];
 }
 
 /**
@@ -289,14 +289,14 @@ void SolverBackendPDHG::PerformIteration() {
     real b = (2.0 * tau_ * sigma_ * num) / (opts_.bt_gamma * (sigma_ * denom1 + tau_ * denom2));
 
     if(b > 1) {
-      /*
       std::cout << "bt_gamma=" << opts_.bt_gamma << std::endl;
       std::cout << "num=" << num << ", denom1=" << denom1 << ", denom2=" << denom2 << std::endl;
-      std::cout << b << ", " << tau_ << ", " << sigma_ << std::endl;
-      */
+      std::cout << b << ", " << tau_ << ", " << sigma_ << ", tau*sigma=" << tau_ * sigma_ << std::endl;
 
       tau_ = opts_.bt_beta * tau_ / b;
       sigma_ = opts_.bt_beta * sigma_ / b;
+
+      std::cout << "new_tau=" << tau_ << ", new_sigma=" << sigma_ << ", " << tau_ * sigma_ << std::endl;
     }
   }
   

@@ -1,1 +1,87 @@
+\documentclass[A4,12pt]{article}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage[nooneline]{subfigure}
+\usepackage{graphicx}
+\usepackage{varwidth}
+\usepackage{float}
+\usepackage{fullpage} 
+\usepackage{color}
+\usepackage{nicefrac}
+\usepackage{epstopdf}
+
+\newtheorem{thm}{Theorem}[section]
+\newtheorem{prop}[thm]{Proposition}
+\newtheorem{lemma}[thm]{Lemma}
+\newtheorem{cor}[thm]{Corollary}
+\newtheorem{rem}[thm]{Remark}
+\newtheorem{defi}[thm]{Definition}
+\newtheorem{example}{Example}
+
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator{\divop}{div}
+\DeclareMathOperator*{\proj}{proj}
+
+\newcommand\M{\mathcal{M}}
+\newcommand{\bbR}{\mathbb{R}}
+\newcommand{\bbRext}{\mathbb{R} \cup \{ \infty \} }
+\newcommand{\rslv}[1]{(I + #1)^{-1}}
+\newcommand{\norm}[1]{\Vert #1 \Vert}
+\newcommand{\abs}[1]{\vert #1 \vert}
+\newcommand\MyGreenBox[1]{%
+\colorbox{green}{\begin{varwidth}{\dimexpr\linewidth-2\fboxsep}#1\end{varwidth}}}
+\providecommand{\iprod}[2]{\langle#1,#2\rangle}
+\newcommand{\Tau}{\mathrm{T}}
+
+\title{Preconditioned Adaptive Primal-Dual Hybrid Gradient}
+%\author{Thomas M\"ollenhoff}
+\date{}
+
+\begin{document}
+\maketitle
+
+\section{The Algorithm}
+Let $X$ and $Y$ be finite dimensional Hilbert spaces with inner products
+\begin{equation}
+  \begin{aligned}
+    \iprod{x^1}{x^2}_X := \iprod{\Tau^{-1} x^1}{x^2}, ~~
+    \iprod{y^1}{y^2}_Y := \iprod{\Sigma^{-1} y^1}{y^2},
+  \end{aligned}
+\end{equation}
+for symmetric positive definite linear maps $\Tau : X \rightarrow X$ and $\Sigma : Y \rightarrow Y$. The inner products induce a norm $\norm{\cdot}_X = \sqrt{\iprod{\cdot}{\cdot}_X}$. The subdifferential $\partial_X g$ of a function $g \in \Gamma_0(X)$ can be related to the usual subdifferential by 
+\begin{equation}
+  \begin{aligned}
+    \partial_X g(x_0) &= \{ v ~|~ g(x_0) + \iprod{v}{x - x_0}_X \leq g(x), \forall x \in X\}\\
+&=  \{ v ~|~ g(x_0) + \iprod{\Tau^{-1}v}{x - x_0} \leq g(x), \forall x \in X\} \\
+&= \Tau \partial g(x_0).
+  \end{aligned}
+\end{equation}
+We consider saddle-point problems of the form
+\begin{equation}
+  \underset{x \in X} \min ~ \underset{y \in Y} \max ~ \iprod{x}{K^T y}_X + g(x) - h^*(y),
+\end{equation}
+where $h^* : Y \rightarrow \bbRext$ denotes the convex conjugate. Writing out the adaptive primal-dual algorithm in this different norm yields the following method:
+\begin{equation} 
+  \begin{aligned}
+    x^{k+1} &= \rslv{\tau_k \Tau \partial g}(x^k - \tau_k \Tau K^T y^k),\\
+    y^{k+1} &= \rslv{\sigma_k \Sigma \partial h^*}(y^k + \sigma_k \Sigma K (2x^{k+1} - x^k)).
+  \end{aligned}
+\end{equation}
+In every iteration, the primal and dual residuals are given as
+\begin{equation} 
+  \begin{aligned}
+    p^{k+1} &= \norm{ (\tau_k \Tau)^{-1} (x^k - x^{k+1}) - K^T (y^k - y^{k+1})}_1,\\
+    d^{k+1} &= \norm{ (\sigma_k \Sigma)^{-1} (y^k - y^{k+1}) - K (x^k - x^{k+1})}_1.
+  \end{aligned}
+\end{equation}
+Based on the residuals, the step sizes $\tau_k$ and $\sigma_k$ are adaptively chosen. The backtracking condition evaluates as
+\begin{equation}
+  \begin{aligned}
+    b_k &= \frac{2 \tau_k \sigma_k \iprod{y^{k+1} - y^k}{K (x^{k+1} - x^k)}}{\gamma \sigma_k \iprod{\Tau^{-1}(x^{k+1} - x^k)}{x^{k+1} - x^k} + \gamma \tau_k \iprod{\Sigma^{-1}(y^{k+1} - y^k)}{y^{k+1} - y^k}}.
+\end{aligned}
+\end{equation}
+
+
+\end{document}
 

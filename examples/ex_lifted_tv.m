@@ -19,10 +19,10 @@
 
 %% data term
 im = imread('data/surprised-cat.jpg');
-im = imresize(im, 0.25);
+im = imresize(im, 0.05);
 [ny, nx] = size(im);
 
-L = 25;  % number of labels
+L = 8;  % number of labels
 t = linspace(0, 1, L); % label space, equidistant
 N = nx * ny;
 

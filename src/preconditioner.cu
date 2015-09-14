@@ -60,8 +60,6 @@ void Preconditioner::ComputeAlpha(
       h_left[i] = 1. / sum;
     else
       h_left[i] = 1.; // should be set to infinity, but might cause NaN
-
-    //std::cout << "row sum:" << sum << std::endl;
   }
 
   // compute right preconditioner as sum over matrix columns
@@ -72,8 +70,6 @@ void Preconditioner::ComputeAlpha(
       h_right[i] = 1. / sum;
     else
       h_right[i] = 1.; // should be set to infinity, but might cause NaN
-
-    //std::cout << "col sum:" << sum << std::endl;
   }
 
   // average diagonal entries where prox doesn't allow diagonal steps
