@@ -7,6 +7,7 @@
 #include "solver_backend_pdhg.hpp"
 #include "util/util.hpp"
 
+// used for sorting prox operators according to their starting index
 struct ProxCompare {
   bool operator()(Prox* const& left, Prox* const& right) {
     if(left->index() <= right->index())
@@ -16,6 +17,9 @@ struct ProxCompare {
   }
 };
 
+/**
+ * @brief Checks whether the whole domain is covered by prox operators.
+ */
 bool CheckDomainProx(const std::vector<Prox *>& proxs, int n) {
   int num_proxs = proxs.size();
 
@@ -145,6 +149,11 @@ void Solver::Solve() {
     if(i >= cb_iters.front() || is_converged) {
       backend_->iterates(h_primal_, h_dual_);
       callback_(i + 1, h_primal_, h_dual_, false);
+
+      if(opts_.verbose) {
+        std::cout << backend_->status();
+      }
+      
       cb_iters.pop_front();
     }
 
@@ -176,35 +185,33 @@ std::string SolverOptions::get_string() const {
   if(backend == kBackendPDHG) {
     ss << " PDHG,";
 
-    switch(pdhg) {
-      case kPDHGAlg1:
-        ss << " with constant steps (Alg. 1)." << std::endl;
+    switch(adapt) {
+      case kAdaptNone:
+        ss << " with constant steps." << std::endl;
         break;
 
-      case kPDHGAlg2:
-        ss << " accelerated version for strongly convex problems (Alg. 2). gamma = " << gamma << std::endl;
+      case kAdaptStrong:
+        ss << " accelerated version for strongly convex problems (Alg. 2). gamma = " << ad_strong.gamma << std::endl;
         break;
 
-      case kPDHGAdapt:
-        ss << " adaptive step sizes. (alpha0 = " << alpha0;
-        ss << ", nu = " << nu;
-        ss << ", delta = " << delta;
-        ss << ", s = " << s << ")." << std::endl;
+      case kAdaptBalance:
+        ss << " residual balancing. (alpha0 = " << ad_balance.alpha0;
+        ss << ", nu = " << ad_balance.nu;
+        ss << ", delta = " << ad_balance.delta;
+        ss << ", s = " << ad_balance.s << ")." << std::endl;
         break;
 
-      case kPDHGBacktrack:
-        ss << " adaptive step sizes + backtracking. (alpha0 = " << alpha0;
-        ss << ", nu = " << nu;
-        ss << ", delta = " << delta;
-        ss << ", s = " << s;
-        ss << ", gamma = " << bt_gamma;
-        ss << ", beta = " << bt_beta << ")." << std::endl;
+      case kAdaptConverge:
+        ss << " residual converging. (delta = " << ad_converge.delta;
+        ss << ", tau = " << ad_converge.tau;
+        ss << std::endl;
         break;
     }
   }
   ss << " - max_iters: " << max_iters << std::endl;
   ss << " - cb_iters: " << cb_iters << std::endl;
-  ss << " - tolerance: " << tolerance << std::endl;
+  ss << " - tol_primal: " << tol_primal << std::endl;
+  ss << " - tol_dual: " << tol_dual << std::endl;
   ss << " - verbose: " << verbose << std::endl;
   ss << " - preconditioning: ";
 

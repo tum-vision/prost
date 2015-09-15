@@ -19,10 +19,10 @@
 
 %% data term
 im = imread('data/surprised-cat.jpg');
-im = imresize(im, 0.05);
+im = imresize(im, 0.1);
 [ny, nx] = size(im);
 
-L = 8;  % number of labels
+L = 32;  % number of labels
 t = linspace(0, 1, L); % label space, equidistant
 N = nx * ny;
 
@@ -74,15 +74,28 @@ prox_g = {
 prox_hc = {
     prox_1d(0, N, 'zero', 1,0,1,1,0) };
 
+%% build ground truth
+[val, ind] = min(reshape(f, nx * ny, L)');
+result_gt = t(ind);
+u_opt = zeros(nx * ny, L);
+for i=1:nx*ny
+    u_opt(i, ind(i)) = 1;
+end
+
+en_opt = u_opt(:)' * f;
 
 %% solve problem
 opts = pdsolver_opts();
-opts.pdhg_type = 'backtrack';
-opts.max_iters = 50;
+opts.adapt = 'converge';
+opts.bt_enabled = true;
+opts.max_iters = 10000;
 opts.cb_iters = 10;
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;
-opts.callback = @ex_lifted_tv_callback;
+opts.tol_primal = 0.05;
+opts.tol_dual = 0.05;
+opts.callback = @(it, x, y) ex_lifted_tv_callback(it, x, y, f, nx, ...
+                                                  ny, L, en_opt);
 %[uw, qrs] = pdsolver(K, prox_g, prox_hc, opts);
 tic;
 [u, s] = pdsolver(K, prox_g, prox_hc, opts);
@@ -97,9 +110,6 @@ toc;
 [val, ind] = max(reshape(u, nx * ny, L)');
 result = t(ind);
 
-%analytical result
-[val, ind] = min(reshape(f, nx * ny, L)');
-result_gt = t(ind);
 
 figure;
 subplot(1,3,1);

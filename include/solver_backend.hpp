@@ -32,6 +32,7 @@ public:
 protected:
   OptimizationProblem problem_;
   SolverOptions opts_;
+  int iteration_;
 };
 
 #endif

@@ -16,12 +16,11 @@ enum SolverBackendType
   kBackendPDHG,
 };
 
-enum BackendPDHGType
-{
-  kPDHGAlg1,
-  kPDHGAlg2,
-  kPDHGAdapt,
-  kPDHGBacktrack,
+enum AdaptivityType {
+  kAdaptNone,           // constant step sizes
+  kAdaptStrong, // adapts step sizes based on strong convexity
+  kAdaptBalance,        // tries to balance residuals
+  kAdaptConverge,       // lets one of the residuals converge first, then adapts.
 };
 
 struct SolverOptions {
@@ -30,19 +29,26 @@ struct SolverOptions {
     backend = kBackendPDHG;
     max_iters = 1000;
     cb_iters = 10;
-    tolerance = 0.05;
+    tol_primal = 1.0;
+    tol_dual = 1.0;
     verbose = true;
-    
+
+    // preconditioning
     precond = kPrecondScalar;
     precond_alpha = 1;
-    
-    pdhg = kPDHGAlg1;
-    gamma = 0;
-    alpha0 = 0.5;
-    nu = 0.95;
-    delta = 1.5;
-    s = 10;
 
+    // adaptivity
+    adapt = kAdaptNone;
+    ad_strong.gamma = 0;
+    ad_balance.alpha0 = 0.5;
+    ad_balance.nu = 0.95;
+    ad_balance.delta = 1.5;
+    ad_balance.s = 10;
+    ad_converge.delta = 1.05;
+    ad_converge.tau = 0.8;
+
+    // backtracking
+    bt_enabled = false;
     bt_beta = 0.95;
     bt_gamma = 0.75;
   }
@@ -54,18 +60,39 @@ struct SolverOptions {
   // generic solver options
   int max_iters;
   int cb_iters;
-  real tolerance;
+  real tol_primal;
+  real tol_dual;
   bool verbose;
 
   // parameters for preconditioner
   PreconditionerType precond;
   real precond_alpha;
 
-  // parameters for pdhg
-  BackendPDHGType pdhg;
-  real gamma; // strong convexity gamma
-  real alpha0, nu, delta, s;
-  real bt_beta, bt_gamma; // backtracking parameters
+  // adaptivity parameters for pdhg
+  struct AdaptParamsStrong {
+    real gamma;
+  };
+
+  struct AdaptParamsBalance {
+    real alpha0;
+    real nu;
+    real delta;
+    real s;
+  };
+
+  struct AdaptParamsConverge {
+    real delta;
+    real tau;
+  };
+  
+  AdaptivityType adapt;
+  AdaptParamsStrong ad_strong;
+  AdaptParamsBalance ad_balance;
+  AdaptParamsConverge ad_converge;
+  
+  // backtracking parameters
+  bool bt_enabled;
+  real bt_beta, bt_gamma;
 };
 
 struct OptimizationProblem {

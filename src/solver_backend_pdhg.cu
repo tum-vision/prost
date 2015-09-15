@@ -163,7 +163,7 @@ void ComputeDualResidualPDHG(
       (d_kx_prev[idx] - d_kx[idx]);
 }
 
-void SolverBackendPDHG::PerformIteration() {
+void SolverBackendPDHG::PerformIteration() {  
   int n = problem_.mat->ncols();
   int m = problem_.mat->nrows();
   
@@ -251,7 +251,7 @@ void SolverBackendPDHG::PerformIteration() {
   //std::cout << res_primal_ << "," << res_dual_ << std::endl;
 
   // if backtracking is enabled, update step sizes
-  if(opts_.pdhg == kPDHGBacktrack) {
+  if(opts_.bt_enabled == true) {
     real num, denom1, denom2;
     
     // compute numerator
@@ -289,43 +289,62 @@ void SolverBackendPDHG::PerformIteration() {
     real b = (2.0 * tau_ * sigma_ * num) / (opts_.bt_gamma * (sigma_ * denom1 + tau_ * denom2));
 
     if(b > 1) {
+      /*
       std::cout << "bt_gamma=" << opts_.bt_gamma << std::endl;
       std::cout << "num=" << num << ", denom1=" << denom1 << ", denom2=" << denom2 << std::endl;
       std::cout << b << ", " << tau_ << ", " << sigma_ << ", tau*sigma=" << tau_ * sigma_ << std::endl;
-
+      */
+      
       tau_ = opts_.bt_beta * tau_ / b;
       sigma_ = opts_.bt_beta * sigma_ / b;
 
-      std::cout << "new_tau=" << tau_ << ", new_sigma=" << sigma_ << ", " << tau_ * sigma_ << std::endl;
+      //      std::cout << "new_tau=" << tau_ << ", new_sigma=" << sigma_ << ", " << tau_ * sigma_ << std::endl;
     }
   }
   
   // adapt step-sizes according to chosen algorithm
-  switch(opts_.pdhg) {
-    case kPDHGAlg1: // fixed step sizes, do nothing.
+  switch(opts_.adapt) {
+    case kAdaptNone: // fixed step sizes, do nothing.
       break;
 
-    case kPDHGAlg2: // adapt based on strong convexity constant gamma
+    case kAdaptStrong: // adapt based on strong convexity constant gamma
       // TODO: implement me!
       break;
 
-    case kPDHGBacktrack: 
-    case kPDHGAdapt: { // adapt based on residuals
+    case kAdaptBalance: { // adapt based on residuals
 
-      if(res_primal_ > opts_.s * res_dual_ * opts_.delta) {
+      if(res_primal_ > opts_.ad_balance.s * res_dual_ * opts_.ad_balance.delta) {
         tau_ = tau_ / (1 - alpha_);
         sigma_ = sigma_ * (1 - alpha_);
-        alpha_ = alpha_ * opts_.nu;
+        alpha_ = alpha_ * opts_.ad_balance.nu;
       }
-      if(res_primal_ < opts_.s * res_dual_ / opts_.delta) {
+      if(res_primal_ < opts_.ad_balance.s * res_dual_ / opts_.ad_balance.delta) {
         tau_ = tau_ * (1 - alpha_);
         sigma_ = sigma_ / (1 - alpha_);
-        alpha_ = alpha_ * opts_.nu;
+        alpha_ = alpha_ * opts_.ad_balance.nu;
       }
 
     } break;
+
+    case kAdaptConverge: {
+
+      if( (res_dual_ < opts_.tol_dual) &&
+          (opts_.ad_converge.tau * iteration_ > adc_l_) ) {
+        adc_u_ = iteration_;
+        tau_ = tau_ * opts_.ad_converge.delta;
+        sigma_ = sigma_ / opts_.ad_converge.delta;
+      }
+      else if( (res_primal_ < opts_.tol_primal) &&
+               (opts_.ad_converge.tau * iteration_ > adc_u_) ) {
+        adc_l_ = iteration_;
+        tau_ = tau_ / opts_.ad_converge.delta;
+        sigma_ = sigma_ * opts_.ad_converge.delta;
+      }
+
+    };
   }
 
+  iteration_ ++;
   //std::cout << res_primal_ << ", " << res_dual_ << std::endl;
 }
 
@@ -349,7 +368,9 @@ bool SolverBackendPDHG::Initialize() {
   tau_ = 1;
   sigma_ = 1;
   theta_ = 1;
-  alpha_ = opts_.alpha0;
+  alpha_ = opts_.ad_balance.alpha0;
+  iteration_ = 0;
+  adc_l_ = adc_u_ = 0;
 
   // TODO: add possibility for non-zero initializations
   cudaMemset(d_x_, 0, n * sizeof(real));
@@ -391,11 +412,15 @@ void SolverBackendPDHG::iterates(real *primal, real *dual) {
 }
 
 bool SolverBackendPDHG::converged() {
-  return false; //std::max(res_primal_, res_dual_) < opts_.tolerance;
+  return (res_primal_ < opts_.tol_primal) &&
+         (res_dual_ < opts_.tol_dual);
 }
 
 std::string SolverBackendPDHG::status() {
   std::stringstream ss;
+
+  ss << "res_primal=" << res_primal_ << ", res_dual=" << res_dual_;
+  ss << ", tau=" << tau_ << ", sigma=" << sigma_ << std::endl;
 
   return ss.str();
 }

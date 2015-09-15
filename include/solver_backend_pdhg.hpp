@@ -48,6 +48,10 @@ protected:
   real alpha_; // adaptive step size parameter
   real res_primal_; // summed primal residual
   real res_dual_; // summed dual residual
+
+  // for adaptive step size rule from Boyd's paper
+  int adc_l_; 
+  int adc_u_;
 };
 
 #endif

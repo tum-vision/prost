@@ -48,7 +48,7 @@ SparseMatrix<real> *MatrixFromMatlab(const mxArray *pm) {
 void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **cb_func_handle) {
 
   std::string be_name(mxArrayToString(mxGetField(pm, 0, "backend")));
-  std::string pdhg_type(mxArrayToString(mxGetField(pm, 0, "pdhg_type")));
+  std::string adapt_type(mxArrayToString(mxGetField(pm, 0, "adapt")));
   std::string precond(mxArrayToString(mxGetField(pm, 0, "precond")));
 
   std::transform(be_name.begin(),
@@ -56,9 +56,9 @@ void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **c
                  be_name.begin(),
                  ::tolower);
   
-  std::transform(pdhg_type.begin(),
-                 pdhg_type.end(),
-                 pdhg_type.begin(),
+  std::transform(adapt_type.begin(),
+                 adapt_type.end(),
+                 adapt_type.begin(),
                  ::tolower);
 
   std::transform(precond.begin(),
@@ -68,13 +68,17 @@ void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **c
   
   opts.max_iters = (int) mxGetScalar(mxGetField(pm, 0, "max_iters"));
   opts.cb_iters = (int) mxGetScalar(mxGetField(pm, 0, "cb_iters"));
-  opts.tolerance = (real) mxGetScalar(mxGetField(pm, 0, "tolerance"));
-  opts.gamma = (real) mxGetScalar(mxGetField(pm, 0, "gamma"));
-  opts.alpha0 = (real) mxGetScalar(mxGetField(pm, 0, "alpha0"));
-  opts.nu = (real) mxGetScalar(mxGetField(pm, 0, "nu"));
-  opts.delta = (real) mxGetScalar(mxGetField(pm, 0, "delta"));
-  opts.s = (real) mxGetScalar(mxGetField(pm, 0, "s"));
+  opts.tol_primal = (real) mxGetScalar(mxGetField(pm, 0, "tol_primal"));
+  opts.tol_dual = (real) mxGetScalar(mxGetField(pm, 0, "tol_dual"));
+  opts.ad_strong.gamma = (real) mxGetScalar(mxGetField(pm, 0, "ads_gamma"));
+  opts.ad_balance.alpha0 = (real) mxGetScalar(mxGetField(pm, 0, "adb_alpha0"));
+  opts.ad_balance.nu = (real) mxGetScalar(mxGetField(pm, 0, "adb_nu"));
+  opts.ad_balance.delta = (real) mxGetScalar(mxGetField(pm, 0, "adb_delta"));
+  opts.ad_balance.s = (real) mxGetScalar(mxGetField(pm, 0, "adb_s"));
+  opts.ad_converge.delta = (real) mxGetScalar(mxGetField(pm, 0, "adc_delta"));
+  opts.ad_converge.tau = (real) mxGetScalar(mxGetField(pm, 0, "adc_tau"));
   opts.verbose = (bool) mxGetScalar(mxGetField(pm, 0, "verbose"));
+  opts.bt_enabled = (bool) mxGetScalar(mxGetField(pm, 0, "bt_enabled"));
   opts.bt_beta = (real) mxGetScalar(mxGetField(pm, 0, "bt_beta"));
   opts.bt_gamma = (real) mxGetScalar(mxGetField(pm, 0, "bt_gamma"));
   opts.precond_alpha = (real) mxGetScalar(mxGetField(pm, 0, "precond_alpha"));
@@ -84,14 +88,14 @@ void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **c
   else
     mexErrMsgTxt("Unknown backend.");
 
-  if("alg1" == pdhg_type)
-    opts.pdhg = kPDHGAlg1;
-  else if("alg2" == pdhg_type)
-    opts.pdhg = kPDHGAlg2;
-  else if("adapt" == pdhg_type)
-    opts.pdhg = kPDHGAdapt;
-  else if("backtrack" == pdhg_type)
-    opts.pdhg = kPDHGBacktrack;
+  if("none" == adapt_type)
+    opts.adapt = kAdaptNone;
+  else if("strong" == adapt_type)
+    opts.adapt = kAdaptStrong;
+  else if("balance" == adapt_type)
+    opts.adapt = kAdaptBalance;
+  else if("converge" == adapt_type)
+    opts.adapt = kAdaptConverge;
   else
     mexErrMsgTxt("Unknown PDHG variant.");
 
