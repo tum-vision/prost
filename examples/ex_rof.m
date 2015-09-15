@@ -8,7 +8,7 @@ im = imresize(im, 0.25);
 
 f = double(im(:)) / 255.;
 K = grad_forw_2d(nx, ny, 1);
-lmb = 1.5; 
+lmb = 0.5; 
 
 %% setup prox operators
 prox_g = { prox_1d(0, nx * ny, 'square', 1, f, 1, 0, 0) };
@@ -25,8 +25,8 @@ opts.bt_enabled = false;
 opts.max_iters = 5000;
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;
-opts.tol_primal = 1;
-opts.tol_dual = 1;
+opts.tol_primal = 0.05;
+opts.tol_dual = 0.05;
 opts.callback = @(it, x, y) ex_rof_callback(K, f, lmb, it, x, y);
 [x, y] = pdsolver(K, prox_g, prox_hstar, opts);
 

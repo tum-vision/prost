@@ -72,6 +72,9 @@ bool Solver::Initialize() {
   h_dual_ = new real[problem_.nrows];
 
   // create preconditioners
+
+  std::cout << "Creating Preconditioners...";
+  std::cout.flush();
   problem_.precond = new Preconditioner(problem_.mat);
   switch(opts_.precond)
   {
@@ -88,6 +91,7 @@ bool Solver::Initialize() {
     case kPrecondEquil:
       return false; // not implemented yet
   }
+  std::cout << " done!" << std::endl;
 
   // create backend
   switch(opts_.backend)
