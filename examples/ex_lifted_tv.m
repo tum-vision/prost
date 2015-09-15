@@ -43,11 +43,11 @@ lmb_scaled = lmb * (t(2) - t(1)); % assumes equidistant labels
 K1 = grad_forw_2d(nx, ny, L)'; 
 % zeros
 K2 = sparse(N*L, 2*N*(L-1)); 
-% constraint
+% constraint for regularizer
 K3 = spdiags([ones(2*N*L,1), -ones(2*N*L,1)],[0, 2*N],2*N*(L-1),2*N*L);
-% constraint
+% constraint for regularizer
 K4 = -speye(2*N*(L-1));
-% sum constraint
+% sum constraint for primal variable
 K5 = spdiags(ones(N, L),(0:(L-1))*N,N,N*L);
 % zeros
 K6 = sparse(N, 2 * N * (L - 1));

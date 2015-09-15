@@ -2,11 +2,16 @@ TODOs:
  o Lifted TV rof denoising example
  o Lifted TV stereo example
  o Epigraph prox, continuous relaxation
- o Write helper functions for interleaved index calculation and double=>real conversion
+ o Add LinearOperator class, for now only LinearOperatorSparseMatrix,
+   maybe LinearOperatorZero (cudaMemset) and LinearOperatorIdentity (cudaMemcpy). 
+ o Write helper functions for interleaved index calculation and
+ double=>real conversion
+ o Check whether is necessary to static_cast<real>(1) and so
+   on... (compile time cast!!)
+ o Inertial/overrelaxed primal-dual? 
  o Look into matrix equilibriation preconditioner, constrained equilibriation
  o Test Moreau prox
- o Stopping Criterion
- o Write proper error handling/checking code, add exceptions and have
+ o Write proper error handling/checking code, with exceptions and have
    meaningful error messages.
  o Resolve all TODOs in code
  o Implement debug/verbose flag where solver outputs lots of stuff
@@ -16,12 +21,25 @@ TODOs:
  o Investigate why everything crashes when MATLAB GUI is on but works
    with console
  o Reference MATLAB implementation of backends/proxs for debugging?
- o run with valgrind to check for memleaks
- o Graph Projection Splitting backend with preconditioned CG solver
+ o run with valgrind/cuda-memcheck/cuda-gdb to check for memleaks
  o Check for Memory Leaks and Out-Of-Bounds accesses in CUDA kernels.
  o Add doxygen comments
  o -Werror, -Wall compiler flags
  o Unit tests for prox operators, etc
+ o Check how fast a naive multi-GPU sparse/matrix vector product is,
+   add multi-GPU support if slowdown isn't too large. Multi-GPU support
+   requires refactoring of most parts of the library... maybe have
+   something like a Vector-class or OptimVariable-class which resides
+   on several GPUs and the LinearOperator and ProximalOperator class
+   can act on it. It should also support basic operations like adding,
+   scaling, reductions, etc.
+   If everything has to get refactored anyways, one might consider
+   also adding CPU support. Check how switching between CPU/GPU works
+   e.g. in Caffe. Also check how Multi-GPU support works in Caffe.
+ o Graph Projection Splitting backend with indirect CG solver
+   (e.g. CGLS).
+ o Python/C/C++ bindings
+ o Implement some example problems
 
 Done:
  x Adapt to google C++ style guide
@@ -34,15 +52,17 @@ Done:
  x Simplex Projection prox (not useful due to limited shared memory)
  x Diagonal Preconditioning a la Pock
  x Add check if prox operators cover the whole primal/dual domain
+ x Stopping Criterion?
 
-TODO prox:
+Ideas of cool Prox-Operators to implement:
  o huber, identity, 0 <= x <= 1, x <= 0, max(0, x), pogs
- o q>1, elastic net, ...
+ o check Combettes papers
+ o q>1, elastic net
  o constraint sets from lifting papers
  o nuclear norm
  o x^T A x + b^T x + c
  o second order cone projection
- o halfspace
+ o halfspace projection
  o linear operator (1/2) ||Ax-b||^2 with cuFFT
  o linear operator (preconditioned) conjugate gradient
  o elastic net
@@ -53,5 +73,6 @@ TODO prox:
  o (nonconvex nuclear norm)
  o (l^q (0<=q<infty) 1d, nuclear & 2-norm)
  o (mumford-shah 1d & 2-norm)
- o (smooth mumford-shah 1d & 2-norm)
+ o (smooth (semiconvex) mumford-shah 1d & 2-norm)
+ o ...?
  
