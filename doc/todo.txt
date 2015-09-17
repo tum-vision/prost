@@ -12,7 +12,7 @@ TODOs:
  o Look into matrix equilibriation preconditioner, constrained equilibriation
  o Test Moreau prox
  o Write proper error handling/checking code, with exceptions and have
-   meaningful error messages.
+   meaningful error messages. Have DEBUG mode, which outputs lots of information.
  o Resolve all TODOs in code
  o Implement debug/verbose flag where solver outputs lots of stuff
  o Write CMakeLists.txt and pdsolver_build.m properly so it builds

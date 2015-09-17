@@ -26,10 +26,15 @@ bool CheckDomainProx(const std::vector<Prox *>& proxs, int n) {
   std::vector<Prox *> sorted_proxs = proxs;
   std::sort(sorted_proxs.begin(), sorted_proxs.end(), ProxCompare());
 
+  //std::cout << "num_proxs=" << num_proxs << ":" << std::endl;
   for(int i = 0; i < num_proxs - 1; i++) {
+    //std::cout << sorted_proxs[i]->index() << ", " << sorted_proxs[i]->end() << std::endl;
+    
     if(sorted_proxs[i]->end() != (sorted_proxs[i + 1]->index() - 1))
       return false;
   }
+
+  //std::cout << sorted_proxs[num_proxs - 1]->index() << ", " << sorted_proxs[num_proxs - 1]->end() << ", end=" << n-1 << std::endl;
 
   if(sorted_proxs[num_proxs - 1]->end() != (n - 1))
     return false;

@@ -21,12 +21,14 @@ prox_hstar = { prox_norm2(0, nx * ny, 2, false, 'indicator_leq', ...
 %% set options and run algorithm
 opts = pdsolver_opts();
 opts.adapt = 'balance';
+opts.verbose = false;
 opts.bt_enabled = false;
-opts.max_iters = 5000;
+opts.max_iters = 15000;
+opts.cb_iters = 10;
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;
-opts.tol_primal = 0.05;
-opts.tol_dual = 0.05;
+opts.tol_primal = 0.01;
+opts.tol_dual = 0.01;
 opts.callback = @(it, x, y) ex_rof_callback(K, f, lmb, it, x, y);
 [x, y] = pdsolver(K, prox_g, prox_hstar, opts);
 

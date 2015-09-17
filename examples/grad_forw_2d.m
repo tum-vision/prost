@@ -13,6 +13,8 @@ function K = grad_forw_2d(nx, ny, nc)
     dy = spdiags([[-ones(ny - 1, 1); 0], ones(ny, 1)], [0, 1], ny, ny);
     dy = kron(speye(nx), dy);
     
-    dx = spdiags([[-ones(ny*(nx-1),1); zeros(ny, 1)], ones(nx*ny,1)], [0, ny], nx*ny,nx*ny);
+    dx = spdiags([[-ones(ny*(nx-1),1); zeros(ny, 1)], ones(nx*ny,1)], ...
+                 [0, ny], nx*ny,nx*ny);
+    
     K = kron(speye(nc), [dx; dy]);
 end
