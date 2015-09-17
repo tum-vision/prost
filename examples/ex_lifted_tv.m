@@ -21,7 +21,7 @@ im = imread('data/surprised-cat.jpg');
 im = imresize(im, 0.25);
 [ny, nx] = size(im);
 
-L = 16;  % number of labels
+L = 22;  % number of labels
 t = linspace(0, 1, L); % label space, equidistant
 N = nx * ny;
 
