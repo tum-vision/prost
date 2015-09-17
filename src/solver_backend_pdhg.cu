@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "util/cuwrap.hpp"
+#include "util/util.hpp"
 
 /**
  * @brief ...
@@ -179,7 +180,7 @@ void SolverBackendPDHG::PerformIteration() {
       problem_.precond->right(),
       d_kty_,
       n);
-  cudaDeviceSynchronize();
+  CUDA_CHECK;
 
   // remember previous primal iterate
   std::swap(d_x_, d_x_prev_);
@@ -206,7 +207,7 @@ void SolverBackendPDHG::PerformIteration() {
        d_kx_,
        d_kx_prev_,
        m);
-  cudaDeviceSynchronize();
+  CUDA_CHECK;
 
   // apply prox_hc
   std::swap(d_y_, d_y_prev_);
@@ -231,6 +232,7 @@ void SolverBackendPDHG::PerformIteration() {
       tau_,
       problem_.precond->right(),
       n);
+  CUDA_CHECK;
 
   ComputeDualResidualPDHG<<<grid_m, block>>>(
       d_res_dual_,
@@ -242,9 +244,8 @@ void SolverBackendPDHG::PerformIteration() {
       problem_.precond->left(),
       theta_,
       m);
+  CUDA_CHECK;
   
-  cudaDeviceSynchronize();
-
   cuwrap::asum<real>(cublas_handle_, d_res_primal_, n, &res_primal_);
   cuwrap::asum<real>(cublas_handle_, d_res_dual_, m, &res_dual_);
 
@@ -264,7 +265,8 @@ void SolverBackendPDHG::PerformIteration() {
         problem_.precond->left(),
         problem_.precond->right(),
         m);
-    cudaDeviceSynchronize();
+    CUDA_CHECK;
+    
     cuwrap::asum<real>(cublas_handle_, d_res_dual_, m, &num);
     
     // compute denominator
@@ -274,7 +276,8 @@ void SolverBackendPDHG::PerformIteration() {
         d_x_prev_,
         problem_.precond->right(),
         n);
-    cudaDeviceSynchronize();
+    CUDA_CHECK;
+    
     cuwrap::asum<real>(cublas_handle_, d_res_primal_, n, &denom1);
 
     ComputeBtDenom2PDHG<<<grid_m, block>>>(
@@ -283,7 +286,8 @@ void SolverBackendPDHG::PerformIteration() {
         d_y_prev_,
         problem_.precond->left(),
         m);
-    cudaDeviceSynchronize();
+    CUDA_CHECK;
+
     cuwrap::asum<real>(cublas_handle_, d_res_dual_, m, &denom2);
 
     real b = (2.0 * tau_ * sigma_ * num) / (opts_.bt_gamma * (sigma_ * denom1 + tau_ * denom2));
@@ -353,17 +357,17 @@ bool SolverBackendPDHG::Initialize() {
   int n = problem_.mat->ncols();
   int l = std::max(m, n);
 
-  cudaMalloc((void **)&d_x_, n * sizeof(real));
-  cudaMalloc((void **)&d_x_prev_, n * sizeof(real));
-  cudaMalloc((void **)&d_kty_, n * sizeof(real));
-  cudaMalloc((void **)&d_kty_prev_, n * sizeof(real));
-  cudaMalloc((void **)&d_res_primal_, n * sizeof(real));
-  cudaMalloc((void **)&d_y_, m * sizeof(real));
-  cudaMalloc((void **)&d_y_prev_, m * sizeof(real));
-  cudaMalloc((void **)&d_kx_, m * sizeof(real));
-  cudaMalloc((void **)&d_kx_prev_, m * sizeof(real));
-  cudaMalloc((void **)&d_res_dual_, m * sizeof(real));
-  cudaMalloc((void **)&d_prox_arg_, l * sizeof(real));  
+  cudaMalloc((void **)&d_x_, n * sizeof(real)); CUDA_CHECK;
+  cudaMalloc((void **)&d_x_prev_, n * sizeof(real)); CUDA_CHECK;
+  cudaMalloc((void **)&d_kty_, n * sizeof(real)); CUDA_CHECK;
+  cudaMalloc((void **)&d_kty_prev_, n * sizeof(real)); CUDA_CHECK;
+  cudaMalloc((void **)&d_res_primal_, n * sizeof(real)); CUDA_CHECK;
+  cudaMalloc((void **)&d_y_, m * sizeof(real)); CUDA_CHECK;
+  cudaMalloc((void **)&d_y_prev_, m * sizeof(real)); CUDA_CHECK;
+  cudaMalloc((void **)&d_kx_, m * sizeof(real)); CUDA_CHECK;
+  cudaMalloc((void **)&d_kx_prev_, m * sizeof(real)); CUDA_CHECK;
+  cudaMalloc((void **)&d_res_dual_, m * sizeof(real)); CUDA_CHECK;
+  cudaMalloc((void **)&d_prox_arg_, l * sizeof(real)); CUDA_CHECK;
 
   tau_ = 1;
   sigma_ = 1;
@@ -373,17 +377,17 @@ bool SolverBackendPDHG::Initialize() {
   adc_l_ = adc_u_ = 0;
 
   // TODO: add possibility for non-zero initializations
-  cudaMemset(d_x_, 0, n * sizeof(real));
-  cudaMemset(d_x_prev_, 0, n * sizeof(real));
-  cudaMemset(d_kty_, 0, n * sizeof(real));
-  cudaMemset(d_kty_prev_, 0, n * sizeof(real));
-  cudaMemset(d_res_primal_, 0, n * sizeof(real));
-  cudaMemset(d_y_, 0, m * sizeof(real));
-  cudaMemset(d_y_prev_, 0, m * sizeof(real));
-  cudaMemset(d_res_dual_, 0, m * sizeof(real));
-  cudaMemset(d_kx_, 0, m * sizeof(real));
-  cudaMemset(d_kx_prev_, 0, m * sizeof(real));
-  cudaMemset(d_prox_arg_, 0, l * sizeof(real));
+  cudaMemset(d_x_, 0, n * sizeof(real)); CUDA_CHECK;
+  cudaMemset(d_x_prev_, 0, n * sizeof(real)); CUDA_CHECK;
+  cudaMemset(d_kty_, 0, n * sizeof(real)); CUDA_CHECK;
+  cudaMemset(d_kty_prev_, 0, n * sizeof(real)); CUDA_CHECK;
+  cudaMemset(d_res_primal_, 0, n * sizeof(real)); CUDA_CHECK;
+  cudaMemset(d_y_, 0, m * sizeof(real)); CUDA_CHECK;
+  cudaMemset(d_y_prev_, 0, m * sizeof(real)); CUDA_CHECK;
+  cudaMemset(d_res_dual_, 0, m * sizeof(real)); CUDA_CHECK;
+  cudaMemset(d_kx_, 0, m * sizeof(real)); CUDA_CHECK;
+  cudaMemset(d_kx_prev_, 0, m * sizeof(real)); CUDA_CHECK;
+  cudaMemset(d_prox_arg_, 0, l * sizeof(real)); CUDA_CHECK;
 
   cublasCreate(&cublas_handle_);
   

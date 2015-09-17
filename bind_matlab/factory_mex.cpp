@@ -26,16 +26,20 @@ SparseMatrix<real> *MatrixFromMatlab(const mxArray *pm) {
 
   // convert from mwIndex -> int, double -> real
   real *val_real = new real[nnz];
-  int *ptr_int = new int[n + 1];
-  int *ind_int = new int[nnz];
+  int32_t *ptr_int = new int32_t[n + 1];
+  int32_t *ind_int = new int32_t[nnz];
 
+  uint64_t max_ind = 0, max_ptr = 0;
   for(int i = 0; i < nnz; i++) {
     val_real[i] = (real)val[i];
-    ind_int[i] = (int)ind[i];
+    ind_int[i] = (int32_t)ind[i];
   }
   
-  for(int i = 0; i < n + 1; i++) 
-    ptr_int[i] = (int) ptr[i];
+  for(int i = 0; i < n + 1; i++) {
+    ptr_int[i] = (int32_t) ptr[i];
+
+    assert(ptr_int[i] >= 0 && ptr_int[i] <= nnz); 
+  }
   
   SparseMatrix<real> *mat = SparseMatrix<real>::CreateFromCSC(
       m, n, nnz, val_real, ptr_int, ind_int);

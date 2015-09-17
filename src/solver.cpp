@@ -10,7 +10,7 @@
 // used for sorting prox operators according to their starting index
 struct ProxCompare {
   bool operator()(Prox* const& left, Prox* const& right) {
-    if(left->index() <= right->index())
+    if(left->index() < right->index())
       return true;
 
     return false;
@@ -31,13 +31,19 @@ bool CheckDomainProx(const std::vector<Prox *>& proxs, int n) {
     //std::cout << sorted_proxs[i]->index() << ", " << sorted_proxs[i]->end() << std::endl;
     
     if(sorted_proxs[i]->end() != (sorted_proxs[i + 1]->index() - 1))
+    {
+      std::cout << "prox_index=" << i << ", (" << sorted_proxs[i]->end() << " != " << sorted_proxs[i+1]->index() - 1 << ")" << std::endl;
       return false;
+    }
   }
 
   //std::cout << sorted_proxs[num_proxs - 1]->index() << ", " << sorted_proxs[num_proxs - 1]->end() << ", end=" << n-1 << std::endl;
 
-  if(sorted_proxs[num_proxs - 1]->end() != (n - 1))
+  if(sorted_proxs[num_proxs - 1]->end() != (n - 1)) {
+    std::cout << "prox_index=" << num_proxs - 1 << ", (" << sorted_proxs[num_proxs - 1]->end() << " != " << (n-1) << ")" << std::endl;
+    
     return false;
+  }
 
   return true;
 }
@@ -110,27 +116,34 @@ bool Solver::Initialize() {
   }
 
   // check if whole domain is covered by prox operators
-  if(!CheckDomainProx(problem_.prox_g, problem_.ncols))
+  if(!CheckDomainProx(problem_.prox_g, problem_.ncols)) {
+    std::cout << "ERROR: prox_g does not cover the whole domain!" << std::endl;
     return false;
+  }
 
-  if(!CheckDomainProx(problem_.prox_hc, problem_.nrows))
+  if(!CheckDomainProx(problem_.prox_hc, problem_.nrows)) {
+    std::cout << "ERROR: prox_hc does not cover the whole domain!" << std::endl;
+
     return false;
+  }
 
   // sort prox operators according to their index()
   // check if prox[i].end() == prox[i+1].index() - 1
   // check if prox[last].end() == n - 1
 
-  if(!backend_->Initialize())
+  if(!backend_->Initialize()) {
+    std::cout << "Failed to initialize the backend!" << std::endl;
+
     return false;
+  }
 
   return true;
 }
 
-void Solver::gpu_mem_amount(size_t& gpu_mem_required, size_t& gpu_mem_avail) {
+void Solver::gpu_mem_amount(size_t& gpu_mem_required, size_t& gpu_mem_avail, size_t& gpu_mem_free) {
   // calculate memory requirements
   gpu_mem_required = 0;
   gpu_mem_avail = 0;
-  size_t gpu_mem_free;
   
   for(int i = 0; i < problem_.prox_g.size(); ++i)
     gpu_mem_required += problem_.prox_g[i]->gpu_mem_amount();

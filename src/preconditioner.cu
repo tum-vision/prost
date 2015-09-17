@@ -52,7 +52,24 @@ void Preconditioner::ComputeAlpha(
   real *h_left = new real[m];
   real *h_right = new real[n];
 
+  std::cout << "m=" << m << ", n = " << n << "...";
+  std::cout.flush();
+
+  // compute right preconditioner as sum over matrix columns
+  std::cout << "colsum...";
+  std::cout.flush();
+  for(int i = 0; i < n; i++) {
+    real sum = mat_->col_sum(i, 2. - alpha);
+
+    if(sum > 0)
+      h_right[i] = 1. / sum;
+    else
+      h_right[i] = 1.; // should be set to infinity, but might cause NaN
+  }
+  
   // compute left preconditioner as sum over matrix rows
+  std::cout << "rowsum...";
+  std::cout.flush();
   for(int i = 0; i < m; i++) {
     real sum = mat_->row_sum(i, alpha);
 
@@ -62,17 +79,9 @@ void Preconditioner::ComputeAlpha(
       h_left[i] = 1.; // should be set to infinity, but might cause NaN
   }
 
-  // compute right preconditioner as sum over matrix columns
-  for(int i = 0; i < n; i++) {
-    real sum = mat_->col_sum(i, 2. - alpha);
-
-    if(sum > 0)
-      h_right[i] = 1. / sum;
-    else
-      h_right[i] = 1.; // should be set to infinity, but might cause NaN
-  }
-
   // average diagonal entries where prox doesn't allow diagonal steps
+  std::cout << "averaging...";
+  std::cout.flush();
   std::vector<std::vector<int> > indices_left = GetIndices(prox_hc);
   std::vector<std::vector<int> > indices_right = GetIndices(prox_g);
   AverageValues(h_left, indices_left);

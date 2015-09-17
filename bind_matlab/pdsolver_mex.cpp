@@ -53,6 +53,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   if(nlhs != 2)
     mexErrMsgTxt("Two outputs required.");
+
+  /*
+  size_t gpu_mem_free, gpu_mem_avail, gpu_mem_required;
+  cudaMemGetInfo(&gpu_mem_free, &gpu_mem_avail);
+  mexPrintf("Free GPU memory: %.3f (%.3f available)\n", gpu_mem_free / (1024. * 1024.), gpu_mem_avail / (1024. * 1024.));
+  */
   
   Solver solver;
   SolverOptions opts;
@@ -81,14 +87,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   
   // init and run solver
   if(solver.Initialize()) {
-    mexPrintf("Initialized solver successfully!\n");
-
-    size_t gpu_mem_avail, gpu_mem_required;
-    solver.gpu_mem_amount(gpu_mem_required, gpu_mem_avail);
-
-    mexPrintf("%.3fMBytes of GPU memory required (%.3fMBytes available).\n",
+    size_t gpu_mem_required, gpu_mem_avail, gpu_mem_free;
+    
+    solver.gpu_mem_amount(gpu_mem_required, gpu_mem_avail, gpu_mem_free);
+    mexPrintf("%.3fMBytes of GPU memory required (%.3fMBytes available) => %.3fMBytes free!\n",
               (double)gpu_mem_required / (1024. * 1024.),
-              (double)gpu_mem_avail / (1024. * 1024.));
+              (double)gpu_mem_avail / (1024. * 1024.),
+              (double)gpu_mem_free / (1024. * 1024.));
+
+    if(gpu_mem_required > gpu_mem_avail) {
+      mexErrMsgTxt("Out of memory!");
+    }
+    
+    mexPrintf("Initialized solver successfully!\n");
 
     solver.Solve();
 

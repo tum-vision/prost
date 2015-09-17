@@ -3,11 +3,54 @@
 
 #include <cuda_runtime.h>
 #include <cusparse.h>
+#include <cassert>
 #include <cmath>
 #include <memory.h>
 #include <cstdlib>
+#include <iostream>
+#include <stdint.h>
 
 #include "util/cuwrap.hpp"
+
+/**
+ * @brief converts CSR format to CSC format, not in-place,
+ *                 if a == NULL, only pattern is reorganized.
+ *                 the size of matrix is n x m.
+ */
+
+template<typename T>
+void csr2csc(int n, int m, int nz, T *a, int *col_idx, int *row_start,
+             T *csc_a, int *row_idx, int *col_start)
+{
+  int i, j, k, l;
+  int *ptr;
+
+  for (i=0; i<=m; i++) col_start[i] = 0;
+
+  /* determine column lengths */
+  for (i=0; i<nz; i++) col_start[col_idx[i]+1]++;
+
+  for (i=0; i<m; i++) col_start[i+1] += col_start[i];
+
+
+  /* go through the structure once more. Fill in output matrix. */
+
+  for (i=0, ptr=row_start; i<n; i++, ptr++)
+    for (j=*ptr; j<*(ptr+1); j++){
+      k = col_idx[j];
+      l = col_start[k]++;
+      row_idx[l] = i;
+      if (a) csc_a[l] = a[j];
+    }
+
+  /* shift back col_start */
+  for (i=m; i>0; i--) col_start[i] = col_start[i-1];
+
+  col_start[0] = 0;
+}
+
+
+               
 
 /**
  * @brief Wrapper class around cuSPARSE API.
@@ -36,8 +79,8 @@ public:
       int n,
       int nnz,
       real *val,
-      int *ptr,
-      int *ind)
+      int32_t *ptr,
+      int32_t *ind)
   {
     SparseMatrix<real> *mat = new SparseMatrix<real>;
 
@@ -50,41 +93,51 @@ public:
     mat->n_ = n;
     mat->nnz_ = nnz;
 
-    cudaMalloc((void **)&mat->d_ind_, sizeof(int) * 2 * mat->nnz_);
-    cudaMalloc((void **)&mat->d_ptr_, sizeof(int) * (mat->m_ + mat->n_ + 2));
+    cudaMalloc((void **)&mat->d_ind_, sizeof(int32_t) * 2 * mat->nnz_);
+    cudaMalloc((void **)&mat->d_ptr_, sizeof(int32_t) * (mat->m_ + mat->n_ + 2));
     cudaMalloc((void **)&mat->d_val_, sizeof(real) * 2 * mat->nnz_);
 
     mat->d_ind_t_ = &mat->d_ind_[mat->nnz_];
     mat->d_ptr_t_ = &mat->d_ptr_[mat->m_ + 1];
     mat->d_val_t_ = &mat->d_val_[mat->nnz_];
 
-    cudaMemcpy(mat->d_ind_t_, ind, sizeof(int) * mat->nnz_, cudaMemcpyHostToDevice);
-    cudaMemcpy(mat->d_ptr_t_, ptr, sizeof(int) * (mat->n_ + 1), cudaMemcpyHostToDevice);
+    cudaMemcpy(mat->d_ind_t_, ind, sizeof(int32_t) * mat->nnz_, cudaMemcpyHostToDevice);
+    cudaMemcpy(mat->d_ptr_t_, ptr, sizeof(int32_t) * (mat->n_ + 1), cudaMemcpyHostToDevice);
     cudaMemcpy(mat->d_val_t_, val, sizeof(real) * mat->nnz_, cudaMemcpyHostToDevice);
 
-    mat->FillTranspose();
-    cudaDeviceSynchronize();
-
-    mat->h_ind_ = new int[mat->nnz_];
-    mat->h_ptr_ = new int[mat->m_ + 1];
+    mat->h_ind_ = new int32_t[mat->nnz_];
+    mat->h_ptr_ = new int32_t[mat->m_ + 1];
     mat->h_val_ = new real[mat->nnz_];
 
-    mat->h_ind_t_ = new int[mat->nnz_];
-    mat->h_ptr_t_ = new int[mat->n_ + 1];
+    mat->h_ind_t_ = new int32_t[mat->nnz_];
+    mat->h_ptr_t_ = new int32_t[mat->n_ + 1];
     mat->h_val_t_ = new real[mat->nnz_];
 
-/*
-    cudaMemcpy(mat->h_ind_, mat->d_ind_, sizeof(int) * mat->nnz_, cudaMemcpyDeviceToHost);
-    cudaMemcpy(mat->h_ptr_, mat->d_ptr_, sizeof(int) * (mat->m_ + 1), cudaMemcpyDeviceToHost);
-    cudaMemcpy(mat->h_val_, mat->d_val_, sizeof(real) * mat->nnz_, cudaMemcpyDeviceToHost);
-*/
-    memcpy(mat->h_ind_, ind, sizeof(int) * mat->nnz_);
-    memcpy(mat->h_ptr_, ptr, sizeof(int) * (mat->m_ + 1));
-    memcpy(mat->h_val_, val, sizeof(real) * mat->nnz_);
+    memcpy(mat->h_ind_t_, ind, sizeof(int32_t) * mat->nnz_);
+    memcpy(mat->h_ptr_t_, ptr, sizeof(int32_t) * (mat->n_ + 1));
+    memcpy(mat->h_val_t_, val, sizeof(real) * mat->nnz_);
 
-    cudaMemcpy(mat->h_ind_t_, mat->d_ind_t_, sizeof(int) * mat->nnz_, cudaMemcpyDeviceToHost);
-    cudaMemcpy(mat->h_ptr_t_, mat->d_ptr_t_, sizeof(int) * (mat->n_ + 1), cudaMemcpyDeviceToHost);
-    cudaMemcpy(mat->h_val_t_, mat->d_val_t_, sizeof(real) * mat->nnz_, cudaMemcpyDeviceToHost);
+    // fill h_ind_, h_ptr_, h_val_ from transpose. csr to csc
+    csr2csc<real>(mat->n_,
+                  mat->m_,
+                  mat->nnz_,
+                  mat->h_val_t_,
+                  mat->h_ind_t_,
+                  mat->h_ptr_t_,
+                  mat->h_val_,
+                  mat->h_ind_,
+                  mat->h_ptr_);
+    
+    cudaMemcpy(mat->d_ind_, mat->h_ind_, sizeof(int32_t) * mat->nnz_, cudaMemcpyHostToDevice);
+    cudaMemcpy(mat->d_ptr_, mat->h_ptr_, sizeof(int32_t) * (mat->m_ + 1), cudaMemcpyHostToDevice);
+    cudaMemcpy(mat->d_val_, mat->h_val_, sizeof(real) * mat->nnz_, cudaMemcpyHostToDevice);
+
+    /*        
+    mat->FillTranspose();
+    cudaMemcpy(mat->h_ind_, mat->d_ind_, sizeof(int32_t) * mat->nnz_, cudaMemcpyDeviceToHost);
+    cudaMemcpy(mat->h_ptr_, mat->d_ptr_, sizeof(int32_t) * (mat->m_ + 1), cudaMemcpyDeviceToHost);
+    cudaMemcpy(mat->h_val_, mat->d_val_, sizeof(real) * mat->nnz_, cudaMemcpyDeviceToHost);
+    */
     
     return mat;
   }
@@ -102,16 +155,37 @@ public:
 
   real row_sum(int row, real alpha) const {
     real sum = 0;
-    for(int i = h_ptr_[row]; i < h_ptr_[row + 1]; i++)
-      sum += pow(abs(h_val_[i]), alpha);
+
+    assert(h_ptr_[row] >= 0);
+    assert(h_ptr_[row] <= nnz_);
+    assert(h_ptr_[row + 1] >= 0);
+    assert(h_ptr_[row + 1] <= nnz_);
+    if(alpha == 1) {
+      for(int i = h_ptr_[row]; i < h_ptr_[row + 1]; i++)
+      {
+        sum += abs(h_val_[i]);
+      }
+    }
+    else {
+      for(int i = h_ptr_[row]; i < h_ptr_[row + 1]; i++)
+      {
+        sum += powf(abs(h_val_[i]), alpha);
+      }
+    }
     
     return sum;
   }
 
   real col_sum(int col, real alpha) const {
     real sum = 0;
-    for(int i = h_ptr_t_[col]; i < h_ptr_t_[col + 1]; i++)
+
+    assert(h_ptr_t_[col] >= 0);
+    assert(h_ptr_t_[col] <= nnz_);
+    assert(h_ptr_t_[col + 1] >= 0);
+    assert(h_ptr_t_[col + 1] <= nnz_);
+    for(int i = h_ptr_t_[col]; i < h_ptr_t_[col + 1]; i++) {
       sum += pow(abs(h_val_t_[i]), alpha);
+    }
     
     return sum;
   }
@@ -136,31 +210,35 @@ protected:
   cusparseHandle_t cusp_handle_;
   cusparseMatDescr_t descr_;
 
-  int *d_ind_, *d_ind_t_;
-  int *d_ptr_, *d_ptr_t_;
+  int32_t *d_ind_, *d_ind_t_;
+  int32_t *d_ptr_, *d_ptr_t_;
   real *d_val_, *d_val_t_;
 
-  int *h_ind_, *h_ind_t_;
-  int *h_ptr_, *h_ptr_t_;
+  int32_t *h_ind_, *h_ind_t_;
+  int32_t *h_ptr_, *h_ptr_t_;
   real *h_val_, *h_val_t_;
 };
 
 template<>
 inline void SparseMatrix<float>::FillTranspose() const {
-  cusparseScsr2csc(cusp_handle_, n_, m_, nnz_,
+  cusparseStatus_t stat = cusparseScsr2csc(cusp_handle_, n_, m_, nnz_,
                    d_val_t_, d_ptr_t_, d_ind_t_,
                    d_val_, d_ind_, d_ptr_,
                    CUSPARSE_ACTION_NUMERIC,
                    CUSPARSE_INDEX_BASE_ZERO);
+
+  assert(stat == CUSPARSE_STATUS_SUCCESS);
 }
 
 template<>
 inline void SparseMatrix<double>::FillTranspose() const {
-  cusparseDcsr2csc(cusp_handle_, n_, m_, nnz_,
+  cusparseStatus_t stat = cusparseDcsr2csc(cusp_handle_, n_, m_, nnz_,
                    d_val_t_, d_ptr_t_, d_ind_t_,
                    d_val_, d_ind_, d_ptr_,
                    CUSPARSE_ACTION_NUMERIC,
                    CUSPARSE_INDEX_BASE_ZERO);
+
+  assert(stat == CUSPARSE_STATUS_SUCCESS);
 }
 
 template<>
