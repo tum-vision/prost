@@ -1,5 +1,7 @@
 #include "factory_mex.hpp"
 
+#include <algorithm>
+
 #include "prox.hpp"
 #include "prox_1d.hpp"
 #include "prox_epi_conjquadr.hpp"

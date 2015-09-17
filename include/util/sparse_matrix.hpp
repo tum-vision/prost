@@ -4,6 +4,7 @@
 #include <cuda_runtime.h>
 #include <cusparse.h>
 #include <cmath>
+#include <memory.h>
 #include <cstdlib>
 
 #include "util/cuwrap.hpp"
@@ -62,6 +63,7 @@ public:
     cudaMemcpy(mat->d_val_t_, val, sizeof(real) * mat->nnz_, cudaMemcpyHostToDevice);
 
     mat->FillTranspose();
+    cudaDeviceSynchronize();
 
     mat->h_ind_ = new int[mat->nnz_];
     mat->h_ptr_ = new int[mat->m_ + 1];
@@ -71,13 +73,18 @@ public:
     mat->h_ptr_t_ = new int[mat->n_ + 1];
     mat->h_val_t_ = new real[mat->nnz_];
 
+/*
     cudaMemcpy(mat->h_ind_, mat->d_ind_, sizeof(int) * mat->nnz_, cudaMemcpyDeviceToHost);
     cudaMemcpy(mat->h_ptr_, mat->d_ptr_, sizeof(int) * (mat->m_ + 1), cudaMemcpyDeviceToHost);
-    cudaMemcpy(mat->h_val_, mat->d_val_, sizeof(int) * mat->nnz_, cudaMemcpyDeviceToHost);
+    cudaMemcpy(mat->h_val_, mat->d_val_, sizeof(real) * mat->nnz_, cudaMemcpyDeviceToHost);
+*/
+    memcpy(mat->h_ind_, ind, sizeof(int) * mat->nnz_);
+    memcpy(mat->h_ptr_, ptr, sizeof(int) * (mat->m_ + 1));
+    memcpy(mat->h_val_, val, sizeof(real) * mat->nnz_);
 
     cudaMemcpy(mat->h_ind_t_, mat->d_ind_t_, sizeof(int) * mat->nnz_, cudaMemcpyDeviceToHost);
     cudaMemcpy(mat->h_ptr_t_, mat->d_ptr_t_, sizeof(int) * (mat->n_ + 1), cudaMemcpyDeviceToHost);
-    cudaMemcpy(mat->h_val_t_, mat->d_val_t_, sizeof(int) * mat->nnz_, cudaMemcpyDeviceToHost);
+    cudaMemcpy(mat->h_val_t_, mat->d_val_t_, sizeof(real) * mat->nnz_, cudaMemcpyDeviceToHost);
     
     return mat;
   }
