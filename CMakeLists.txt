@@ -6,21 +6,32 @@ find_package(CUDA REQUIRED)
 
 if(APPLE)
   set(CUDA_HOST_COMPILER /usr/bin/clang)
-  set(CMAKE_CXX_FLAGS "-stdlib=libstdc++ -std=c++11 -O3")
+  set(CMAKE_CXX_FLAGS "-g -stdlib=libstdc++")
 endif()
 
-if(UNIX)
-  set(CMAKE_CXX_FLAGS "-fPIC -O3")
-endif()
+# TODO: fix this
+#if(UNIX)
+#  set(CMAKE_CXX_FLAGS "-fPIC -O3")
+#endif()
 
-set(CUDA_NVCC_FLAGS "-arch=compute_30 -code=sm_30 -O3 --use_fast_math")
+set(CUDA_NVCC_FLAGS "-arch=compute_13 -code=sm_13 -g")
 include_directories("include")
-include_directories("include/util")
 
 file(GLOB SOURCES
   "src/*.cpp"
   "src/*.cu"
+  "src/linop/*.cpp"
+  "src/linop/*.cu"
+  "src/prox/*.cpp"
+  "src/prox/*.cu"
+  "src/solver/*.cpp"
+  "src/solver/*.cu"
+  "src/util/*.cpp"
+  "src/util/*.cu"
   "include/*.hpp"
+  "include/linop/*.hpp"
+  "include/prox/*.hpp"
+  "include/solver/*.hpp"
   "include/util/*.hpp"
   )
   

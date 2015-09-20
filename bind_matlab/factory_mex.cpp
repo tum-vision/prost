@@ -11,6 +11,40 @@
 #include "prox_zero.hpp"
 
 /**
+ * @brief Returns the prox-function corresponding to the string.
+ */
+Prox1DFunction Prox1DFunctionFromString(std::string name) {
+  std::transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+  static std::string names[] = {
+    "zero",
+    "abs",
+    "square",
+    "max_pos0",
+    "ind_leq0",
+    "ind_geq0",
+    "ind_eq0",
+    "ind_box01" };
+
+  static Prox1DFunction funcs[] = {
+    kZero,
+    kAbs,
+    kSquare,
+    kMaxPos0,
+    kIndLeq0,
+    kIndGeq0,
+    kIndEq0,
+    kIndBox01 };
+
+  for(int i = 0; i < kNumProx1DFunctions; i++)
+    if(names[i] == name)
+      return funcs[i];
+
+  return kInvalidProx;
+}
+
+
+/**
  * @brief Creates a SparseMatrix<real> instance from a MATLAB sparse matrix
  */
 SparseMatrix<real> *MatrixFromMatlab(const mxArray *pm) {
@@ -219,9 +253,7 @@ ProxEpiConjQuadr* ProxEpiConjQuadrFromMatlab(
  * @brief ...
  */
 ProxMoreau* ProxMoreauFromMatlab(const mxArray *data) {
-  // TODO: implement me!
-
-  return NULL;
+  return new ProxMoreau(ProxFromMatlab(mxGetCell(data, 0)));
 }
 
 /**
@@ -270,9 +302,11 @@ Prox* ProxFromMatlab(const mxArray *pm) {
   bool diagsteps = (bool) mxGetScalar(mxGetCell(pm, 5));
   mxArray *data = mxGetCell(pm, 6);
 
+  /*
   mexPrintf("Attempting to create prox<'%s',idx=%d,cnt=%d,dim=%d,interleaved=%d,diagsteps=%d>...",
             name.c_str(), idx, count, dim, interleaved, diagsteps);
-    
+  */
+  
   Prox *p = NULL;
   if("1d" == name)
     p = Prox1DFromMatlab(idx, count, data);
@@ -288,9 +322,7 @@ Prox* ProxFromMatlab(const mxArray *pm) {
     p = ProxZeroFromMatlab(idx, count);
 
   if(NULL == p) 
-    mexPrintf(" failure!\n");
-  else
-    mexPrintf(" done!\n");
+    mexPrintf("Failure creating prox<'%s',idx=%d,cnt=%d,dim=%d,interleaved=%d,diagsteps=%d>...", name.c_str(), idx, count, dim, interleaved, diagsteps);
 
   return p;
 }

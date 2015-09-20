@@ -43,7 +43,14 @@ void ProxListFromMatlab(const mxArray *pm, std::vector<Prox *>& proxs) {
   }
 }
 
+__host__ void cleanUp() 
+{
+  cudaDeviceReset();
+}
+
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
+  cudaDeviceReset();
+  mexAtExit(cleanUp);
   
   if(nrhs < 4)
     mexErrMsgTxt("At least four inputs required.");
@@ -90,7 +97,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     size_t gpu_mem_required, gpu_mem_avail, gpu_mem_free;
     
     solver.gpu_mem_amount(gpu_mem_required, gpu_mem_avail, gpu_mem_free);
-    mexPrintf("%.3fMBytes of GPU memory required (%.3fMBytes available) => %.3fMBytes free!\n",
+    mexPrintf("%.3fMBytes of GPU memory required (%.3fMBytes available, %.3fMBytes free!)\n",
               (double)gpu_mem_required / (1024. * 1024.),
               (double)gpu_mem_avail / (1024. * 1024.),
               (double)gpu_mem_free / (1024. * 1024.));

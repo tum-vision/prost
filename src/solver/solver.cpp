@@ -144,18 +144,37 @@ void Solver::gpu_mem_amount(size_t& gpu_mem_required, size_t& gpu_mem_avail, siz
   // calculate memory requirements
   gpu_mem_required = 0;
   gpu_mem_avail = 0;
-  
+
+  size_t gpu_mem_prox_g = 0,
+      gpu_mem_prox_hc = 0,
+      gpu_mem_solver = 0,
+      gpu_mem_mat = 0,
+      gpu_mem_precond= 0;
+
   for(int i = 0; i < problem_.prox_g.size(); ++i)
-    gpu_mem_required += problem_.prox_g[i]->gpu_mem_amount();
+    gpu_mem_prox_g += problem_.prox_g[i]->gpu_mem_amount();
 
   for(int i = 0; i < problem_.prox_hc.size(); ++i)
-    gpu_mem_required += problem_.prox_hc[i]->gpu_mem_amount();
+    gpu_mem_prox_hc += problem_.prox_hc[i]->gpu_mem_amount();
 
-  gpu_mem_required += backend_->gpu_mem_amount();
-  gpu_mem_required += problem_.mat->gpu_mem_amount();
-  gpu_mem_required += problem_.precond->gpu_mem_amount();
+  gpu_mem_solver += backend_->gpu_mem_amount();
+  gpu_mem_mat += problem_.mat->gpu_mem_amount();
+  gpu_mem_precond += problem_.precond->gpu_mem_amount();
 
   cudaMemGetInfo(&gpu_mem_free, &gpu_mem_avail);
+
+  std::cout << "Memory requirements:" << std::endl;
+  std::cout << "  - prox_g : " << gpu_mem_prox_g / (1024 * 1024) << "MBytes." << std::endl;
+  std::cout << "  - prox_hc : " << gpu_mem_prox_hc / (1024 * 1024) << "MBytes." << std::endl;
+  std::cout << "  - solver : " << gpu_mem_solver / (1024 * 1024) << "MBytes." << std::endl;
+  std::cout << "  - matrix : " << gpu_mem_mat / (1024 * 1024) << "MBytes." << std::endl;
+  std::cout << "  - preconds : " << gpu_mem_precond / (1024 * 1024) << "MBytes." << std::endl;
+
+  gpu_mem_required = gpu_mem_prox_g +
+                     gpu_mem_prox_hc +
+                     gpu_mem_solver +
+                     gpu_mem_mat +
+                     gpu_mem_precond;
 }
 
 void Solver::Solve() {
@@ -165,7 +184,7 @@ void Solver::Solve() {
   
   for(int i = 0; i < opts_.max_iters; i++) {    
     backend_->PerformIteration();
-    bool is_converged = backend_->converged();
+    bool is_converged = backend_->converged() && (i > 25);
 
     // check if we should run the callback this iteration
     if(i >= cb_iters.front() || is_converged) {

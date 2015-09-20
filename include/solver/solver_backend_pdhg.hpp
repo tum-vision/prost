@@ -34,13 +34,14 @@ protected:
   real *d_y_; // dual variable y^k
   real *d_x_prev_; // previous primal variable x^{k-1}
   real *d_y_prev_; // previous dual variable y^{k-1}
-  real *d_prox_arg_; // temporary variable to store result of proxs
+  real *d_temp_; // temporary variable to store result of proxs and residuals
   real *d_kx_; // holds mat-vec product K x^k
   real *d_kty_; // holds mat-vec product K^T y^k
   real *d_kx_prev_; // holds mat-vec product K x^{k-1}
   real *d_kty_prev_; // holds mat-vec product K^T y^{k-1}
-  real *d_res_primal_; // primal residual
-  real *d_res_dual_; // dual residual
+  
+  //real *d_res_primal_; // primal residual
+  //real *d_res_dual_; // dual residual
 
   real tau_; // primal step size
   real sigma_; // dual step size

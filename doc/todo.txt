@@ -1,16 +1,20 @@
 TODOs:
- o Lifted TV rof denoising example
+ o Do math functions for double/float properly
+ o Fix bug where residuals are 0 at beginning.
+ o Add templates instead of typedef real float...
+ o Write proper Makefiles
+ o Check whether is necessary to static_cast<real>(1) and so
+   on... (compile time cast!!)
+ o Do sanity check before creating the prox operators (don't allocate
+   stuff inside the constructor)
+ o Test Moreau prox
+ 
  o Lifted TV stereo example
  o Epigraph prox, continuous relaxation
  o Add LinearOperator class, for now only LinearOperatorSparseMatrix,
    maybe LinearOperatorZero (cudaMemset) and LinearOperatorIdentity (cudaMemcpy). 
  o Write helper functions for interleaved index calculation and
- double=>real conversion
- o Check whether is necessary to static_cast<real>(1) and so
-   on... (compile time cast!!)
- o Inertial/overrelaxed primal-dual? 
- o Look into matrix equilibriation preconditioner, constrained equilibriation
- o Test Moreau prox
+   double=>real conversion
  o Write proper error handling/checking code, with exceptions and have
    meaningful error messages. Have DEBUG mode, which outputs lots of information.
  o Resolve all TODOs in code
@@ -40,8 +44,13 @@ TODOs:
    (e.g. CGLS).
  o Python/C/C++ bindings
  o Implement some example problems
+ o Inertial/overrelaxed primal-dual? 
+ o Look into matrix equilibriation preconditioner, constrained
+   equilibriation
+ o Subgradient projection for initialization?!
 
 Done:
+ x Lifted TV rof denoising example
  x Adapt to google C++ style guide
  x MATLAB callback, output primal-dual gap in ex_rof.m
  x Output Memory Requirement for Solver

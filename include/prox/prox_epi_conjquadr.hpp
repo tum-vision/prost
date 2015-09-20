@@ -5,12 +5,17 @@
 
 #include "prox.hpp"
 
+#define PROX_EPI_CONJQUADR_NUM_COEFFS 5
+
+template<typename T>
 struct EpiConjQuadrCoeffs {
-  static int num_coeffs() {
-    return 5;
-  }
-  
-  std::vector<real> a, b, c, alpha, beta;
+  std::vector<T> a, b, c;
+  std::vector<T> alpha, beta;
+};
+
+template<typename T>
+struct EpiConjQuadrCoeffsDevice {
+  T *d_ptr[PROX_EPI_CONJQUADR_NUM_COEFFS];
 };
 
 /**
@@ -18,26 +23,28 @@ struct EpiConjQuadrCoeffs {
  *        C = { (x, y) | y >= (ax^2 + bx + c + delta(alpha <= x <= beta))* },
  *        where * denotes the Legendre-Fenchel conjugate.
  */
-class ProxEpiConjQuadr : public Prox {
-public:
-  ProxEpiConjQuadr(
-      int index,
-      int count,
-      bool interleaved,
-      const EpiConjQuadrCoeffs& coeffs);
+template<typename T>
+class ProxEpiConjQuadr : public Prox<T> {
+ public:
+  ProxEpiConjQuadr(size_t index,
+                   size_t count,
+                   bool interleaved,
+                   const EpiConjQuadrCoeffs& coeffs);
 
   virtual ~ProxEpiConjQuadr();
 
-  virtual void Evaluate(
-      real *d_arg,
-      real *d_result,
-      real tau,
-      real *d_tau,
-      bool invert_step = false);
-
+  virtual bool Init();
+  virtual void Release();
+  
 protected:
+  virtual void EvalLocal(T *d_arg,
+                         T *d_res,
+                         T *d_tau,
+                         T tau,
+                         bool invert_tau);
+  
   EpiConjQuadrCoeffs coeffs_;
-  std::vector<real *> d_coeffs_;
+  EpiConjQuadrCoeffsDevice coeffs_dev_;
 };
 
 #ifdef __CUDACC__
@@ -47,12 +54,11 @@ protected:
  *        the parabola y >= \alpha x^2.
  */
 template<typename T>
-inline __device__ void ProjectParabolaSimple(
-    const T& x0,
-    const T& y0,
-    const T& alpha,
-    T& x,
-    T& y)
+inline __device__ void ProjectParabolaSimple(const T& x0,
+                                             const T& y0,
+                                             const T& alpha,
+                                             T& x,
+                                             T& y)
 {
   // nothing to do?
   if(y0 >= alpha * (x0 * x0)) {
@@ -90,14 +96,13 @@ inline __device__ void ProjectParabolaSimple(
  *        parabola y >= p * x^2 + q * x + r.
  */
 template<typename T>
-inline __device__ void ProjectParabolaGeneral(
-    const T& x0,
-    const T& y0,
-    const T& p,
-    const T& q,
-    const T& r,
-    T& x,
-    T& y)
+inline __device__ void ProjectParabolaGeneral(const T& x0,
+                                              const T& y0,
+                                              const T& p,
+                                              const T& q,
+                                              const T& r,
+                                              T& x,
+                                              T& y)
 {
   T tildex;
   T tildey;
@@ -118,12 +123,11 @@ inline __device__ void ProjectParabolaGeneral(
  *        halfspace described by { x | <n, x> <= t }.
  */
 template<typename T>
-inline __device__ void ProjectHalfspace(
-    const T *v,
-    const T *n,
-    const T& t,
-    T* result,
-    int d)
+inline __device__ void ProjectHalfspace(const T *v,
+                                        const T *n,
+                                        const T& t,
+                                        T* result,
+                                        int d)
 {
   T dot = 0, sq_norm = 0;
 
@@ -143,11 +147,10 @@ inline __device__ void ProjectHalfspace(
  *        described by a point p and normal n.
  */
 template<typename T>
-inline __device__ bool PointInHalfspace(
-    const T* v,
-    const T* p,
-    const T* n,
-    int d)
+inline __device__ bool PointInHalfspace(const T* v,
+                                        const T* p,
+                                        const T* n,
+                                        int d)
 {
   T dot = 0;
   for(int i = 0; i < d; i++) 

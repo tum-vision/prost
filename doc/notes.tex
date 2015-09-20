@@ -34,7 +34,7 @@
 \providecommand{\iprod}[2]{\langle#1,#2\rangle}
 \newcommand{\Tau}{\mathrm{T}}
 
-\title{Preconditioned Adaptive Primal-Dual Hybrid Gradient}
+\title{Notes for GPU solver}
 %\author{Thomas M\"ollenhoff}
 \date{}
 
@@ -80,6 +80,14 @@ Based on the residuals, the step sizes $\tau_k$ and $\sigma_k$ are adaptively ch
   \begin{aligned}
     b_k &= \frac{2 \tau_k \sigma_k \iprod{y^{k+1} - y^k}{K (x^{k+1} - x^k)}}{\gamma \sigma_k \iprod{\Tau^{-1}(x^{k+1} - x^k)}{x^{k+1} - x^k} + \gamma \tau_k \iprod{\Sigma^{-1}(y^{k+1} - y^k)}{y^{k+1} - y^k}}.
 \end{aligned}
+\end{equation}
+
+\section{Moreau's Identity}
+Let $\Tau : X \rightarrow X$ be a symmetric positive definite
+map. Then it holds that
+\begin{equation}
+  \rslv{\tau \Tau \partial g}(v) = v - \tau \Tau \rslv{(\tau
+    \Tau)^{-1} \partial g^*}((\tau \Tau)^{-1}v).
 \end{equation}
 
 

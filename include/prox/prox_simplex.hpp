@@ -19,29 +19,31 @@
  *        because there's not enough shared mem. Sorting in global mem
  *        would be much too slow.
  */
-class ProxSimplex : public Prox {
-public:
-  ProxSimplex(
-      int index,
-      int count,
-      int dim,
-      bool interleaved,
-      const std::vector<real>& coeffs);
+template<typename T>
+class ProxSimplex : public Prox<T> {
+ public:
+  ProxSimplex(size_t index,
+              size_t count,
+              size_t dim,
+              bool interleaved,
+              const std::vector<T>& coeffs);
 
   virtual ~ProxSimplex();
 
-  virtual void Evaluate(
-      real *d_arg,
-      real *d_result,
-      real tau,
-      real *d_tau,
-      bool invert_step = false);
+  virtual bool Init();
+  virtual void Release();
+  virtual size_t gpu_mem_amount();
 
-  virtual int gpu_mem_amount();
+ protected:
+  virtual void EvalLocal(real *d_arg,
+                         real *d_res,
+                         real *d_tau,
+                         real tau,
+                         bool invert_tau);
 
 protected:
-  std::vector<real> coeffs_;
-  real *d_coeffs_;
+  std::vector<T> coeffs_;
+  T *d_coeffs_;
 };
 
 #endif
