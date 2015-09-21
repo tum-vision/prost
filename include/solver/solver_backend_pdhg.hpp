@@ -40,9 +40,6 @@ protected:
   real *d_kx_prev_; // holds mat-vec product K x^{k-1}
   real *d_kty_prev_; // holds mat-vec product K^T y^{k-1}
   
-  //real *d_res_primal_; // primal residual
-  //real *d_res_dual_; // dual residual
-
   real tau_; // primal step size
   real sigma_; // dual step size
   real theta_; // overrelaxation parameter

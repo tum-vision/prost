@@ -25,7 +25,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
     mexErrMsgTxt("One outputs required.");
 
   // read input arguments
-  Prox *prox = ProxFromMatlab(prhs[0]);
+  Prox<real> *prox = ProxFromMatlab(prhs[0]);
   double *arg = mxGetPr(prhs[1]);
   real tau = (real) mxGetScalar(prhs[2]);
   double *tau_diag = mxGetPr(prhs[3]);
@@ -60,7 +60,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   // evaluate prox
   Timer t;
   t.start();
-  prox->Evaluate(d_arg, d_result, tau, d_tau, false);
+  prox->Eval(d_arg, d_result, d_tau, tau);
   mexPrintf("prox took %f seconds.\n", t.get());
 
   // copy back result

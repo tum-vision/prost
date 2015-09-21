@@ -4,7 +4,8 @@ function [prox] = prox_norm2(idx, count, dim, interleaved, fn, a, b, c, d, e)
 % euclidean norm. h is given as h(x) = c f(ax - b) + dx + 0.5ex^2 
 % fn is a string describing the 1d function f
 
-data = { fn, a, b, c, d, e };
+% TODO: alpha,beta
+data = { fn, a, b, c, d, e, 0, 0 };
 prox = { 'norm2', idx, count, dim, interleaved, false, data };
 
 end

@@ -12,25 +12,25 @@ lmb = 0.5;
 
 %% setup prox operators
 %prox_g = { prox_1d(0, nx * ny, 'square', 1, f, 1, 0, 0) };
-prox_hstar = { prox_norm2(0, nx * ny, 2, false, 'indicator_leq', ...
-                          1 / lmb, 0, 1, 0, 0) }; 
+
+
+prox_hstar = { prox_norm2(0, nx * ny, 2, false, 'ind_leq0', ...
+                          1 / lmb, 1, 1, 0, 0) }; 
 
 % anisotropic tv
-%prox_hstar = { prox_1d(0, 2 * nx * ny, 'indicator_absleq', 1 /
-%lmb, 0, 1, 0 ,0) }; 
+%prox_hstar = { prox_1d(0, 2 * nx * ny, 'ind_box01', 1 / lmb, -0.5, 1, 0 ,0) }; 
 
 % testing Moreau prox
 prox_g = { prox_moreau(prox_moreau(prox_1d(0, nx * ny, 'square', 1, f, 1, 0, 0))) };
-
-%prox_hstar = { prox_moreau(prox_norm2(0, nx * ny, 2, false, 'abs', ...
-%                                      lmb, 0, 1, 0, 0)) }; 
+prox_hstar = { prox_moreau(prox_norm2(0, nx * ny, 2, false, 'abs', ...
+                                      lmb, 0, 1, 0, 0)) }; 
 
 %% set options and run algorithm
 opts = pdsolver_opts();
 opts.adapt = 'balance';
 opts.verbose = false;
 opts.bt_enabled = false;
-opts.max_iters = 1;
+opts.max_iters = 1000;
 opts.cb_iters = 10;
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;

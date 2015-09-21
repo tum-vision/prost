@@ -35,10 +35,10 @@ class ProxSimplex : public Prox<T> {
   virtual size_t gpu_mem_amount();
 
  protected:
-  virtual void EvalLocal(real *d_arg,
-                         real *d_res,
-                         real *d_tau,
-                         real tau,
+  virtual void EvalLocal(T *d_arg,
+                         T *d_res,
+                         T *d_tau,
+                         T tau,
                          bool invert_tau);
 
 protected:

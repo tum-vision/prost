@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "config.hpp"
-#include "prox.hpp"
-#include "solver.hpp"
+#include "prox/prox.hpp"
+#include "solver/solver.hpp"
 #include "util/sparse_matrix.hpp"
 
 /**

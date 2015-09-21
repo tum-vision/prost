@@ -14,7 +14,7 @@ endif()
 #  set(CMAKE_CXX_FLAGS "-fPIC -O3")
 #endif()
 
-set(CUDA_NVCC_FLAGS "-arch=compute_13 -code=sm_13 -g")
+set(CUDA_NVCC_FLAGS "-arch=compute_30 -code=sm_30 -g")
 include_directories("include")
 
 file(GLOB SOURCES

@@ -29,7 +29,7 @@ class ProxEpiConjQuadr : public Prox<T> {
   ProxEpiConjQuadr(size_t index,
                    size_t count,
                    bool interleaved,
-                   const EpiConjQuadrCoeffs& coeffs);
+                   const EpiConjQuadrCoeffs<T>& coeffs);
 
   virtual ~ProxEpiConjQuadr();
 
@@ -43,8 +43,8 @@ protected:
                          T tau,
                          bool invert_tau);
   
-  EpiConjQuadrCoeffs coeffs_;
-  EpiConjQuadrCoeffsDevice coeffs_dev_;
+  EpiConjQuadrCoeffs<T> coeffs_;
+  EpiConjQuadrCoeffsDevice<T> coeffs_dev_;
 };
 
 #ifdef __CUDACC__

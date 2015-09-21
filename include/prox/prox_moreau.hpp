@@ -8,9 +8,9 @@
  *
  */
 template<typename T>
-class ProxMoreau : public Prox {
+class ProxMoreau : public Prox<T> {
 public:
-  ProxMoreau(Prox *conjugate);
+  ProxMoreau(Prox<T> *conjugate);
   virtual ~ProxMoreau();
 
   virtual bool Init();
@@ -19,7 +19,7 @@ public:
   virtual size_t gpu_mem_amount();
 
 protected:
-  Prox *conjugate_;
+  Prox<T> *conjugate_;
   T *d_scaled_arg_;
 
   virtual void EvalLocal(T *d_arg,

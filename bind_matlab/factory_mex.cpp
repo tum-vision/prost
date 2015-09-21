@@ -2,13 +2,13 @@
 
 #include <algorithm>
 
-#include "prox.hpp"
-#include "prox_1d.hpp"
-#include "prox_epi_conjquadr.hpp"
-#include "prox_moreau.hpp"
-#include "prox_norm2.hpp"
-#include "prox_simplex.hpp"
-#include "prox_zero.hpp"
+#include "prox/prox.hpp"
+#include "prox/prox_1d.hpp"
+#include "prox/prox_epi_conjquadr.hpp"
+#include "prox/prox_moreau.hpp"
+#include "prox/prox_norm2.hpp"
+#include "prox/prox_simplex.hpp"
+#include "prox/prox_zero.hpp"
 
 /**
  * @brief Returns the prox-function corresponding to the string.
@@ -154,19 +154,21 @@ void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **c
 /**
  * @brief ...
  */
-void Prox1DCoefficientsFromMatlab(const mxArray *pm, Prox1DCoefficients& coeffs) { 
+void Prox1DCoefficientsFromMatlab(const mxArray *pm, Prox1DCoefficients<real>& coeffs) { 
   const mwSize *dims;
   double *val;
 
-  std::vector<real>* coeff_array[5] = {
+  std::vector<real>* coeff_array[7] = {
     &coeffs.a,
     &coeffs.b,
     &coeffs.c,
     &coeffs.d,
-    &coeffs.e };
+    &coeffs.e,
+    &coeffs.alpha,
+    &coeffs.beta };
 
   // Loop starts at 1 because cell 0 is prox-name.
-  for(int i = 1; i <= 5; ++i) {
+  for(int i = 1; i <= 7; ++i) {
     dims = mxGetDimensions(mxGetCell(pm, i));
     val = mxGetPr(mxGetCell(pm, i));
 
@@ -178,7 +180,7 @@ void Prox1DCoefficientsFromMatlab(const mxArray *pm, Prox1DCoefficients& coeffs)
 /**
  * @brief ...
  */
-Prox1D *Prox1DFromMatlab(
+Prox1D<real> *Prox1DFromMatlab(
     int idx,
     int count,
     const mxArray *data)
@@ -189,16 +191,16 @@ Prox1D *Prox1DFromMatlab(
   if(kInvalidProx == func)
     return 0;
 
-  Prox1DCoefficients prox_coeffs;
+  Prox1DCoefficients<real> prox_coeffs;
   Prox1DCoefficientsFromMatlab(data, prox_coeffs);
 
-  return new Prox1D(idx, count, prox_coeffs, func);
+  return new Prox1D<real>(idx, count, prox_coeffs, func);
 }
 
 /**
  * @brief ...
  */
-ProxNorm2 *ProxNorm2FromMatlab(
+ProxNorm2<real> *ProxNorm2FromMatlab(
     int idx,
     int count,
     int dim,
@@ -211,22 +213,22 @@ ProxNorm2 *ProxNorm2FromMatlab(
   if(kInvalidProx == func)
     return NULL;
 
-  Prox1DCoefficients prox_coeffs;
+  Prox1DCoefficients<real> prox_coeffs;
   Prox1DCoefficientsFromMatlab(data, prox_coeffs);
   
-  return new ProxNorm2(idx, count, dim, interleaved, prox_coeffs, func);
+  return new ProxNorm2<real>(idx, count, dim, interleaved, prox_coeffs, func);
 }
 
 /**
  * @brief ...
  */
-ProxEpiConjQuadr* ProxEpiConjQuadrFromMatlab(
+ProxEpiConjQuadr<real>* ProxEpiConjQuadrFromMatlab(
     int idx,
     int count,
     bool interleaved,
     const mxArray *data)
 {
-  EpiConjQuadrCoeffs coeffs;
+  EpiConjQuadrCoeffs<real> coeffs;
 
   const mwSize *dims;
   double *val;
@@ -246,20 +248,20 @@ ProxEpiConjQuadr* ProxEpiConjQuadrFromMatlab(
       (*coeff_array[i - 1]).push_back((real)val[j]);
   }
   
-  return new ProxEpiConjQuadr(idx, count, interleaved, coeffs);
+  return new ProxEpiConjQuadr<real>(idx, count, interleaved, coeffs);
 }
 
 /**
  * @brief ...
  */
-ProxMoreau* ProxMoreauFromMatlab(const mxArray *data) {
-  return new ProxMoreau(ProxFromMatlab(mxGetCell(data, 0)));
+ProxMoreau<real>* ProxMoreauFromMatlab(const mxArray *data) {
+  return new ProxMoreau<real>(ProxFromMatlab(mxGetCell(data, 0)));
 }
 
 /**
  * @brief ...
  */
-ProxSimplex* ProxSimplexFromMatlab(
+ProxSimplex<real>* ProxSimplexFromMatlab(
     int idx,
     int count,
     int dim,
@@ -277,21 +279,21 @@ ProxSimplex* ProxSimplexFromMatlab(
   for(int j = 0; j < dims[0]; j++)
     coeffs.push_back((real)val[j]);
   
-  return new ProxSimplex(idx, count, dim, interleaved, coeffs);
+  return new ProxSimplex<real>(idx, count, dim, interleaved, coeffs);
 }
 
 /**
  * @brief ...
  */
-ProxZero* ProxZeroFromMatlab(int idx, int count) {
-  return new ProxZero(idx, count);
+ProxZero<real>* ProxZeroFromMatlab(int idx, int count) {
+  return new ProxZero<real>(idx, count);
 }
 
 
 /**
  * @brief ...
  */
-Prox* ProxFromMatlab(const mxArray *pm) {
+Prox<real>* ProxFromMatlab(const mxArray *pm) {
   std::string name(mxArrayToString(mxGetCell(pm, 0)));
   transform(name.begin(), name.end(), name.begin(), ::tolower);
 
@@ -302,12 +304,10 @@ Prox* ProxFromMatlab(const mxArray *pm) {
   bool diagsteps = (bool) mxGetScalar(mxGetCell(pm, 5));
   mxArray *data = mxGetCell(pm, 6);
 
-  /*
   mexPrintf("Attempting to create prox<'%s',idx=%d,cnt=%d,dim=%d,interleaved=%d,diagsteps=%d>...",
             name.c_str(), idx, count, dim, interleaved, diagsteps);
-  */
   
-  Prox *p = NULL;
+  Prox<real> *p = NULL;
   if("1d" == name)
     p = Prox1DFromMatlab(idx, count, data);
   else if("norm2" == name)

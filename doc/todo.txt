@@ -8,6 +8,7 @@ TODOs:
  o Do sanity check before creating the prox operators (don't allocate
    stuff inside the constructor)
  o Test Moreau prox
+ o Test Simplex prox (multilabel segmentation example)
  
  o Lifted TV stereo example
  o Epigraph prox, continuous relaxation

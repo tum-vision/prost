@@ -1,8 +1,8 @@
-#include "preconditioner.hpp"
+#include "solver/preconditioner.hpp"
 
 #include <iostream>
 
-std::vector<std::vector<int> > GetIndices(const std::vector<Prox *>& prox);
+std::vector<std::vector<int> > GetIndices(const std::vector<Prox<real> *>& prox);
 void AverageValues(real *vals, const std::vector<std::vector<int> >& indices);
 
 Preconditioner::Preconditioner(SparseMatrix<real> *mat)
@@ -41,8 +41,8 @@ void Preconditioner::ComputeScalar() {
 
 void Preconditioner::ComputeAlpha(
     real alpha,
-    const std::vector<Prox *>& prox_g,
-    const std::vector<Prox *>& prox_hc)
+    const std::vector<Prox<real> *>& prox_g,
+    const std::vector<Prox<real> *>& prox_hc)
 {
   type_ = kPrecondAlpha;
 
@@ -52,7 +52,7 @@ void Preconditioner::ComputeAlpha(
   real *h_left = new real[m];
   real *h_right = new real[n];
 
-  std::cout << "m=" << m << ", n = " << n << "...";
+  std::cout << "m=" << m << ", n=" << n << "...";
   std::cout.flush();
 
   // compute right preconditioner as sum over matrix columns
@@ -104,11 +104,11 @@ void Preconditioner::ComputeEquil() {
 }
 
 
-std::vector<std::vector<int> > GetIndices(const std::vector<Prox *>& prox) {
+std::vector<std::vector<int> > GetIndices(const std::vector<Prox<real> *>& prox) {
   std::vector<std::vector<int> > indices;
   
   for(int i = 0; i < prox.size(); i++) {
-    Prox *p = prox[i];
+    Prox<real> *p = prox[i];
 
     if(!p->diagsteps()) {
       for(int j = 0; j < p->count(); j++) {

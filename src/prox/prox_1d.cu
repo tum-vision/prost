@@ -1,8 +1,9 @@
-#include "prox_1d.hpp"
+#include "prox/prox_1d.hpp"
 
 #include <algorithm>
 #include <cassert>
 #include <iostream>
+#include <cuda_runtime.h>
 
 #include "config.hpp"
 
@@ -14,7 +15,7 @@ void Prox1DKernel(
     T *d_tau,
     T tau,
     const Prox1DFunc prox,
-    Prox1DCoeffsDevice coeffs,
+    Prox1DCoeffsDevice<T> coeffs,
     size_t count,
     bool invert_tau)
 {
@@ -39,7 +40,7 @@ void Prox1DKernel(
                    (1. + tau * coeffs.val[4]);
 
     // compute scaled prox and store result
-    d_res[tx] =
+    d_res[tx] = 
         (prox.Eval(arg, step, coeffs.val[5], coeffs.val[6]) + coeffs.val[1])
         / coeffs.val[0];
   }
@@ -49,7 +50,7 @@ template<typename T>
 Prox1D<T>::Prox1D(size_t index,
                   size_t count,
                   const Prox1DCoefficients<T>& coeffs,
-                  const Prox1DFunction<T>& func)
+                  const Prox1DFunction& func)
     : Prox<T>(index, count, 1, false, true), coeffs_(coeffs), func_(func)
 {
 }
@@ -83,15 +84,17 @@ bool Prox1D<T>::Init() {
     if(cur_elem.size() > 1) {
 
       // check if dimension is correct
-      if(cur_elem.size() != count_)
+      if(cur_elem.size() != this->count_)
         return false;
 
-      cudaMalloc((void **)&gpu_data, sizeof(T) * count_);
-      if(cudaGetLastError() != CUDA_SUCCESS) // out of memory
+      cudaMalloc((void **)&gpu_data, sizeof(T) * this->count_);
+      if(cudaGetLastError() != cudaSuccess) // out of memory
         return false;
       
-      cudaMemcpy(gpu_data, &cur_elem[0], sizeof(T) * count_, cudaMemcpyHostToDevice);
+      cudaMemcpy(gpu_data, &cur_elem[0], sizeof(T) * this->count_, cudaMemcpyHostToDevice);
     }
+    else 
+      coeffs_dev_.val[i] = cur_elem[0];
 
     // for single coeffs, NULL is pushed back.
     coeffs_dev_.d_ptr[i] = gpu_data;
@@ -115,7 +118,7 @@ void Prox1D<T>::EvalLocal(T *d_arg,
                           bool invert_tau)
 {
   dim3 block(kBlockSizeCUDA, 1, 1);
-  dim3 grid((count_ + block.x - 1) / block.x, 1, 1);
+  dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
   // makes things more readable
   #define CALL_PROX_1D_KERNEL(Func) \
@@ -127,7 +130,7 @@ void Prox1D<T>::EvalLocal(T *d_arg,
              tau, \
              Func<T>(), \
              coeffs_dev_, \
-             count_, invert_tau)
+             this->count_, invert_tau)
   
   switch(func_) {    
     case kZero: 
@@ -172,7 +175,7 @@ size_t Prox1D<T>::gpu_mem_amount() {
   size_t total_mem = 0;
   for(size_t i = 0; i < PROX_1D_NUM_COEFFS; i++) {
     if(coeffs_dev_.d_ptr[i] != NULL)
-      total_mem += count_ * sizeof(T);
+      total_mem += this->count_ * sizeof(T);
   }
 
   return total_mem;

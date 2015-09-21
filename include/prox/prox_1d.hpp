@@ -49,7 +49,7 @@ public:
   Prox1D(size_t index,
          size_t count,
          const Prox1DCoefficients<T>& coeffs,
-         const Prox1DFunction<T>& func);
+         const Prox1DFunction& func);
   
   virtual ~Prox1D();
 
@@ -139,7 +139,7 @@ struct Prox1DIndBox01 {
 };
 
 template<typename T>
-struct ProxMaxPos0 {
+struct Prox1DMaxPos0 {
   inline __device__ T Eval(T x0, T tau, T alpha, T beta) const {
     if(x0 > tau)
       return x0 - tau;

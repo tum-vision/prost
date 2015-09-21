@@ -1,15 +1,15 @@
-#include "solver.hpp"
+#include "solver/solver.hpp"
 
 #include <algorithm>
 #include <iostream>
 #include <sstream>
-#include "solver_backend.hpp"
-#include "solver_backend_pdhg.hpp"
+#include "solver/solver_backend.hpp"
+#include "solver/solver_backend_pdhg.hpp"
 #include "util/util.hpp"
 
 // used for sorting prox operators according to their starting index
 struct ProxCompare {
-  bool operator()(Prox* const& left, Prox* const& right) {
+  bool operator()(Prox<real>* const& left, Prox<real>* const& right) {
     if(left->index() < right->index())
       return true;
 
@@ -20,10 +20,10 @@ struct ProxCompare {
 /**
  * @brief Checks whether the whole domain is covered by prox operators.
  */
-bool CheckDomainProx(const std::vector<Prox *>& proxs, int n) {
+bool CheckDomainProx(const std::vector<Prox<real> *>& proxs, int n) {
   int num_proxs = proxs.size();
 
-  std::vector<Prox *> sorted_proxs = proxs;
+  std::vector<Prox<real> *> sorted_proxs = proxs;
   std::sort(sorted_proxs.begin(), sorted_proxs.end(), ProxCompare());
 
   //std::cout << "num_proxs=" << num_proxs << ":" << std::endl;
@@ -62,11 +62,11 @@ void Solver::SetMatrix(SparseMatrix<real>* mat) {
   problem_.ncols = mat->ncols();
 }
 
-void Solver::SetProx_g(const std::vector<Prox*>& prox) {
+void Solver::SetProx_g(const std::vector<Prox<real> *>& prox) {
   problem_.prox_g = prox;
 }
 
-void Solver::SetProx_hc(const std::vector<Prox*>& prox) {
+void Solver::SetProx_hc(const std::vector<Prox<real> *>& prox) {
   problem_.prox_hc = prox;
 }
 
@@ -127,10 +127,22 @@ bool Solver::Initialize() {
     return false;
   }
 
-  // sort prox operators according to their index()
-  // check if prox[i].end() == prox[i+1].index() - 1
-  // check if prox[last].end() == n - 1
+  for(size_t i = 0; i < problem_.prox_g.size(); i++) {
+    if(!problem_.prox_g[i]->Init()) {
+      std::cout << "Failed to initialized prox_g!" << std::endl;
 
+      return false;      
+    }
+  }
+
+  for(size_t i = 0; i < problem_.prox_hc.size(); i++) {
+    if(!problem_.prox_hc[i]->Init()) {
+      std::cout << "Failed to initialized prox_hc!" << std::endl;
+
+      return false;      
+    }
+  }
+  
   if(!backend_->Initialize()) {
     std::cout << "Failed to initialize the backend!" << std::endl;
 

@@ -1,4 +1,4 @@
-#include "solver_backend_pdhg.hpp"
+#include "solver/solver_backend_pdhg.hpp"
 
 #include <cuComplex.h> // TODO: what was this needed for ...?
 #include <iostream>
@@ -187,12 +187,11 @@ void SolverBackendPDHG::PerformIteration() {
 
   // apply prox_g
   for(int j = 0; j < problem_.prox_g.size(); ++j)
-    problem_.prox_g[j]->Evaluate(
+    problem_.prox_g[j]->Eval(
         d_temp_,
         d_x_,
-        tau_,
         problem_.precond->right(),
-        false);
+        tau_);
 
   // compute Kx^{k+1} and remember Kx^k
   std::swap(d_kx_, d_kx_prev_);
@@ -213,12 +212,11 @@ void SolverBackendPDHG::PerformIteration() {
   // apply prox_hc
   std::swap(d_y_, d_y_prev_);
   for(int j = 0; j < problem_.prox_hc.size(); ++j)
-    problem_.prox_hc[j]->Evaluate(
+    problem_.prox_hc[j]->Eval(
         d_temp_,
         d_y_,
-        sigma_,
         problem_.precond->left(),
-        false);
+        sigma_);
 
   // compute K^T y^{k+1} and remember Ky^k
   std::swap(d_kty_, d_kty_prev_);
@@ -234,7 +232,6 @@ void SolverBackendPDHG::PerformIteration() {
       tau_,
       problem_.precond->right(),
       n);
-  CUDA_CHECK;
   cuwrap::asum<real>(cublas_handle_, d_temp_, n, &res_primal_);
 
   ComputeDualResidualPDHG<<<grid_m, block>>>(
@@ -247,7 +244,6 @@ void SolverBackendPDHG::PerformIteration() {
       problem_.precond->left(),
       theta_,
       m);
-  CUDA_CHECK;
   cuwrap::asum<real>(cublas_handle_, d_temp_, m, &res_dual_);
 
   //std::cout << res_primal_ << "," << res_dual_ << std::endl;

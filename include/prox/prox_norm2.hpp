@@ -15,7 +15,7 @@ class ProxNorm2 : public Prox1D<T> {
             size_t count,
             size_t dim,
             bool interleaved,
-            const Prox1DCoefficients& coeffs,
+            const Prox1DCoefficients<T>& coeffs,
             const Prox1DFunction& func);
   
   virtual ~ProxNorm2();
@@ -24,7 +24,7 @@ class ProxNorm2 : public Prox1D<T> {
   virtual void EvalLocal(T *d_arg,
                          T *d_res,
                          T *d_tau,
-                         real tau,
+                         T tau,
                          bool invert_tau);
 };
 

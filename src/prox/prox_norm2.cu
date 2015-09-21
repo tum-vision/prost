@@ -1,4 +1,4 @@
-#include "prox_norm2.hpp"
+#include "prox/prox_norm2.hpp"
 
 #include "config.hpp"
 #include "util/cuwrap.hpp"
@@ -11,7 +11,7 @@ void ProxNorm2Kernel(
     T* d_tau,
     T tau,
     const ProxFunc1D prox,
-    Prox1DCoeffsDevice coeffs,
+    Prox1DCoeffsDevice<T> coeffs,
     size_t count,
     size_t dim,
     bool interleaved,
@@ -31,7 +31,7 @@ void ProxNorm2Kernel(
     }
     
     if(norm > 0) {
-      norm = cuwrap::sqrt<real>(norm);
+      norm = cuwrap::sqrt<T>(norm);
 
       // read value for vector coefficients
       for(size_t i = 0; i < PROX_1D_NUM_COEFFS; i++) {
@@ -74,26 +74,28 @@ ProxNorm2<T>::ProxNorm2(size_t index,
                         size_t count,
                         size_t dim,
                         bool interleaved,
-                        const Prox1DCoefficients& coeffs,
+                        const Prox1DCoefficients<T>& coeffs,
                         const Prox1DFunction& func) :
-    Prox1D<T>(index, count, coeffs, func),
-    dim_(dim),
-    interleaved_(interleaved),
-    diagsteps_(false) {}
+    Prox1D<T>(index, count, coeffs, func)
+{
+  this->dim_ = dim;
+  this->interleaved_ = interleaved;
+  this->diagsteps_ = false;
+}
 
 template<typename T>
 ProxNorm2<T>::~ProxNorm2() {
 }
 
 template<typename T>
-void ProxNorm2<T>::EvalLocal(real *d_arg,
-                             real *d_res,
-                             real *d_tau,
-                             real tau,
+void ProxNorm2<T>::EvalLocal(T *d_arg,
+                             T *d_res,
+                             T *d_tau,
+                             T tau,
                              bool invert_tau)
 {
   dim3 block(kBlockSizeCUDA, 1, 1);
-  dim3 grid((count_ + block.x - 1) / block.x, 1, 1);
+  dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
   #define CALL_PROX_NORM2_KERNEL(Func) \
     ProxNorm2Kernel<Func<T>, T> \
@@ -103,10 +105,10 @@ void ProxNorm2<T>::EvalLocal(real *d_arg,
             d_tau, \
             tau, \
             Func<T>(), \
-            coeffs_dev_,
-            count_, dim_, interleaved_, invert_tau)
+            this->coeffs_dev_, \
+            this->count_, this->dim_, this->interleaved_, invert_tau)
   
-  switch(func_) {
+  switch(this->func_) {
     case kZero:
       CALL_PROX_NORM2_KERNEL(Prox1DZero);
       break;

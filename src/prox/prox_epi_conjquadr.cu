@@ -1,13 +1,14 @@
-#include "prox_epi_conjquadr.hpp"
+#include "prox/prox_epi_conjquadr.hpp"
 
 #include <cassert>
+#include <cuda_runtime.h>
 #include "config.hpp"
 
 template<typename T>
 __global__
 void ProxEpiConjQuadrKernel(T *d_arg,
                             T *d_res,
-                            EpiConjQuadrCoeffsDevice coeffs,
+                            EpiConjQuadrCoeffsDevice<T> coeffs,
                             size_t count,
                             bool interleaved)
 {
@@ -109,7 +110,7 @@ template<typename T>
 ProxEpiConjQuadr<T>::ProxEpiConjQuadr(size_t index,
                                       size_t count,
                                       bool interleaved,
-                                      const EpiConjQuadrCoeffs& coeffs)
+                                      const EpiConjQuadrCoeffs<T>& coeffs)
     
     : Prox<T>(index, count, 2, interleaved, false), coeffs_(coeffs)
 {
@@ -136,11 +137,11 @@ bool ProxEpiConjQuadr<T>::Init() {
       return false;
     
     T *gpu_ptr = NULL;
-    cudaMalloc((void **)&gpu_ptr, count_ * sizeof(T));
-    if(cudaGetLastError() != CUDA_SUCCESS)
+    cudaMalloc((void **)&gpu_ptr, this->count_ * sizeof(T));
+    if(cudaGetLastError() != cudaSuccess)
       return false;
     
-    cudaMemcpy(gpu_ptr, &cur_elem[0], sizeof(T) * count_, cudaMemcpyHostToDevice);
+    cudaMemcpy(gpu_ptr, &cur_elem[0], sizeof(T) * this->count_, cudaMemcpyHostToDevice);
     coeffs_dev_.d_ptr[i] = gpu_ptr;
   }
   return true;
@@ -148,28 +149,28 @@ bool ProxEpiConjQuadr<T>::Init() {
 
 template<typename T>
 void ProxEpiConjQuadr<T>::Release() {
-  for(int i = 0; i < d_coeffs_.size(); i++) {
-    cudaFree(d_coeffs_[i]);
+  for(size_t i = 0; i < PROX_EPI_CONJQUADR_NUM_COEFFS; i++) {
+    cudaFree(coeffs_dev_.d_ptr[i]);
   }
 }
 
 template<typename T>
-void ProxEpiConjQuadr<T>::Evaluate(T *d_arg,
-                                   T *d_res,
-                                   T *d_tau,
-                                   T tau,
-                                   bool invert_tau)
+void ProxEpiConjQuadr<T>::EvalLocal(T *d_arg,
+                                    T *d_res,
+                                    T *d_tau,
+                                    T tau,
+                                    bool invert_tau)
 {
   dim3 block(kBlockSizeCUDA, 1, 1);
-  dim3 grid((count_ + block.x - 1) / block.x, 1, 1);
+  dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
   ProxEpiConjQuadrKernel<T>
       <<<grid, block>>>(
           d_arg,
           d_res,
           coeffs_dev_,
-          count_,
-          interleaved_);
+          this->count_,
+          this->interleaved_);
 }
 
 // Explicit template instantiation

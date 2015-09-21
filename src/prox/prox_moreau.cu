@@ -1,5 +1,7 @@
-#include "prox_moreau.hpp"
+#include "prox/prox_moreau.hpp"
 
+#include <iostream>
+#include <cuda_runtime.h>
 #include "config.hpp"
 
 template<typename T>
@@ -41,8 +43,8 @@ void MoreauPostscale(T *d_result,
 }
 
 template<typename T>
-ProxMoreau<T>::ProxMoreau(Prox *conjugate)
-    : Prox(*conjugate), conjugate_(conjugate) {
+ProxMoreau<T>::ProxMoreau(Prox<T> *conjugate)
+    : Prox<T>(*conjugate), conjugate_(conjugate) {
 }
 
 template<typename T>
@@ -52,9 +54,11 @@ ProxMoreau<T>::~ProxMoreau() {
 
 template<typename T>
 bool ProxMoreau<T>::Init() {
-  cudaMalloc((void **)&d_scaled_arg_, sizeof(T) * (count_ * dim_));
+  cudaMalloc((void **)&d_scaled_arg_, sizeof(T) * (this->count_ * this->dim_));
+
+  bool success = conjugate_->Init();
   
-  return cudaGetLastError() == CUDA_SUCCESS;
+  return success && (cudaGetLastError() == cudaSuccess);
 }
 
 template<typename T>
@@ -69,33 +73,38 @@ void ProxMoreau<T>::EvalLocal(T *d_arg,
                               T tau,
                               bool invert_tau)
 {
-  size_t total_count = count_ * dim_;
+  size_t total_count = this->count_ * this->dim_;
   dim3 block(kBlockSizeCUDA, 1, 1);
   dim3 grid((total_count + block.x - 1) / block.x, 1, 1);
 
   // scale argument
-  MoreauPrescale<<<grid, block>>>(d_scaled_arg,
-                                  d_arg,
-                                  d_tau,
-                                  tau,
-                                  total_count,
-                                  invert_tau);
+  MoreauPrescale<T>
+      <<<grid, block>>>(d_scaled_arg_,
+                        d_arg,
+                        d_tau,
+                        tau,
+                        total_count,
+                        invert_tau);
 
   // compute prox with scaled argument
-  conjugate_->EvalLocal(d_scaled_arg, d_result, d_tau, tau, !invert_tau);
+  conjugate_->EvalLocal(d_scaled_arg_, d_res, d_tau, tau, !invert_tau);
 
   // combine back to get result of conjugate prox
-  MoreauPostscale<<<grid, block>>>(d_result,
-                                   d_arg,
-                                   d_tau,
-                                   tau,
-                                   total_count,
-                                   invert_tau);
+  MoreauPostscale<T>
+      <<<grid, block>>>(d_res,
+                        d_arg,
+                        d_tau,
+                        tau,
+                        total_count,
+                        invert_tau);
+
+
+  //  conjugate_->EvalLocal(d_arg, d_res, d_tau, tau, false);
 }
 
 template<typename T>
 size_t ProxMoreau<T>::gpu_mem_amount() {
-  return count_ * dim_ * sizeof(T);
+  return this->count_ * this->dim_ * sizeof(T);
 }
 
 

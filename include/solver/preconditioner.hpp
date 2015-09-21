@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "config.hpp"
-#include "prox.hpp"
+#include "prox/prox.hpp"
 #include "util/sparse_matrix.hpp"
 
 enum PreconditionerType {
@@ -25,8 +25,8 @@ public:
   void ComputeScalar();
   void ComputeAlpha(
       real alpha,
-      const std::vector<Prox *>& prox_g,
-      const std::vector<Prox *>& prox_hc);
+      const std::vector<Prox<real> *>& prox_g,
+      const std::vector<Prox<real> *>& prox_hc);
   void ComputeEquil();
 
   real *left() const { return d_left_; }

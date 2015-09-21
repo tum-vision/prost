@@ -1,11 +1,12 @@
-#include "prox.hpp"
+#include "prox/prox.hpp"
 
 template<typename T>
-void Prox<T>::Eval(T *d_arg, T *d_result, T tau, T *d_tau) {
+void Prox<T>::Eval(T *d_arg, T *d_result, T* d_tau, T tau) {
   EvalLocal(&d_arg[index_],
             &d_result[index_],
+            &d_tau[index_],
             tau,
-            d_tau[index_]);
+            false);
 }
 
 // Explicit template instantiation

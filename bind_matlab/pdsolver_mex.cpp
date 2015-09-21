@@ -28,13 +28,13 @@ void SolverCallback(int it, real *x, real *y, bool is_converged) {
   mexCallMATLAB(0, NULL, 4, cb_rhs, "feval");
 }
 
-void ProxListFromMatlab(const mxArray *pm, std::vector<Prox *>& proxs) {
+void ProxListFromMatlab(const mxArray *pm, std::vector<Prox<real> *>& proxs) {
   const mwSize *dims = mxGetDimensions(pm);
   int num_proxs = dims[0];
 
   for(int i = 0; i < num_proxs; i++) {
     mxArray *prox_cell = mxGetCell(pm, i);
-    Prox *prox = ProxFromMatlab(prox_cell);
+    Prox<real> *prox = ProxFromMatlab(prox_cell);
 
     if(0 == prox)
       mexErrMsgTxt("Error creating the prox.");
@@ -83,15 +83,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   mexPrintf("%s", opts.get_string().c_str());
 
   // set prox operators, ownership gets transfered to solver
-  std::vector<Prox *> prox_g, prox_hc;
+  std::vector<Prox<real> *> prox_g, prox_hc;
+  mexPrintf("Creating prox operators...\n");
   ProxListFromMatlab(prhs[1], prox_g);
   ProxListFromMatlab(prhs[2], prox_hc);
+  mexPrintf("Set prox...\n");
   solver.SetProx_g(prox_g);
   solver.SetProx_hc(prox_hc);
 
+  mexPrintf("Set callback...\n");
   // set callback
   solver.SetCallback(&SolverCallback);
-  
+
+  mexPrintf("Initialize...\n");  
   // init and run solver
   if(solver.Initialize()) {
     size_t gpu_mem_required, gpu_mem_avail, gpu_mem_free;

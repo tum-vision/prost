@@ -7,7 +7,7 @@
 
 #include "config.hpp"
 #include "preconditioner.hpp"
-#include "prox.hpp"
+#include "prox/prox.hpp"
 #include "util/sparse_matrix.hpp"
 
 typedef void (*SolverCallbackPtr)(int, real*, real*, bool);
@@ -103,8 +103,8 @@ struct OptimizationProblem {
   }
   
   int nrows, ncols;
-  std::vector<Prox*> prox_g;
-  std::vector<Prox*> prox_hc;
+  std::vector<Prox<real>*> prox_g;
+  std::vector<Prox<real>*> prox_hc;
   SparseMatrix<real> *mat;
   Preconditioner *precond;
 };
@@ -125,8 +125,8 @@ public:
   void SetMatrix(SparseMatrix<real>* mat);
 
   // Solver takes ownership of prox
-  void SetProx_g(const std::vector<Prox*>& prox);
-  void SetProx_hc(const std::vector<Prox*>& prox);
+  void SetProx_g(const std::vector<Prox<real>*>& prox);
+  void SetProx_hc(const std::vector<Prox<real>*>& prox);
   
   void SetOptions(const SolverOptions& opts);
   void SetCallback(SolverCallbackPtr cb); 

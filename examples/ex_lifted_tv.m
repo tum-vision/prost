@@ -21,7 +21,7 @@ im = imread('data/surprised-cat.jpg');
 im = imresize(im, 0.5);
 [ny, nx] = size(im);
 
-L = 8;  % number of labels
+L = 4;  % number of labels
 t = linspace(0, 1, L); % label space, equidistant
 N = nx * ny;
 
@@ -57,14 +57,14 @@ K = [K1' K3'; K2' K4'; K5 K6];
 
 %% prox operators
 prox_g = { 
-     prox_1d(0, N*L,'indicator_geq', 1, 0, 1, f, 0), 
+     prox_1d(0, N*L,'ind_geq0', 1, 0, 1, f, 0), 
      prox_zero(N*L, 2*N*(L-1)) };
 
 prox_hc = { prox_zero(0, 2*N*L) };
 
 for i=0:(L-2)
-    prox_hc{i + 2, 1} = prox_norm2(2*N*L+i*2*N, N, 2, false, 'indicator_leq', ...
-                                1 / lmb_scaled, 0, 1, 0, 0);
+    prox_hc{i + 2, 1} = prox_norm2(2*N*L+i*2*N, N, 2, false, 'ind_leq0', ...
+                                1 / lmb_scaled, 1, 1, 0, 0);
 end
 
 prox_hc{L + 1, 1} = prox_1d(2*N*L+2*N*(L-1),N,'zero',1,0,1,1,0);
@@ -74,7 +74,7 @@ opts = pdsolver_opts();
 opts.verbose = true;
 opts.adapt = 'converge';
 opts.bt_enabled = false;
-opts.max_iters = 100;
+opts.max_iters = 1000;
 opts.cb_iters = 10;
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;

@@ -1,6 +1,10 @@
 #ifndef PROX_HPP_
 #define PROX_HPP_
 
+#include <stddef.h>
+
+template<typename T> class ProxMoreau;
+
 /**
  * @brief Virtual base class for all proximal operators. Implements prox
  *        for sum of separable functions:
@@ -18,6 +22,8 @@
  */
 template<typename T>
 class Prox {
+  friend class ProxMoreau<T>;
+  
 public:
   Prox(size_t index, size_t count, size_t dim, bool interleaved, bool diagsteps) :
     index_(index),
@@ -39,13 +45,13 @@ public:
    * @brief Initializes the prox Operator, copies data to the GPU.
    *
    */
-  virtual bool Init() = 0;
+  virtual bool Init() { return true; }
 
   /**
    * @brief Cleans up GPU data.
    *
    */
-  virtual void Release() = 0;
+  virtual void Release() {}
 
   /**
    * @brief Evaluates the prox operator on the GPU. d_arg, d_result and

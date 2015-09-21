@@ -1,4 +1,4 @@
-#include "prox_simplex.hpp"
+#include "prox/prox_simplex.hpp"
 
 #include "config.hpp"
 #include "util/cuwrap.hpp"
@@ -35,7 +35,8 @@ void ProxSimplexKernel(T *d_arg,
                        bool invert_tau)
 {
   size_t tx, sx, i, index;
-  extern __shared__ real sh_arg[];
+  extern __shared__ char sh_mem[];
+  T *sh_arg = reinterpret_cast<T *>(sh_mem);
 
   tx = threadIdx.x + blockDim.x * blockIdx.x;
   
@@ -51,11 +52,11 @@ void ProxSimplexKernel(T *d_arg,
     // handle inner product by completing the squaring and
     // pulling it into the squared term of the prox. while
     // scaling it correctly, taking are of the step size.
-    const T arg = d_arg[index];
+    T arg = d_arg[index];
     if(d_coeffs != NULL) {
       T tau_scaled = tau * d_tau[index];
       
-      if(invert_step)
+      if(invert_tau)
         tau_scaled = 1. / tau_scaled;
       
       arg -= tau_scaled * d_coeffs[index];
@@ -66,7 +67,7 @@ void ProxSimplexKernel(T *d_arg,
   __syncthreads();
   
   // 2) sort inside shared memory
-  shellsort<real>(&sh_arg[threadIdx.x * dim], dim);
+  shellsort<T>(&sh_arg[threadIdx.x * dim], dim);
 
   bool bget = false;
   T tmpsum = 0;
@@ -90,11 +91,11 @@ void ProxSimplexKernel(T *d_arg,
     // handle inner product by completing the squaring and
     // pulling it into the squared term of the prox. while
     // scaling it correctly, taking are of the step size.
-    const T arg = d_arg[index];
+    T arg = d_arg[index];
     if(d_coeffs != NULL) {
       T tau_scaled = tau * d_tau[index];
       
-      if(invert_step)
+      if(invert_tau)
         tau_scaled = 1. / tau_scaled;
       
       arg -= tau_scaled * d_coeffs[index];
@@ -106,11 +107,11 @@ void ProxSimplexKernel(T *d_arg,
 
 template<typename T>
 ProxSimplex<T>::ProxSimplex(
-    int index,
-    int count,
-    int dim,
+    size_t index,
+    size_t count,
+    size_t dim,
     bool interleaved,
-    const std::vector<real>& coeffs)
+    const std::vector<T>& coeffs)
 
     : Prox<T>(index, count, dim, interleaved, false), coeffs_(coeffs)
 {
@@ -118,6 +119,7 @@ ProxSimplex<T>::ProxSimplex(
 
 template<typename T>
 ProxSimplex<T>::~ProxSimplex() {
+  Release();
 }
 
 template<typename T>
@@ -125,11 +127,12 @@ bool ProxSimplex<T>::Init() {
   if(coeffs_.empty())
     d_coeffs_ = NULL;
   else {
-    cudaMalloc((void **)&d_coeffs_, sizeof(real) * count_);
-    if(cudaGetLastError() != CUDA_SUCCESS) // out of memory
+    cudaMalloc((void **)&d_coeffs_, sizeof(T) * this->count_);
+    if(cudaGetLastError() != cudaSuccess) // out of memory
       return false;
     
-    cudaMemcpy(d_coeffs_, &coeffs_[0], sizeof(real) * count_, cudaMemcpyHostToDevice);
+    cudaMemcpy(d_coeffs_, &coeffs_[0], sizeof(T) * this->count_,
+               cudaMemcpyHostToDevice);
   }
 
   // TODO: return false if not enough shared mem
@@ -150,9 +153,9 @@ void ProxSimplex<T>::EvalLocal(T *d_arg,
                                bool invert_tau)
 {
   dim3 block(kBlockSizeCUDA, 1, 1);
-  dim3 grid((count_ + block.x - 1) / block.x, 1, 1);
+  dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
-  size_t shmem_bytes = dim_ * block.x * sizeof(T);
+  size_t shmem_bytes = this->dim_ * block.x * sizeof(T);
 
   ProxSimplexKernel<T>
       <<<grid, block, shmem_bytes>>>(
@@ -161,16 +164,16 @@ void ProxSimplex<T>::EvalLocal(T *d_arg,
           d_tau,
           tau,
           d_coeffs_,
-          count_,
-          dim_,
-          interleaved_,
+          this->count_,
+          this->dim_,
+          this->interleaved_,
           invert_tau);
 }
 
 template<typename T>
 size_t ProxSimplex<T>::gpu_mem_amount() {
   if(d_coeffs_ != 0)
-    return count_ * sizeof(T);
+    return this->count_ * sizeof(T);
   else
     return 0;
 }
