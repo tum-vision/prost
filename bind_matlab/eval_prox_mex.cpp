@@ -36,6 +36,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if(dims[1] != 1)
     mexErrMsgTxt("Input to prox should be a vector!");
 
+  if(!prox->Init())
+    mexErrMsgTxt("Failed to init prox!");
+
   // allocate gpu arrays
   real *d_arg;
   real *d_result;

@@ -7,8 +7,7 @@ TODOs:
    on... (compile time cast!!)
  o Do sanity check before creating the prox operators (don't allocate
    stuff inside the constructor)
- o Test Moreau prox
- o Test Simplex prox (multilabel segmentation example)
+ o Test Simplex prox (multilabel segmentation example, with few labels)
  
  o Lifted TV stereo example
  o Epigraph prox, continuous relaxation
@@ -63,6 +62,7 @@ Done:
  x Diagonal Preconditioning a la Pock
  x Add check if prox operators cover the whole primal/dual domain
  x Stopping Criterion?
+ x Test Moreau prox
 
 Ideas of cool Prox-Operators to implement:
  o huber, identity, 0 <= x <= 1, x <= 0, max(0, x), pogs

@@ -35,66 +35,95 @@ void ProxEpiConjQuadrKernel(T *d_arg,
       v[0] = d_arg[tx + count * 0];
       v[1] = d_arg[tx + count * 1];
     }
+
+    T fun_val;
+
+    if(a > 0) {
+      if(v[0] < 2. * a * alpha + b)
+        fun_val = alpha * v[0] - a * alpha * alpha - b * alpha - c;
+      else if(v[0] > 2. * a * beta + b)
+        fun_val = beta * v[0] - a * beta * beta - b * beta - c;
+      else
+        fun_val = v[0] * v[0] / (4. * a) - b * v[0] / (2. * a) + b * b / (4. * a) - c;
+    }
+    else {
+      if(v[0] < a * (alpha + beta) + b) {
+        fun_val = alpha * v[0] - a * alpha * alpha - b * alpha - c;
+      }
+      else {
+        fun_val = beta * v[0] - a * beta * beta - b * beta - c;
+      }
+    }
     
-    // check which case applies (0 = A, 1 = B, 2 = C)
-    const T p_A[2] = { 2 * a * alpha + b, a * alpha * alpha - c };
-    const T p_B[2] = { 2 * a * beta + b, a * beta * beta - c };
-    T n_A[2] = { 1, alpha };
-    T n_B[2] = { -1, -beta }; 
+    // check if we are in the epigraph
+    if(v[1] > fun_val) {
+
+      // nothing to do!
+      result[0] = v[0];
+      result[1] = v[1];
+    }
+    else {
+
+      // check which case applies (0 = A, 1 = B, 2 = C)
+      const T p_A[2] = { 2 * a * alpha + b, a * alpha * alpha - c };
+      const T p_B[2] = { 2 * a * beta + b, a * beta * beta - c };
+      T n_A[2] = { 1, alpha };
+      T n_B[2] = { -1, -beta }; 
     
-    int proj_case;
-    if(PointInHalfspace(v, p_A, n_A, 2))
-      proj_case = 0;
-    else if(PointInHalfspace(v, p_B, n_B, 2))
-      proj_case = 2;
-    else
-      proj_case = 1;
+      int proj_case;
+      if(PointInHalfspace(v, p_A, n_A, 2))
+        proj_case = 0;
+      else if(PointInHalfspace(v, p_B, n_B, 2))
+        proj_case = 2;
+      else
+        proj_case = 1;
     
-    // perform projection
-    switch(proj_case) {
-      case 0: { // case A
-        n_A[0] = -alpha;
-        n_A[1] = 1.;
-        const T t = -a * alpha * alpha - b * alpha - c;
+      // perform projection
+      switch(proj_case) {
+        case 0: { // case A
+          n_A[0] = -alpha;
+          n_A[1] = 1.;
+          const T t = -a * alpha * alpha - b * alpha - c;
           
-        ProjectHalfspace<T>(v,
-                            n_A,
-                            t,
-                            result,
-                            2);
-      } break;
+          ProjectHalfspace<T>(v,
+                              n_A,
+                              t,
+                              result,
+                              2);
+        } break;
 
-      case 1: { // case B
-        if(a > 0) 
-          ProjectParabolaGeneral<T>(v[0],
-                                    v[1],
-                                    1. / (4. * a),
-                                    -b / (2. * a),
-                                    b * b / (4. * a) - c,
-                                    result[0],
-                                    result[1]);
-        else {
-          // if a <= 0 the parabola disappears and we're in the normal cone.
-          result[0] = a * (alpha + beta) + b;
-          result[1] = alpha * beta * a - c;
-        }
+        case 1: { // case B
+          if(a > 0) 
+            ProjectParabolaGeneral<T>(v[0],
+                                      v[1],
+                                      1. / (4. * a),
+                                      -b / (2. * a),
+                                      b * b / (4. * a) - c,
+                                      result[0],
+                                      result[1]);
+          else {
+            // if a <= 0 the parabola disappears and we're in the normal cone.
+            result[0] = a * (alpha + beta) + b;
+            result[1] = alpha * beta * a - c;
+          }
           
-      } break;
+        } break;
 
-      case 2: { // case C
-        n_B[0] = -beta;
-        n_B[1] = 1.;
-        const T t = -a * beta * beta - b * beta - c;
+        case 2: { // case C
+          n_B[0] = -beta;
+          n_B[1] = 1.;
+          const T t = -a * beta * beta - b * beta - c;
 
-        ProjectHalfspace<T>(v,
-                            n_B,
-                            t,
-                            result,
-                            2);
-      } break;
-    }      
+          ProjectHalfspace<T>(v,
+                              n_B,
+                              t,
+                              result,
+                              2);
+        } break;
+      }
+    }
     
-    // write result
+    // write out result
     if(interleaved) {
       d_res[tx * 2 + 0] = result[0];
       d_res[tx * 2 + 1] = result[1];

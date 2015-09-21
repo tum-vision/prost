@@ -3,7 +3,7 @@
 
 %% read data, build linear operator
 im = imread('data/surprised-cat.jpg');
-im = imresize(im, 0.25);
+im = imresize(im, 0.5);
 [ny, nx] = size(im);
 
 f = double(im(:)) / 255.;
@@ -14,8 +14,8 @@ lmb = 0.5;
 %prox_g = { prox_1d(0, nx * ny, 'square', 1, f, 1, 0, 0) };
 
 
-prox_hstar = { prox_norm2(0, nx * ny, 2, false, 'ind_leq0', ...
-                          1 / lmb, 1, 1, 0, 0) }; 
+%prox_hstar = { prox_norm2(0, nx * ny, 2, false, 'ind_leq0', ...
+%                          1 / lmb, 1, 1, 0, 0) }; 
 
 % anisotropic tv
 %prox_hstar = { prox_1d(0, 2 * nx * ny, 'ind_box01', 1 / lmb, -0.5, 1, 0 ,0) }; 
@@ -27,7 +27,7 @@ prox_hstar = { prox_moreau(prox_norm2(0, nx * ny, 2, false, 'abs', ...
 
 %% set options and run algorithm
 opts = pdsolver_opts();
-opts.adapt = 'balance';
+opts.adapt = 'none';
 opts.verbose = false;
 opts.bt_enabled = false;
 opts.max_iters = 1000;

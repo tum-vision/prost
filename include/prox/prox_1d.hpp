@@ -37,7 +37,7 @@ struct Prox1DCoeffsDevice {
 /**
  * @brief Provides proximal operator for fully separable 1D functions:
  * 
- *        sum_i c_i * f(a_i x - b_i) + d_i x + e_i x^2.
+ *        sum_i c_i * f(a_i x - b_i) + d_i x + (e_i / 2) x^2.
  *
  *        alpha and beta are generic parameters depending on the choice of f,
  *        e.g. the power for f(x) = |x|^{alpha}.

@@ -68,16 +68,16 @@ inline __device__ void ProjectParabolaSimple(const T& x0,
   else {
     const T a = 2. * alpha * (x0 * x0);
     const T b = 2. * (1. - 2. * alpha * y0) / 3.;
-    const T sq = powf(-b, 3. / 2.);
+    const T sq = pow(-b, 3. / 2.);
     const T d = (a - sq) * (a + sq);
 
     T v;
     if(d >= 0) {
-      const T c = powf(a + sqrtf(d), 1. / 3.);
+      const T c = pow(a + sqrt(d), 1. / 3.);
       v = c - b / c;
     }
     else {
-      v = 2 * sqrtf(-b) * cosf(acosf(a / powf(-b, 3. / 2.)) / 3.);
+      v = 2 * sqrt(-b) * cos(acos(a / pow(-b, 3. / 2.)) / 3.);
     }
 
     if(x0 > 0) 
@@ -108,14 +108,14 @@ inline __device__ void ProjectParabolaGeneral(const T& x0,
   T tildey;
   
   ProjectParabolaSimple<T>(
-      x0 - q / 2.,
-      y0 + q * q / 4. - r,
+      x0 + q / (2. * p),
+      y0 + q * q / (4. * p) - r,
       p,
       tildex,
       tildey);
   
-  x = tildex + q / 2.;
-  y = tildey - q * q / 4. + r;
+  x = tildex - q / (2. * p);
+  y = tildey - q * q / (4. * p) + r;
 }
 
 /**

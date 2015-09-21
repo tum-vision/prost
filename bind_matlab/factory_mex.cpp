@@ -233,19 +233,19 @@ ProxEpiConjQuadr<real>* ProxEpiConjQuadrFromMatlab(
   const mwSize *dims;
   double *val;
 
-  std::vector<real>* coeff_array[5] = {
+  std::vector<real>* coeff_array[PROX_EPI_CONJQUADR_NUM_COEFFS] = {
     &coeffs.a,
     &coeffs.b,
     &coeffs.c,
     &coeffs.alpha,
     &coeffs.beta };
 
-  for(int i = 0; i < 5; ++i) {
+  for(int i = 0; i < PROX_EPI_CONJQUADR_NUM_COEFFS; ++i) {
     dims = mxGetDimensions(mxGetCell(data, i));
     val = mxGetPr(mxGetCell(data, i));
 
     for(int j = 0; j < dims[0]; j++)
-      (*coeff_array[i - 1]).push_back((real)val[j]);
+      (*coeff_array[i]).push_back((real)val[j]);
   }
   
   return new ProxEpiConjQuadr<real>(idx, count, interleaved, coeffs);
