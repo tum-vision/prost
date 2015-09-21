@@ -54,10 +54,9 @@ ProxMoreau<T>::~ProxMoreau() {
 
 template<typename T>
 bool ProxMoreau<T>::Init() {
-  cudaMalloc((void **)&d_scaled_arg_, sizeof(T) * (this->count_ * this->dim_));
-
   bool success = conjugate_->Init();
-  
+
+  cudaMalloc((void **)&d_scaled_arg_, sizeof(T) * (this->count_ * this->dim_));  
   return success && (cudaGetLastError() == cudaSuccess);
 }
 

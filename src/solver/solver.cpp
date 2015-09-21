@@ -129,7 +129,7 @@ bool Solver::Initialize() {
 
   for(size_t i = 0; i < problem_.prox_g.size(); i++) {
     if(!problem_.prox_g[i]->Init()) {
-      std::cout << "Failed to initialized prox_g!" << std::endl;
+      std::cout << "Failed to initialize prox_g!" << std::endl;
 
       return false;      
     }
@@ -137,7 +137,7 @@ bool Solver::Initialize() {
 
   for(size_t i = 0; i < problem_.prox_hc.size(); i++) {
     if(!problem_.prox_hc[i]->Init()) {
-      std::cout << "Failed to initialized prox_hc!" << std::endl;
+      std::cout << "Failed to initialize prox_hc!" << std::endl;
 
       return false;      
     }
