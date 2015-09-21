@@ -21,7 +21,9 @@ im = imread('data/surprised-cat.jpg');
 im = imresize(im, 0.5);
 [ny, nx] = size(im);
 
+
 L = 4;  % number of labels
+
 t = linspace(0, 1, L); % label space, equidistant
 N = nx * ny;
 
@@ -74,12 +76,14 @@ opts = pdsolver_opts();
 opts.verbose = true;
 opts.adapt = 'converge';
 opts.bt_enabled = false;
+
 opts.max_iters = 1000;
 opts.cb_iters = 10;
+
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;
-opts.tol_primal = 0.05;
-opts.tol_dual = 0.05;
+opts.tol_primal = 0.25;
+opts.tol_dual = 0.25;
 opts.callback = @(it, x, y) ex_lifted_tv_callback(it, x, y, f, nx, ny, L);
 [uw, qrs] = pdsolver(K, prox_g, prox_hc, opts);
 

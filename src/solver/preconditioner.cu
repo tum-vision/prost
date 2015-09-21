@@ -56,8 +56,6 @@ void Preconditioner::ComputeAlpha(
   std::cout.flush();
 
   // compute right preconditioner as sum over matrix columns
-  std::cout << "colsum...";
-  std::cout.flush();
   for(int i = 0; i < n; i++) {
     real sum = mat_->col_sum(i, 2. - alpha);
 
@@ -68,8 +66,6 @@ void Preconditioner::ComputeAlpha(
   }
   
   // compute left preconditioner as sum over matrix rows
-  std::cout << "rowsum...";
-  std::cout.flush();
   for(int i = 0; i < m; i++) {
     real sum = mat_->row_sum(i, alpha);
 
@@ -80,8 +76,6 @@ void Preconditioner::ComputeAlpha(
   }
 
   // average diagonal entries where prox doesn't allow diagonal steps
-  std::cout << "averaging...";
-  std::cout.flush();
   std::vector<std::vector<int> > indices_left = GetIndices(prox_hc);
   std::vector<std::vector<int> > indices_right = GetIndices(prox_g);
   AverageValues(h_left, indices_left);

@@ -84,18 +84,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   // set prox operators, ownership gets transfered to solver
   std::vector<Prox<real> *> prox_g, prox_hc;
-  mexPrintf("Creating prox operators...\n");
   ProxListFromMatlab(prhs[1], prox_g);
   ProxListFromMatlab(prhs[2], prox_hc);
-  mexPrintf("Set prox...\n");
+
   solver.SetProx_g(prox_g);
   solver.SetProx_hc(prox_hc);
 
-  mexPrintf("Set callback...\n");
   // set callback
   solver.SetCallback(&SolverCallback);
 
-  mexPrintf("Initialize...\n");  
   // init and run solver
   if(solver.Initialize()) {
     size_t gpu_mem_required, gpu_mem_avail, gpu_mem_free;

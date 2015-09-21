@@ -3,6 +3,7 @@
 
 #include <ctime>
 #include <list>
+#include <string>
 
 template<typename T>
 std::list<double> linspace(T start_in, T end_in, int num_in) {
