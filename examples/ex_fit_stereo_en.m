@@ -43,7 +43,7 @@ j = randi([1 n],1, 1);
 %%
 L = 15;
 deg=2;
-gamma = 0.9;
+gamma = 1e3;
 delta = 0.0;
 
 %%
@@ -66,13 +66,13 @@ opts.adapt = 'converge';
 opts.bt_enabled = false;
 
 opts.max_iters = 100000;
-opts.cb_iters = 100;
+opts.cb_iters = 10;
 
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;
-opts.tol_primal = 0.025;
-opts.tol_dual = 0.025;
-opts.callback = @(it, x, y) disp('');
+opts.tol_primal = 0.0025;
+opts.tol_dual = 0.0025;
+opts.callback = @(it, x, y) fprintf('%d\n', it);
 [A, qrs] = pdsolver(K, prox_g, prox_hc, opts);
 A = reshape(A, [deg+1, L-1])';
 %%
