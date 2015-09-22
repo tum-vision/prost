@@ -55,8 +55,8 @@ void ProxEpiConjQuadrKernel(T *d_arg,
       }
     }
     
-    // check if we are in the epigraph
-    if(v[1] > fun_val) {
+    // check if we are in/on the epigraph
+    if(v[1] >= fun_val) {
 
       // nothing to do!
       result[0] = v[0];
@@ -65,8 +65,20 @@ void ProxEpiConjQuadrKernel(T *d_arg,
     else {
 
       // check which case applies (0 = A, 1 = B, 2 = C)
-      const T p_A[2] = { 2 * a * alpha + b, a * alpha * alpha - c };
-      const T p_B[2] = { 2 * a * beta + b, a * beta * beta - c };
+      T p_A[2];
+      T p_B[2];
+
+      if(a < 0) {
+        p_A[0] = p_B[0] = a * (alpha + beta) + b;
+        p_A[1] = p_B[1] = alpha * beta * a - c;
+      }
+      else {
+        p_A[0] = 2 * a * alpha + b;
+        p_A[1] = a * alpha * alpha - c;
+        p_B[0] = 2 * a * beta + b;
+        p_B[1] = a * beta * beta - c;
+      }
+      
       T n_A[2] = { 1, alpha };
       T n_B[2] = { -1, -beta }; 
     
