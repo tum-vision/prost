@@ -36,8 +36,8 @@ void ProxEpiConjQuadrKernel(T *d_arg,
       v[1] = d_arg[tx + count * 1];
     }
 
+    // compute function value to see if we are already in epigraph
     T fun_val;
-
     if(a > 0) {
       if(v[0] < 2. * a * alpha + b)
         fun_val = alpha * v[0] - a * alpha * alpha - b * alpha - c;
@@ -65,9 +65,10 @@ void ProxEpiConjQuadrKernel(T *d_arg,
     else {
 
       // check which case applies (0 = A, 1 = B, 2 = C)
-      T p_A[2];
-      T p_B[2];
 
+      // compute boundary points between A, B and C
+      T p_A[2]; // point on epigraph of boundary between A and B
+      T p_B[2]; // point on epigraph of boundary between B and C
       if(a < 0) {
         p_A[0] = p_B[0] = a * (alpha + beta) + b;
         p_A[1] = p_B[1] = alpha * beta * a - c;
@@ -78,7 +79,8 @@ void ProxEpiConjQuadrKernel(T *d_arg,
         p_B[0] = 2 * a * beta + b;
         p_B[1] = a * beta * beta - c;
       }
-      
+
+      // normals of the halfspaces A and B
       T n_A[2] = { 1, alpha };
       T n_B[2] = { -1, -beta }; 
     
