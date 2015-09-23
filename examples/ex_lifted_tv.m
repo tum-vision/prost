@@ -40,7 +40,7 @@ lmb = 0.5;
 lmb_scaled = lmb * (t(2) - t(1)); % assumes equidistant labels
 
 %% linear operator
-% divergence
+% -divergence
 K1 = grad_forw_2d(nx, ny, L)'; 
 % zeros
 K2 = sparse(N*L, 2*N*(L-1)); 

@@ -1,5 +1,6 @@
 TODOs:
  o mexPrintf instead of std::cout <<...
+ o Implement alpha != 1 for preconds.
  o Do math functions for double/float properly
  o Fix bug where residuals are 0 at beginning.
  o Add templates instead of typedef real float...
