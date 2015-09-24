@@ -17,12 +17,12 @@
 % total size of dual variable: N*L*2 + N*(L-1)*2 + N
 
 %% data term
-im = imread('data/surprised-cat.jpg');
-im = imresize(im, 0.5);
+im = imread('data/24004.jpg');
+im = imresize(im, 1);
 [ny, nx] = size(im);
 
 
-L = 4;  % number of labels
+L = 16;  % number of labels
 
 t = linspace(0, 1, L); % label space, equidistant
 N = nx * ny;
@@ -36,7 +36,7 @@ end
 
 % regularization in front of total variation
 % scale accordingly to label spacing
-lmb = 0.5;
+lmb = 0.25;
 lmb_scaled = lmb * (t(2) - t(1)); % assumes equidistant labels
 
 %% linear operator
@@ -71,20 +71,31 @@ end
 
 prox_hc{L + 1, 1} = prox_1d(2*N*L+2*N*(L-1),N,'zero',1,0,1,1,0);
 
+global plot_primal;
+global plot_dual;
+global plot_iters;
+
+plot_primal=[];
+plot_dual=[];
+plot_iters=[];
+Kgrad = grad_forw_2d(nx, ny, 1);
+
 %% solve problem
 opts = pdsolver_opts();
 opts.verbose = true;
 opts.adapt = 'converge';
 opts.bt_enabled = false;
 
-opts.max_iters = 1000;
-opts.cb_iters = 10;
+opts.max_iters = 10000;
+opts.cb_iters = 100;
 
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;
-opts.tol_primal = 0.25;
-opts.tol_dual = 0.25;
-opts.callback = @(it, x, y) ex_lifted_tv_callback(it, x, y, f, nx, ny, L);
+opts.tol_primal = 0.01;
+opts.tol_dual = 0.01;
+opts.callback = @(it, x, y) ex_lifted_tv_callback(it, x, y, f, nx, ...
+                                                  ny, L, t, Kgrad, ...
+                                                  f2, lmb);
 [uw, qrs] = pdsolver(K, prox_g, prox_hc, opts);
 
 
