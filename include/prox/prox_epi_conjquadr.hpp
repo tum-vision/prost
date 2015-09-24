@@ -71,7 +71,7 @@ inline __device__ void ProjectParabolaSimple(const T& x0,
     T d, v;
     
     if(b < 0) {
-      const T sq = pow(-b, 3. / 2.);
+      const T sq = pow(-b, static_cast<T>(3. / 2.));
       d = (a - sq) * (a + sq);      
     }
     else {
@@ -79,11 +79,11 @@ inline __device__ void ProjectParabolaSimple(const T& x0,
     }
     
     if(d >= 0) {
-      const T c = pow(a + sqrt(d), 1. / 3.);
+      const T c = pow(a + sqrt(d), static_cast<T>(1. / 3.));
       v = c - b / c;
     }
     else {
-      v = 2 * sqrt(-b) * cos(acos(a / pow(-b, 3. / 2.)) / 3.);
+      v = 2 * sqrt(-b) * cos(acos(a / pow(-b, static_cast<T>(3. / 2.))) / static_cast<T>(3.));
     }
 
     if(x0 > 0) 

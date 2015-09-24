@@ -29,4 +29,6 @@ Prox<real>* ProxFromMatlab(const mxArray *pm);
 SparseMatrix<real>* MatrixFromMatlab(const mxArray *pm);
 void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **cb_func_handle);
 
+LinOp<real>* LinOpFromMatlab(
+
 #endif

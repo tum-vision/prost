@@ -39,6 +39,13 @@ protected:
   real *d_kty_; // holds mat-vec product K^T y^k
   real *d_kx_prev_; // holds mat-vec product K x^{k-1}
   real *d_kty_prev_; // holds mat-vec product K^T y^{k-1}
+
+  /* cheaper version:
+  real *d_x_; 
+  real *d_y_; 
+  real *d_x_bar_;
+  real *d_tmp_; 
+  */
   
   real tau_; // primal step size
   real sigma_; // dual step size
