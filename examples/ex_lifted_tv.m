@@ -21,8 +21,7 @@ im = imread('data/24004.jpg');
 im = imresize(im, 1);
 [ny, nx] = size(im);
 
-
-L = 16;  % number of labels
+L = 64;  % number of labels
 
 t = linspace(0, 1, L); % label space, equidistant
 N = nx * ny;
@@ -86,13 +85,13 @@ opts.verbose = true;
 opts.adapt = 'converge';
 opts.bt_enabled = false;
 
-opts.max_iters = 10000;
+opts.max_iters = 25000;
 opts.cb_iters = 100;
 
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;
-opts.tol_primal = 0.01;
-opts.tol_dual = 0.01;
+opts.tol_primal = 0.001;
+opts.tol_dual = 0.001;
 opts.callback = @(it, x, y) ex_lifted_tv_callback(it, x, y, f, nx, ...
                                                   ny, L, t, Kgrad, ...
                                                   f2, lmb);
@@ -107,8 +106,8 @@ u = reshape(uw(1:nx*ny*L), nx*ny, L) * t';
 % u3 = reshape(uw(2*nx*ny+1:3*nx*ny), nx*ny, 1);
 % u4 = reshape(uw(3*nx*ny+1:4*nx*ny), nx*ny, 1);
 
-figure;
-subplot(1,1,1);
-imshow(reshape(u, ny, nx)); % solution
+%figure;
+%subplot(1,1,1);
+%imshow(reshape(u, ny, nx)); % solution
 
 

@@ -106,7 +106,6 @@ size_t ProxMoreau<T>::gpu_mem_amount() {
   return this->count_ * this->dim_ * sizeof(T);
 }
 
-
 // Explicit template instantiation
 template class ProxMoreau<float>;
 template class ProxMoreau<double>;

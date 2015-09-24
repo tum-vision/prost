@@ -7,7 +7,12 @@ im = imresize(im, 1);
 [ny, nx] = size(im);
 
 f = double(im(:)) / 255.;
+
 K = grad_forw_2d(nx, ny, 1);
+
+linop = { {linop_sparse(K), linop_identity(128},
+          {linop_zero(128), }};
+
 lmb = 0.25; 
 
 %% setup prox operators
@@ -38,13 +43,13 @@ opts = pdsolver_opts();
 opts.adapt = 'balance';
 opts.verbose = false;
 opts.bt_enabled = false;
-opts.max_iters = 10000;
+opts.max_iters = 25000;
 opts.cb_iters = 100;
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;
 opts.tol_primal = 0.01;
 opts.tol_dual = 0.01;
-opts.callback = @(it, x, y) ex_rof_callback(K, f, lmb, it, x, y, t);
+opts.callback = @(it, x, y) ex_rof_callback(K, f, lmb, it, x, y);
 [x, y] = pdsolver(K, prox_g, prox_hstar, opts);
 
 %% show result

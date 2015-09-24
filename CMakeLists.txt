@@ -7,14 +7,15 @@ find_package(CUDA REQUIRED)
 if(APPLE)
   set(CUDA_HOST_COMPILER /usr/bin/clang)
   set(CMAKE_CXX_FLAGS "-g -stdlib=libstdc++")
+else()
+  set(CMAKE_CXX_FLAGS "-fPIC -O3")
 endif()
 
 # TODO: fix this
 #if(UNIX)
-#  set(CMAKE_CXX_FLAGS "-fPIC -O3")
 #endif()
 
-set(CUDA_NVCC_FLAGS "-arch=compute_30 -code=sm_30 -g")
+set(CUDA_NVCC_FLAGS "-arch=compute_30 -code=sm_30 -O3")
 include_directories("include")
 
 file(GLOB SOURCES

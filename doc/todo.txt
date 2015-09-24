@@ -1,8 +1,11 @@
 TODOs:
- o mexPrintf instead of std::cout <<...
+ o prox operator constructor in matlab doesn't need index -- infer
+   this automatically!
+ o default arguments for prox operator
+ o mexPrintf instead of std::cout <<... or general PRINTF define
  o Implement alpha != 1 for preconds.
  o Do math functions for double/float properly
- o Fix bug where residuals are 0 at beginning.
+ o Fix bug where residuals are 0 at beginning?
  o Add templates instead of typedef real float...
  o Write proper Makefiles
  o Check whether is necessary to static_cast<real>(1) and so
