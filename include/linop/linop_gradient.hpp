@@ -1,6 +1,8 @@
 #ifndef LINOP_GRADIENT_HPP_
 #define LINOP_GRADIENT_HPP_
 
+#include "linop.hpp"
+
 /**
  * @brief Assumes label-first ordering and outputs dx dy pixelwise ordered.
  *
@@ -12,8 +14,8 @@ class LinOpGradient2D : public LinOp<T> {
   virtual ~LinOpGradient2D();
 
   // required for preconditioners
-  virtual T row_sum(int row, T alpha) const { return 2; }
-  virtual T col_sum(int col, T alpha) const { return 4; }
+  virtual T row_sum(size_t row, T alpha) const { return 2; }
+  virtual T col_sum(size_t col, T alpha) const { return 4; }
   
  protected:
   virtual void EvalLocalAdd(T *d_res, T *d_rhs);
@@ -35,8 +37,8 @@ class LinOpGradient3D : public LinOp<T> {
   virtual ~LinOpGradient3D();
 
   // required for preconditioners
-  virtual T row_sum(int row, T alpha) const { return 2; }
-  virtual T col_sum(int col, T alpha) const { return 6; }
+  virtual T row_sum(size_t row, T alpha) const { return 2; }
+  virtual T col_sum(size_t col, T alpha) const { return 6; }
 
  protected:
   virtual void EvalLocalAdd(T *d_res, T *d_rhs);
