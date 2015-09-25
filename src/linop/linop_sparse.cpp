@@ -1,4 +1,4 @@
-#include "linop_sparse.hpp"
+#include "linop/linop_sparse.hpp"
 
 template<typename T>
 LinOpSparse<T>::LinOpSparse(size_t row,
@@ -43,12 +43,14 @@ void LinOpSparse<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
 }
 
 template<typename T>
-T LinOpSparse<T>::row_sum(int row, T alpha) const {
-  return mat_->row_sum(row - row_, alpha);
+T LinOpSparse<T>::row_sum(size_t row, T alpha) const {
+  return mat_->row_sum(row - this->row_, alpha);
 }
 
 template<typename T>
-T LinOpSparse<T>::col_sum(int col, T alpha) const {
-  return mat_->col_sum(col - col_, alpha);
+T LinOpSparse<T>::col_sum(size_t col, T alpha) const {
+  return mat_->col_sum(col - this->col_, alpha);
 }
 
+template class LinOpSparse<float>;
+template class LinOpSparse<double>;

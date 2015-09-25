@@ -1,6 +1,8 @@
 #ifndef LINOP_HPP_
 #define LINOP_HPP_
 
+#include <vector>
+
 /*
  * @brief Abstract base class for linear operator blocks. Also
  *        implements the "zero" operator.
@@ -19,8 +21,8 @@ class LinOp {
   void EvalAdjointAdd(T *d_res, T *d_rhs);
 
   // required for preconditioners
-  virtual T row_sum(int row, T alpha) const { return 0; }
-  virtual T col_sum(int col, T alpha) const { return 0; }
+  virtual T row_sum(size_t row, T alpha) const { return 0; }
+  virtual T col_sum(size_t col, T alpha) const { return 0; }
 
   size_t row() const { return row_; }
   size_t col() const { return col_; }
@@ -57,11 +59,11 @@ class LinearOperator {
   void Release();
 
   void Eval(T *d_res, T *d_rhs);
-  void EvalAdjoint(T *d_res, t *d_rhs);
+  void EvalAdjoint(T *d_res, T *d_rhs);
 
   // required for preconditioners
-  T row_sum(int row, T alpha) const;
-  T col_sum(int col, T alpha) const;
+  T row_sum(size_t row, T alpha) const;
+  T col_sum(size_t col, T alpha) const;
 
   size_t gpu_mem_amount() const;
   

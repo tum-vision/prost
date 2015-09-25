@@ -1,13 +1,15 @@
-#include "linop_identity.hpp"
+#include "linop/linop_identity.hpp"
 
 #include "config.hpp"
+#include <cuda_runtime.h>
 
 static const size_t LINOP_IDENTITY_CMEM_SIZE = 1024;
 
 __constant__ float cmem_factors[LINOP_IDENTITY_CMEM_SIZE];
 __constant__ size_t cmem_offsets[LINOP_IDENTITY_CMEM_SIZE];
 
-static size_t LinOpIdentity<T>::cmem_counter_ = 0;
+template<> size_t LinOpIdentity<float>::cmem_counter_ = 0;
+template<> size_t LinOpIdentity<double>::cmem_counter_ = 0;
 
 template<typename T>
 __global__
@@ -55,26 +57,27 @@ LinOpIdentity<T>::LinOpIdentity(size_t row,
                                 size_t ndiags,
                                 const std::vector<size_t>& offsets,
                                 const std::vector<T>& factors)
-    : LinOp(row, col, nrows, ncols), cmem_offset_(0), ndiags_(ndiags), offsets_(offsets)
+    : LinOp<T>(row, col, nrows, ncols), cmem_offset_(0), ndiags_(ndiags), offsets_(offsets)
 {
   for(size_t i = 0; i < factors.size(); i++)
     factors_[i] = static_cast<float>(factors[i]);
 }
-  
+
+template<typename T>
 LinOpIdentity<T>::~LinOpIdentity() {
   Release();
 }
 
 template<typename T>
 bool LinOpIdentity<T>::Init() {
-  cmem_offset = cmem_counter_;
+  cmem_offset_ = cmem_counter_;
   cmem_counter_ += ndiags_;
 
   if(cmem_counter_ >= LINOP_IDENTITY_CMEM_SIZE)
     return false;
 
   cudaMemcpyToSymbol(cmem_factors, &factors_[0], sizeof(float) * ndiags_);
-  cudaMemcpyToSymobl(cmem_offsets, &offsets_[0], sizeof(size_t) * ndiags_);
+  cudaMemcpyToSymbol(cmem_offsets, &offsets_[0], sizeof(size_t) * ndiags_);
   
   return true;
 }
@@ -86,39 +89,39 @@ void LinOpIdentity<T>::Release() {
 template<typename T>
 void LinOpIdentity<T>::EvalLocalAdd(T *d_res, T *d_rhs) {
   dim3 block(kBlockSizeCUDA, 1, 1);
-  dim3 grid((nrows_ + block.x - 1) / block.x, 1, 1);
+  dim3 grid((this->nrows_ + block.x - 1) / block.x, 1, 1);
 
   LinOpIdentityKernel<T>
       <<<grid, block>>>(d_res,
                         d_rhs,
                         ndiags_,
-                        nrows_,
-                        ncols_,
+                        this->nrows_,
+                        this->ncols_,
                         cmem_offset_);
 }
 
 template<typename T>
 void LinOpIdentity<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
   dim3 block(kBlockSizeCUDA, 1, 1);
-  dim3 grid((ncols_ + block.x - 1) / block.x, 1, 1);
+  dim3 grid((this->ncols_ + block.x - 1) / block.x, 1, 1);
 
   LinOpIdentityAdjointKernel<T>
       <<<grid, block>>>(d_res,
                         d_rhs,
                         ndiags_,
-                        nrows_,
-                        ncols_,
+                        this->nrows_,
+                        this->ncols_,
                         cmem_offset_);
 }
 
 template<typename T>
-T LinOpIdentity<T>::row_sum(int row, T alpha) const {
+T LinOpIdentity<T>::row_sum(size_t row, T alpha) const {
   T sum = 0;
 
   for(size_t i = 0; i < ndiags_; i++) {
     const size_t col = row + offsets_[i];
 
-    if(col >= ncols_)
+    if(col >= this->ncols_)
       break;
 
     sum += factors_[i];
@@ -128,12 +131,12 @@ T LinOpIdentity<T>::row_sum(int row, T alpha) const {
 }
 
 template<typename T>
-T LinOpIdentity<T>::col_sum(int col, T alpha) const {
+T LinOpIdentity<T>::col_sum(size_t col, T alpha) const {
   T sum = 0;
   for(size_t i = 0; i < ndiags_; i++) {
     size_t ofs = offsets_[i];
     
-    if(ofs <= col && (col - ofs) < nrows_) {
+    if(ofs <= col && (col - ofs) < this->nrows_) {
       sum += factors_[i];
     }
 

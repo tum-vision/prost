@@ -21,6 +21,10 @@ class LinOpSparse : public LinOp<T> {
   virtual void Release();
 
   virtual size_t gpu_mem_amount() const { return mat_->gpu_mem_amount(); }
+
+  // required for preconditioners
+  virtual T row_sum(size_t row, T alpha) const;
+  virtual T col_sum(size_t col, T alpha) const;
   
  protected:
   virtual void EvalLocalAdd(T *d_res, T *d_rhs);

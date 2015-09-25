@@ -1,9 +1,11 @@
-#include "linop.hpp"
+#include "linop/linop.hpp"
+
+#include <cuda_runtime.h>
 
 bool RectangleOverlap(size_t x1, size_t y1,
                       size_t x2, size_t y2,
                       size_t a1, size_t b1,
-                      size_t a2, size_t b2) const
+                      size_t a2, size_t b2) 
 { 
   return (x1 <= a2) && (x2 >= a1) && (y1 <= b2) && (y2 >= b1);
 }
@@ -41,12 +43,12 @@ LinOp<T>::~LinOp() {
 
 template<typename T>
 void LinOp<T>::EvalAdd(T *d_res, T *d_rhs) {
-  EvalLocal(&d_res[row_], &d_rhs[row_]);
+  EvalLocalAdd(&d_res[row_], &d_rhs[row_]);
 }
 
 template<typename T>
 void LinOp<T>::EvalAdjointAdd(T *d_res, T *d_rhs) {
-  EvalAdjointLocal(&d_res[col_], &d_rhs[col_]);
+  EvalAdjointLocalAdd(&d_res[col_], &d_rhs[col_]);
 }
 
 template<typename T>
@@ -95,13 +97,14 @@ bool LinearOperator<T>::Init() {
   
   bool overlap = false;
   for(size_t i = 0; i < operators_.size(); i++) {
+    LinOp<T>* op_i = operators_[i];
+
     nrows_ = std::max(op_i->row() + op_i->nrows(), nrows_);
     ncols_ = std::max(op_i->col() + op_i->ncols(), ncols_);
 
     area += op_i->nrows() * op_i->ncols();
     
     for(size_t j = i + 1; j < operators_.size(); j++) {
-      LinOp<T>* op_i = operators_[i];
       LinOp<T>* op_j = operators_[j];
 
       overlap |= RectangleOverlap(op_i->col(), op_i->row(),
@@ -144,7 +147,7 @@ void LinearOperator<T>::Eval(T *d_res, T *d_rhs) {
 }
 
 template<typename T>
-void LinearOperator<T>::EvalAdjoint(T *d_res, t *d_rhs) {
+void LinearOperator<T>::EvalAdjoint(T *d_res, T *d_rhs) {
   cudaMemset(d_res, 0, sizeof(T) * ncols_);
   
   for(size_t i = 0; i < operators_.size(); i++)
@@ -152,7 +155,7 @@ void LinearOperator<T>::EvalAdjoint(T *d_res, t *d_rhs) {
 }
 
 template<typename T>
-T LinearOperator<T>::row_sum(int row, T alpha) const {
+T LinearOperator<T>::row_sum(size_t row, T alpha) const {
   T sum = 0;
   
   for(size_t i = 0; i < operators_.size(); i++) {
@@ -167,7 +170,7 @@ T LinearOperator<T>::row_sum(int row, T alpha) const {
 }
 
 template<typename T>
-T LinearOperator<T>::col_sum(int col, T alpha) const {
+T LinearOperator<T>::col_sum(size_t col, T alpha) const {
   T sum = 0;
   
   for(size_t i = 0; i < operators_.size(); i++) {

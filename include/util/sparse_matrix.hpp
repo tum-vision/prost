@@ -163,13 +163,13 @@ public:
     if(alpha == 1) {
       for(int i = h_ptr_[row]; i < h_ptr_[row + 1]; i++)
       {
-        sum += abs(h_val_[i]);
+        sum += std::abs(h_val_[i]);
       }
     }
     else {
       for(int i = h_ptr_[row]; i < h_ptr_[row + 1]; i++)
       {
-        sum += powf(abs(h_val_[i]), alpha);
+        sum += std::pow(std::abs(h_val_[i]), alpha);
       }
     }
     
@@ -184,7 +184,7 @@ public:
     assert(h_ptr_t_[col + 1] >= 0);
     assert(h_ptr_t_[col + 1] <= nnz_);
     for(int i = h_ptr_t_[col]; i < h_ptr_t_[col + 1]; i++) {
-      sum += pow(abs(h_val_t_[i]), alpha);
+      sum += std::pow(std::abs(h_val_t_[i]), alpha);
     }
     
     return sum;

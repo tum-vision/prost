@@ -1,6 +1,8 @@
 #ifndef LINOP_IDENTITY_HPP_
 #define LINOP_IDENTITY_HPP_
 
+#include "linop.hpp"
+
 /**
  * @brief Linear operator implementation of the MATLAB command speye.
  *
@@ -26,8 +28,8 @@ class LinOpIdentity : public LinOp<T> {
   virtual void Release();
 
   // required for preconditioners
-  virtual T row_sum(int row, T alpha) const;
-  virtual T col_sum(int col, T alpha) const;
+  virtual T row_sum(size_t row, T alpha) const;
+  virtual T col_sum(size_t col, T alpha) const;
   
  protected:
   virtual void EvalLocalAdd(T *d_res, T *d_rhs);
