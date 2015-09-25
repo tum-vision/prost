@@ -16,6 +16,9 @@
 % size of s: N (sum constraint)
 % total size of dual variable: N*L*2 + N*(L-1)*2 + N
 
+%
+
+
 %% data term
 im = imread('data/24004.jpg');
 im = imresize(im, 1);

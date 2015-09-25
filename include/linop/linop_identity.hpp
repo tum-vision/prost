@@ -25,6 +25,10 @@ class LinOpIdentity : public LinOp<T> {
   virtual bool Init();
   virtual void Release();
 
+  // required for preconditioners
+  virtual T row_sum(int row, T alpha) const;
+  virtual T col_sum(int col, T alpha) const;
+  
  protected:
   virtual void EvalLocalAdd(T *d_res, T *d_rhs);
   virtual void EvalAdjointLocalAdd(T *d_res, T *d_rhs);

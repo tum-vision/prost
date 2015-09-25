@@ -111,6 +111,39 @@ void LinOpIdentity<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
                         cmem_offset_);
 }
 
+template<typename T>
+T LinOpIdentity<T>::row_sum(int row, T alpha) const {
+  T sum = 0;
+
+  for(size_t i = 0; i < ndiags_; i++) {
+    const size_t col = row + offsets_[i];
+
+    if(col >= ncols_)
+      break;
+
+    sum += factors_[i];
+  }
+
+  return sum;
+}
+
+template<typename T>
+T LinOpIdentity<T>::col_sum(int col, T alpha) const {
+  T sum = 0;
+  for(size_t i = 0; i < ndiags_; i++) {
+    size_t ofs = offsets_[i];
+    
+    if(ofs <= col && (col - ofs) < nrows_) {
+      sum += factors_[i];
+    }
+
+    if(ofs > col)
+      break;
+  }
+
+  return sum;
+}
+
 // Explicit template instantiation
 template class LinOpIdentity<float>;
 template class LinOpIdentity<double>;
