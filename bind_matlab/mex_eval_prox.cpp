@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "factory_mex.hpp"
+#include "mex_factory.hpp"
 #include "util/util.hpp"
 
 /**

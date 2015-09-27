@@ -65,6 +65,9 @@ class LinearOperator {
   T row_sum(size_t row, T alpha) const;
   T col_sum(size_t col, T alpha) const;
 
+  size_t nrows() const { return nrows_; }
+  size_t ncols() const { return ncols_; } 
+
   size_t gpu_mem_amount() const;
   
  protected:

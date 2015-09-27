@@ -1,4 +1,4 @@
-#include "factory_mex.hpp"
+#include "mex_factory.hpp"
 
 #include <algorithm>
 
@@ -9,6 +9,11 @@
 #include "prox/prox_norm2.hpp"
 #include "prox/prox_simplex.hpp"
 #include "prox/prox_zero.hpp"
+
+#include "linop/linop.hpp"
+#include "linop/linop_gradient.hpp"
+#include "linop/linop_identity.hpp"
+#include "linop/linop_sparse.hpp"
 
 /**
  * @brief Returns the prox-function corresponding to the string.
@@ -327,3 +332,66 @@ Prox<real>* ProxFromMatlab(const mxArray *pm) {
   return p;
 }
 
+LinearOperator<real>* LinearOperatorFromMatlab(const mxArray *pm) {
+  const mwSize *dims = mxGetDimensions(pm);
+  size_t num_linops = dims[0];
+
+  LinearOperator<real> *result =
+      new LinearOperator<real>();
+  for(size_t i = 0; i < num_linops; i++) {
+    mxArray *cell = mxGetCell(pm, i);
+    
+    std::string name(mxArrayToString(mxGetCell(cell, 0)));
+    transform(name.begin(), name.end(), name.begin(), ::tolower);
+
+    size_t row = (size_t) mxGetScalar(mxGetCell(cell, 1));
+    size_t col = (size_t) mxGetScalar(mxGetCell(cell, 2));
+    mxArray *data = mxGetCell(cell, 3);
+
+    LinOp<real> *linop = NULL;
+    if("gradient_2d" == name)
+      linop = LinOpGradient2DFromMatlab(row, col, data);
+    else if("gradient_3d" == name)
+      linop = LinOpGradient3DFromMatlab(row, col, data);
+
+    if(NULL == linop)
+      mexErrMsgTxt("Error creating linop!");
+    else
+      result->AddOperator(linop);
+  }
+
+  return result;
+}
+
+LinOpIdentity<real>* LinOpIdentityFromMatlab(size_t row, size_t col, const mxArray *pm)
+{  
+  return NULL;
+}
+
+LinOpSparse<real>* LinOpSparseFromMatlab(size_t row, size_t col, const mxArray *pm)
+{
+  return NULL;
+}
+
+LinOpGradient2D<real>* LinOpGradient2DFromMatlab(size_t row, size_t col, const mxArray *pm)
+{
+  size_t nx = (size_t) mxGetScalar(mxGetCell(pm, 0));
+  size_t ny = (size_t) mxGetScalar(mxGetCell(pm, 1));
+  size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
+
+  return new LinOpGradient2D<real>(row, col, nx, ny, L);
+}
+
+LinOpGradient3D<real>* LinOpGradient3DFromMatlab(size_t row, size_t col, const mxArray *pm)
+{
+  size_t nx = (size_t) mxGetScalar(mxGetCell(pm, 0));
+  size_t ny = (size_t) mxGetScalar(mxGetCell(pm, 1));
+  size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
+
+  return new LinOpGradient3D<real>(row, col, nx, ny, L);
+}
+
+LinOp<real>* LinOpZeroFromMatlab(size_t row, size_t col, const mxArray *pm)
+{
+  return NULL;
+}

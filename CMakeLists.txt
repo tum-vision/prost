@@ -6,7 +6,7 @@ find_package(CUDA REQUIRED)
 
 if(APPLE)
   set(CUDA_HOST_COMPILER /usr/bin/clang)
-  set(CMAKE_CXX_FLAGS "-g -stdlib=libstdc++")
+  set(CMAKE_CXX_FLAGS "-O3 -stdlib=libstdc++")
 else()
   set(CMAKE_CXX_FLAGS "-fPIC -O3")
 endif()

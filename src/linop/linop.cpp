@@ -1,5 +1,6 @@
 #include "linop/linop.hpp"
 
+#include <iostream>
 #include <cuda_runtime.h>
 
 bool RectangleOverlap(size_t x1, size_t y1,
