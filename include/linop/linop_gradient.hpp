@@ -4,7 +4,8 @@
 #include "linop.hpp"
 
 /**
- * @brief Assumes label-first ordering and outputs dx dy pixelwise ordered.
+ * @brief Assumes pixel-first (matlab style, rows first) ordering and
+ *        outputs dx dy pixelwise ordered.
  *
  */
 template<typename T>
@@ -27,7 +28,8 @@ class LinOpGradient2D : public LinOp<T> {
 };
 
 /**
- * @brief Assumes label-first ordering and outputs dx dy dt pixelwise ordered.
+ * @brief Assumes pixel-first (matlab style, rows first) ordering and
+ *        outputs dx dy dt pixelwise ordered.
  *
  */
 template<typename T>
