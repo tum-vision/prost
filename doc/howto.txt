@@ -1,0 +1,11 @@
+Adding a custom LinearOperator:
+- Write linop_foo.m in bind_matlab which creates the cell array
+- Implement LinOpFooFromMatlab in mex_factory.hpp/mex_factory.cpp in the directory bind_matlab
+- Add case in LinearOperatorFromMatlab in mex_factory.cpp
+- Add linop_foo.hpp in include/linop and linop_foo.cu in src/linop
+- Write LinOpFoo class which inherits from LinOp and override the virtual methods
+- The linear operator can be tested using mex_eval_linop.cpp (see ex_linop.m)
+
+Adding a custom ProxOperator:
+...
+
