@@ -31,7 +31,7 @@ void ProxNorm2Kernel(
     }
     
     if(norm > 0) {
-      norm = cuwrap::sqrt<T>(norm);
+      norm = sqrt(norm);
 
       // read value for vector coefficients
       for(size_t i = 0; i < PROX_1D_NUM_COEFFS; i++) {
