@@ -353,6 +353,12 @@ LinearOperator<real>* LinearOperatorFromMatlab(const mxArray *pm) {
       linop = LinOpGradient2DFromMatlab(row, col, data);
     else if("gradient_3d" == name)
       linop = LinOpGradient3DFromMatlab(row, col, data);
+    else if("sparse" == name)
+      linop = LinOpSparseFromMatlab(row, col, data);
+    else if("zero" == name)
+      linop = LinOpZeroFromMatlab(row, col, data);
+    else if("identity" == name)
+      linop = LinOpIdentityFromMatlab(row, col, data);
 
     if(NULL == linop)
       mexErrMsgTxt("Error creating linop!");
@@ -370,7 +376,9 @@ LinOpIdentity<real>* LinOpIdentityFromMatlab(size_t row, size_t col, const mxArr
 
 LinOpSparse<real>* LinOpSparseFromMatlab(size_t row, size_t col, const mxArray *pm)
 {
-  return NULL;
+  SparseMatrix<real> *mat = MatrixFromMatlab(mxGetCell(pm, 0));
+  
+  return new LinOpSparse<real>(row, col, mat);
 }
 
 LinOpGradient2D<real>* LinOpGradient2DFromMatlab(size_t row, size_t col, const mxArray *pm)
