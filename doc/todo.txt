@@ -12,7 +12,10 @@ TODOs:
    on... (compile time cast!!)
  o Do sanity check before creating the prox operators (don't allocate
    stuff inside the constructor)
- o Test Simplex prox (multilabel segmentation example, with few labels)
+ o Test Simplex prox (multilabel segmentation example, with few
+ labels)
+ o Clean up mex_factory.cpp, const char* and function pointer arrays
+   instead of big if statements. write helper functions for MATLAB stuff.
  
  o Lifted TV stereo example
  o Epigraph prox, continuous relaxation
