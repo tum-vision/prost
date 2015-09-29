@@ -117,10 +117,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
               (double)gpu_mem_required / (1024. * 1024.),
               (double)gpu_mem_avail / (1024. * 1024.),
               (double)gpu_mem_free / (1024. * 1024.));
-
+/*
     if(gpu_mem_required > gpu_mem_avail) {
       mexErrMsgTxt("Out of memory!");
     }
+*/
     
     mexPrintf("Initialized solver successfully!\n");
 

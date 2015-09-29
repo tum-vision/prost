@@ -10,8 +10,7 @@ f = double(im(:)) / 255.;
 
 K = grad_forw_2d(nx, ny, 1);
 
-linop = { {linop_sparse(K), linop_identity(128},
-          {linop_zero(128), }};
+linop = { linop_gradient2d(0, 0, nx, ny, 1) };
 
 lmb = 0.25; 
 
@@ -50,7 +49,7 @@ opts.precond_alpha = 1.;
 opts.tol_primal = 0.01;
 opts.tol_dual = 0.01;
 opts.callback = @(it, x, y) ex_rof_callback(K, f, lmb, it, x, y);
-[x, y] = pdsolver(K, prox_g, prox_hstar, opts);
+[x, y] = pdsolver(linop, prox_g, prox_hstar, opts);
 
 %% show result
 figure;

@@ -366,8 +366,13 @@ bool SolverBackendPDHG::Initialize() {
   cudaMalloc((void **)&d_kx_prev_, m * sizeof(real));
   cudaMalloc((void **)&d_temp_, l * sizeof(real)); 
 
+/*
   tau_ = 1;
   sigma_ = 1;
+*/
+
+  tau_ = opts_.tau0;
+  sigma_ = opts_.sigma0;
   theta_ = 1;
   alpha_ = opts_.ad_balance.alpha0;
   iteration_ = 0;
