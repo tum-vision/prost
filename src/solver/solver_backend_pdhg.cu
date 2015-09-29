@@ -165,8 +165,8 @@ void ComputeDualResidualPDHG(
 }
 
 void SolverBackendPDHG::PerformIteration() {  
-  int n = problem_.mat->ncols();
-  int m = problem_.mat->nrows();
+  int n = problem_.linop->ncols();
+  int m = problem_.linop->nrows();
   
   dim3 block(kBlockSizeCUDA, 1, 1);
   dim3 grid_n((n + block.x - 1) / block.x, 1, 1);
@@ -195,7 +195,8 @@ void SolverBackendPDHG::PerformIteration() {
 
   // compute Kx^{k+1} and remember Kx^k
   std::swap(d_kx_, d_kx_prev_);
-  problem_.mat->MultVec(d_x_, d_kx_, false, 1, 0);
+  //problem_.mat->MultVec(d_x_, d_kx_, false, 1, 0);
+  problem_.linop->Eval(d_kx_, d_x_);
 
   // gradient ascent step
   ComputeProxArgDualPDHG<<<grid_m, block>>>
@@ -220,7 +221,8 @@ void SolverBackendPDHG::PerformIteration() {
 
   // compute K^T y^{k+1} and remember Ky^k
   std::swap(d_kty_, d_kty_prev_);
-  problem_.mat->MultVec(d_y_, d_kty_, true, 1, 0);
+  //problem_.mat->MultVec(d_y_, d_kty_, true, 1, 0);
+  problem_.linop->EvalAdjoint(d_kty_, d_y_);
   
   // compute residuals
   ComputePrimalResidualPDHG<<<grid_n, block>>>(
@@ -350,19 +352,19 @@ void SolverBackendPDHG::PerformIteration() {
 }
 
 bool SolverBackendPDHG::Initialize() {
-  int m = problem_.mat->nrows();
-  int n = problem_.mat->ncols();
+  int m = problem_.linop->nrows();
+  int n = problem_.linop->ncols();
   int l = std::max(m, n);
 
-  cudaMalloc((void **)&d_x_, n * sizeof(real)); CUDA_CHECK;
-  cudaMalloc((void **)&d_x_prev_, n * sizeof(real)); CUDA_CHECK;
-  cudaMalloc((void **)&d_kty_, n * sizeof(real)); CUDA_CHECK;
-  cudaMalloc((void **)&d_kty_prev_, n * sizeof(real)); CUDA_CHECK;
-  cudaMalloc((void **)&d_y_, m * sizeof(real)); CUDA_CHECK;
-  cudaMalloc((void **)&d_y_prev_, m * sizeof(real)); CUDA_CHECK;
-  cudaMalloc((void **)&d_kx_, m * sizeof(real)); CUDA_CHECK;
-  cudaMalloc((void **)&d_kx_prev_, m * sizeof(real)); CUDA_CHECK;
-  cudaMalloc((void **)&d_temp_, l * sizeof(real)); CUDA_CHECK;
+  cudaMalloc((void **)&d_x_, n * sizeof(real)); 
+  cudaMalloc((void **)&d_x_prev_, n * sizeof(real)); 
+  cudaMalloc((void **)&d_kty_, n * sizeof(real)); 
+  cudaMalloc((void **)&d_kty_prev_, n * sizeof(real)); 
+  cudaMalloc((void **)&d_y_, m * sizeof(real)); 
+  cudaMalloc((void **)&d_y_prev_, m * sizeof(real)); 
+  cudaMalloc((void **)&d_kx_, m * sizeof(real));
+  cudaMalloc((void **)&d_kx_prev_, m * sizeof(real));
+  cudaMalloc((void **)&d_temp_, l * sizeof(real)); 
 
   tau_ = 1;
   sigma_ = 1;
@@ -372,15 +374,15 @@ bool SolverBackendPDHG::Initialize() {
   adc_l_ = adc_u_ = 0;
 
   // TODO: add possibility for non-zero initializations
-  cudaMemset(d_x_, 0, n * sizeof(real)); CUDA_CHECK;
-  cudaMemset(d_x_prev_, 0, n * sizeof(real)); CUDA_CHECK;
-  cudaMemset(d_kty_, 0, n * sizeof(real)); CUDA_CHECK;
-  cudaMemset(d_kty_prev_, 0, n * sizeof(real)); CUDA_CHECK;
-  cudaMemset(d_y_, 0, m * sizeof(real)); CUDA_CHECK;
-  cudaMemset(d_y_prev_, 0, m * sizeof(real)); CUDA_CHECK;
-  cudaMemset(d_kx_, 0, m * sizeof(real)); CUDA_CHECK;
-  cudaMemset(d_kx_prev_, 0, m * sizeof(real)); CUDA_CHECK;
-  cudaMemset(d_temp_, 0, l * sizeof(real)); CUDA_CHECK;
+  cudaMemset(d_x_, 0, n * sizeof(real)); 
+  cudaMemset(d_x_prev_, 0, n * sizeof(real)); 
+  cudaMemset(d_kty_, 0, n * sizeof(real)); 
+  cudaMemset(d_kty_prev_, 0, n * sizeof(real)); 
+  cudaMemset(d_y_, 0, m * sizeof(real));
+  cudaMemset(d_y_prev_, 0, m * sizeof(real));
+  cudaMemset(d_kx_, 0, m * sizeof(real));
+  cudaMemset(d_kx_prev_, 0, m * sizeof(real));
+  cudaMemset(d_temp_, 0, l * sizeof(real));
 
   cublasCreate(&cublas_handle_);
   
@@ -402,8 +404,8 @@ void SolverBackendPDHG::Release() {
 }
 
 void SolverBackendPDHG::iterates(real *primal, real *dual) {
-  cudaMemcpy(primal, d_x_, sizeof(real) * problem_.mat->ncols(), cudaMemcpyDeviceToHost);
-  cudaMemcpy(dual, d_y_, sizeof(real) * problem_.mat->nrows(), cudaMemcpyDeviceToHost);
+  cudaMemcpy(primal, d_x_, sizeof(real) * problem_.linop->ncols(), cudaMemcpyDeviceToHost);
+  cudaMemcpy(dual, d_y_, sizeof(real) * problem_.linop->nrows(), cudaMemcpyDeviceToHost);
 }
 
 bool SolverBackendPDHG::converged() {
@@ -421,8 +423,8 @@ std::string SolverBackendPDHG::status() {
 }
 
 int SolverBackendPDHG::gpu_mem_amount() {
-  int m = problem_.mat->nrows();
-  int n = problem_.mat->ncols();
+  int m = problem_.linop->nrows();
+  int n = problem_.linop->ncols();
 
   return (4 * (n + m) + std::max(n, m)) * sizeof(real);
 }

@@ -127,9 +127,13 @@ void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **c
   opts.bt_beta = (real) mxGetScalar(mxGetField(pm, 0, "bt_beta"));
   opts.bt_gamma = (real) mxGetScalar(mxGetField(pm, 0, "bt_gamma"));
   opts.precond_alpha = (real) mxGetScalar(mxGetField(pm, 0, "precond_alpha"));
+  opts.tau0 = (real) mxGetScalar(mxGetField(pm, 0, "tau0"));
+  opts.sigma0 = (real) mxGetScalar(mxGetField(pm, 0, "sigma0"));
 
   if("pdhg" == be_name)
     opts.backend = kBackendPDHG;
+  else if("pdhgtiny" == be_name)
+    opts.backend = kBackendPDHGTiny;
   else
     mexErrMsgTxt("Unknown backend.");
 
@@ -371,6 +375,33 @@ LinearOperator<real>* LinearOperatorFromMatlab(const mxArray *pm) {
 
 LinOpIdentity<real>* LinOpIdentityFromMatlab(size_t row, size_t col, const mxArray *pm)
 {  
+/*
+  std::vector<real> factors;
+  std::vector<size_t> offsets;
+
+  size_t nrows = (size_t) mxGetScalar(mxGetCell(pm, 0));
+  size_t ncols = (size_t) mxGetScalar(mxGetCell(pm, 1));
+
+  const mwSize *dim_factors = mxGetDimensions(mxGetCell(pm, 2));
+  const mwSize *dim_offsets = mxGetDimensions(mxGetCell(pm, 3));
+  double *val_factors = mxGetPr(mxGetCell(pm, 2));
+  double *val_offsets = mxGetPr(mxGetCell(pm, 3));
+
+  if(dim_factors[0] != dim_offsets[0] || dim_factors[1] != 1 || dim_offsets[1] != 1)
+    return NULL;
+
+  for(size_t i = 0; i < dim_factors[1]; i++) {
+    factors.push_back(val_factors[i]);
+    offsets.push_back(val_offsets[i]);
+  }
+
+  size_t ndiags = factors.size();
+
+  return new LinOpIdentity<real>(row, col, nrows, ncols, ndiags, offsets, factors);
+*/
+
+// TODO: implement properly
+
   return NULL;
 }
 
@@ -401,5 +432,8 @@ LinOpGradient3D<real>* LinOpGradient3DFromMatlab(size_t row, size_t col, const m
 
 LinOp<real>* LinOpZeroFromMatlab(size_t row, size_t col, const mxArray *pm)
 {
-  return NULL;
+  size_t nrows = (size_t) mxGetScalar(mxGetCell(pm, 0));
+  size_t ncols = (size_t) mxGetScalar(mxGetCell(pm, 1));
+
+  return new LinOp<real>(row, col, nrows, ncols);
 }

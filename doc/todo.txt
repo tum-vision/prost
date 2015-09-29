@@ -1,4 +1,5 @@
 TODOs:
+ o int -> size_t
  o prox operator constructor in matlab doesn't need index -- infer
    this automatically!
  o default arguments for prox operator

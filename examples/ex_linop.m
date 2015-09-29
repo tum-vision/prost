@@ -1,12 +1,15 @@
 % test-bench for the different linear operators
 
-nx = 357;
-ny = 291;
-L = 24;
+nx = 512;
+ny = 512;
+L = 64;
 
+tic;
 grad = spmat_gradient3d(nx, ny, L);
-%grad_linop = { linop_gradient3d(0, 0, nx, ny, L) };
-grad_linop = { linop_sparse(0, 0, grad) };
+toc;
+
+grad_linop = { linop_gradient3d(0, 0, nx, ny, L) };
+%grad_linop = { linop_sparse(0, 0, grad) };
 
 inp = rand(nx*ny*L, 1);
 
