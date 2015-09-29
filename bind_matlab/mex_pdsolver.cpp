@@ -26,6 +26,9 @@ void SolverCallback(int it, real *x, real *y, bool is_converged) {
   for(int i = 0; i < mat_nrows; ++i) dual[i] = (double) y[i];
   
   mexCallMATLAB(0, NULL, 4, cb_rhs, "feval");
+
+  mxDestroyArray(cb_rhs[2]);
+  mxDestroyArray(cb_rhs[3]);
 }
 
 void ProxListFromMatlab(const mxArray *pm, std::vector<Prox<real> *>& proxs) {
@@ -55,8 +58,10 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if(nrhs < 4)
     mexErrMsgTxt("At least four inputs required.");
 
+/*
   if(!mxIsSparse(prhs[0]))
     mexErrMsgTxt("The constraint matrix must be sparse.");
+*/
 
   if(nlhs != 2)
     mexErrMsgTxt("Two outputs required.");
@@ -70,11 +75,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   Solver solver;
   SolverOptions opts;
 
+/*
   // set matrix
   SparseMatrix<real> *mat = MatrixFromMatlab(prhs[0]);
   solver.SetMatrix(mat);
+
   mat_nrows = mat->nrows();
   mat_ncols = mat->ncols();
+*/
+  LinearOperator<real> *linop = LinearOperatorFromMatlab(prhs[0]);
+  solver.SetLinearOperator(linop);
 
   // set options
   SolverOptionsFromMatlab(prhs[3], opts, &cb_func_handle);
@@ -95,6 +105,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
 
   // init and run solver
   if(solver.Initialize()) {
+    mat_nrows = linop->nrows();
+    mat_ncols = linop->ncols();
+
+    mexPrintf("LinearOperator size: %d %d\n", mat_nrows, mat_ncols);
+
     size_t gpu_mem_required, gpu_mem_avail, gpu_mem_free;
     
     solver.gpu_mem_amount(gpu_mem_required, gpu_mem_avail, gpu_mem_free);
