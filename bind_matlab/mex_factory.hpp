@@ -42,7 +42,7 @@ LinOpIdentity<real>* LinOpIdentityFromMatlab(size_t row, size_t col, const mxArr
 LinOpSparse<real>* LinOpSparseFromMatlab(size_t row, size_t col, const mxArray *pm);
 LinOpGradient2D<real>* LinOpGradient2DFromMatlab(size_t row, size_t col, const mxArray *pm);
 LinOpGradient3D<real>* LinOpGradient3DFromMatlab(size_t row, size_t col, const mxArray *pm);
-LinOp<real>* LinOpZeroFromMatlab(size_t row, size_t col, const mxArray *pm);
 LinOpDataPrec<real>* LinOpDataPrecFromMatlab(size_t row, size_t col, const mxArray *pm);
+LinOp<real>* LinOpZeroFromMatlab(size_t row, size_t col, const mxArray *pm);
 
 #endif
