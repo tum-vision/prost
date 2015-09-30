@@ -14,6 +14,7 @@
 #include "linop/linop_gradient.hpp"
 #include "linop/linop_identity.hpp"
 #include "linop/linop_sparse.hpp"
+#include "linop/linop_data_prec.hpp"
 
 /**
  * @brief Returns the prox-function corresponding to the string.
