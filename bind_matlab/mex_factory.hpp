@@ -23,6 +23,7 @@ template<typename T> class LinOpIdentity;
 template<typename T> class LinOpGradient2D;
 template<typename T> class LinOpGradient3D;
 template<typename T> class LinOpSparse;
+template<typename T> class LinOpDataPrec;
 
 // individual prox constructors
 Prox1D<real>* Prox1DFromMatlab(int idx, int count, const mxArray *data);
@@ -42,5 +43,6 @@ LinOpSparse<real>* LinOpSparseFromMatlab(size_t row, size_t col, const mxArray *
 LinOpGradient2D<real>* LinOpGradient2DFromMatlab(size_t row, size_t col, const mxArray *pm);
 LinOpGradient3D<real>* LinOpGradient3DFromMatlab(size_t row, size_t col, const mxArray *pm);
 LinOp<real>* LinOpZeroFromMatlab(size_t row, size_t col, const mxArray *pm);
+LinOpDataPrec<real>* LinOpDataPrecFromMatlab(size_t row, size_t col, const mxArray *pm);
 
 #endif

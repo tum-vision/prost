@@ -11,8 +11,9 @@ void LinOpGradient2DKernel(T *d_res,
                            size_t L)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
-  size_t y = threadIdx.y + blockDim.y * blockIdx.y;
-  size_t l = threadIdx.z + blockDim.z * blockIdx.z;
+  size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
+  size_t y = y_tilde % ny;
+  size_t l = y_tilde / ny;
 
   if(x >= nx || y >= ny || l >= L)
     return;
@@ -46,8 +47,9 @@ void LinOpDivergence2DKernel(T *d_res,
                              size_t L)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
-  size_t y = threadIdx.y + blockDim.y * blockIdx.y;
-  size_t l = threadIdx.z + blockDim.z * blockIdx.z;
+  size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
+  size_t y = y_tilde  % ny;
+  size_t l = y_tilde / ny;
 
   if(x >= nx || y >= ny || l >= L)
     return;
@@ -75,8 +77,9 @@ void LinOpGradient3DKernel(T *d_res,
                            size_t L)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
-  size_t y = threadIdx.y + blockDim.y * blockIdx.y;
-  size_t l = threadIdx.z + blockDim.z * blockIdx.z;
+  size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
+  size_t y = y_tilde  % ny;
+  size_t l = y_tilde / ny;
 
   if(x >= nx || y >= ny || l >= L)
     return;
@@ -116,8 +119,9 @@ void LinOpDivergence3DKernel(T *d_res,
                              size_t L)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
-  size_t y = threadIdx.y + blockDim.y * blockIdx.y;
-  size_t l = threadIdx.z + blockDim.z * blockIdx.z;
+  size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
+  size_t y = y_tilde  % ny;
+  size_t l = y_tilde / ny;
 
   if(x >= nx || y >= ny || l >= L)
     return;
@@ -156,8 +160,8 @@ void LinOpGradient2D<T>::EvalLocalAdd(T *d_res, T *d_rhs) {
 
   dim3 block(1, 128, 1);
   dim3 grid((nx_ + block.x - 1) / block.x,
-            (ny_ + block.y - 1) / block.y,
-            (L_ + block.z - 1) / block.z);
+            (ny_*L_ + block.y - 1) / block.y,
+            1);
 
   LinOpGradient2DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
 }
@@ -167,8 +171,8 @@ void LinOpGradient2D<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
 
   dim3 block(2, 128, 1);
   dim3 grid((nx_ + block.x - 1) / block.x,
-            (ny_ + block.y - 1) / block.y,
-            (L_ + block.z - 1) / block.z);
+            (ny_*L_ + block.y - 1) / block.y,
+            1);
 
   LinOpDivergence2DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
 }
@@ -188,8 +192,8 @@ void LinOpGradient3D<T>::EvalLocalAdd(T *d_res, T *d_rhs) {
 
   dim3 block(1, 128, 1);
   dim3 grid((nx_ + block.x - 1) / block.x,
-            (ny_ + block.y - 1) / block.y,
-            (L_ + block.z - 1) / block.z);
+            (ny_*L_ + block.y - 1) / block.y,
+            1);
 
   LinOpGradient3DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
 }
@@ -199,8 +203,8 @@ void LinOpGradient3D<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
   
   dim3 block(2, 128, 1);
   dim3 grid((nx_ + block.x - 1) / block.x,
-            (ny_ + block.y - 1) / block.y,
-            (L_ + block.z - 1) / block.z);
+            (ny_*L_ + block.y - 1) / block.y,
+            1);
 
   LinOpDivergence3DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
 }
