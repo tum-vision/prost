@@ -117,12 +117,16 @@ bool LinearOperator<T>::Init() {
     }
   }
 
-  if(overlap)
+  if(overlap) {
+    std::cout << "ERROR: LinearOperators are overlapping!" << std::endl;
     return false;
+  }
 
   // this should even work with overflows due to modular arithmetic :-)
-  if(area != nrows_ * ncols_) 
+  if(area != nrows_ * ncols_)  {
+    std::cout << "ERROR: There's empty space between the LinearOperators!" << std::endl;
     return false;
+  }
 
   for(size_t i = 0; i < operators_.size(); i++)
     if(!operators_[i]->Init())

@@ -394,7 +394,7 @@ LinOpDiags<real>* LinOpDiagsFromMatlab(size_t row, size_t col, const mxArray *pm
   if(dim_factors[0] != dim_offsets[0] || dim_factors[1] != 1 || dim_offsets[1] != 1)
     return NULL;
 
-  mexPrintf("num_offsets=%d, num_factors=%d, nrows=%d, ncols=%d\n", dim_offsets[0], dim_factors[0], nrows, ncols);
+  //mexPrintf("num_offsets=%d, num_factors=%d, nrows=%d, ncols=%d\n", dim_offsets[0], dim_factors[0], nrows, ncols);
 
   for(size_t i = 0; i < dim_factors[0]; i++) {
     factors.push_back(val_factors[i]);
