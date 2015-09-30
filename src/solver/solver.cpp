@@ -5,6 +5,7 @@
 #include <sstream>
 #include "solver/solver_backend.hpp"
 #include "solver/solver_backend_pdhg.hpp"
+#include "solver/solver_backend_pdhgtiny.hpp"
 #include "util/util.hpp"
 
 // used for sorting prox operators according to their starting index
@@ -56,10 +57,8 @@ Solver::Solver()
 Solver::~Solver() {
 }
 
-void Solver::SetMatrix(SparseMatrix<real>* mat) {
-  problem_.mat = mat;
-  problem_.nrows = mat->nrows();
-  problem_.ncols = mat->ncols();
+void Solver::SetLinearOperator(LinearOperator<real>* linop) {
+  problem_.linop = linop;
 }
 
 void Solver::SetProx_g(const std::vector<Prox<real> *>& prox) {
@@ -79,6 +78,14 @@ void Solver::SetCallback(SolverCallbackPtr cb) {
 }
 
 bool Solver::Initialize() {
+  if(!problem_.linop->Init()) {
+    std::cout << "Failed to init linear operator!\n";
+    return false;
+  }
+
+  problem_.nrows = problem_.linop->nrows();
+  problem_.ncols = problem_.linop->ncols();
+
   h_primal_ = new real[problem_.ncols];
   h_dual_ = new real[problem_.nrows];
 
@@ -86,11 +93,12 @@ bool Solver::Initialize() {
 
   std::cout << "Creating Preconditioners...";
   std::cout.flush();
-  problem_.precond = new Preconditioner(problem_.mat);
+  problem_.precond = new Preconditioner(problem_.linop);
   switch(opts_.precond)
   {
     case kPrecondScalar:
-      problem_.precond->ComputeScalar();
+      //problem_.precond->ComputeScalar();
+      return false; // currently only alpha-preconditioning
       break;
 
     case kPrecondAlpha:
@@ -105,14 +113,17 @@ bool Solver::Initialize() {
   std::cout << " done!" << std::endl;
 
   // create backend
-  switch(opts_.backend)
-  {
-    case kBackendPDHG:
-      backend_ = new SolverBackendPDHG(problem_, opts_);
-      break;
+  switch(opts_.backend) {
+  case kBackendPDHG:
+    backend_ = new SolverBackendPDHG(problem_, opts_);
+    break;
 
-    default:
-      return false;
+  case kBackendPDHGTiny:
+    backend_ = new SolverBackendPDHGTiny(problem_, opts_);
+    break;
+
+  default:
+    return false;
   }
 
   // check if whole domain is covered by prox operators
@@ -170,7 +181,7 @@ void Solver::gpu_mem_amount(size_t& gpu_mem_required, size_t& gpu_mem_avail, siz
     gpu_mem_prox_hc += problem_.prox_hc[i]->gpu_mem_amount();
 
   gpu_mem_solver += backend_->gpu_mem_amount();
-  gpu_mem_mat += problem_.mat->gpu_mem_amount();
+  gpu_mem_mat += problem_.linop->gpu_mem_amount();
   gpu_mem_precond += problem_.precond->gpu_mem_amount();
 
   cudaMemGetInfo(&gpu_mem_free, &gpu_mem_avail);
@@ -227,7 +238,7 @@ void Solver::Release() {
   delete [] h_primal_;
   delete [] h_dual_;
   delete problem_.precond;
-  delete problem_.mat;
+  delete problem_.linop;
 }
 
 std::string SolverOptions::get_string() const {
@@ -279,6 +290,8 @@ std::string SolverOptions::get_string() const {
       ss << "matrix equilibration." << std::endl;
       break;
   }
+
+  ss << " - stepsizes: tau0 = " << tau0 << ", sigma0 = " << sigma0 << std::endl;
   
   return ss.str();
 }

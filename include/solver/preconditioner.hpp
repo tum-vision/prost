@@ -5,7 +5,7 @@
 
 #include "config.hpp"
 #include "prox/prox.hpp"
-#include "util/sparse_matrix.hpp"
+#include "linop/linop.hpp"
 
 enum PreconditionerType {
   kPrecondScalar, // S = T = (1 / |K|)
@@ -19,7 +19,7 @@ enum PreconditionerType {
  */
 class Preconditioner {
 public:
-  Preconditioner(SparseMatrix<real> *mat);
+  Preconditioner(LinearOperator<real> *linop);
   virtual ~Preconditioner();
 
   void ComputeScalar();
@@ -33,11 +33,11 @@ public:
   real *right() const { return d_right_; }
   PreconditionerType precond_type() const { return type_; }
   int gpu_mem_amount() {
-    return (mat_->nrows() + mat_->ncols()) * sizeof(real);
+    return (linop_->nrows() + linop_->ncols()) * sizeof(real);
   }
 
 private:
-  SparseMatrix<real> *mat_;
+  LinearOperator<real> *linop_;
   real *d_left_;
   real *d_right_;
   PreconditionerType type_;

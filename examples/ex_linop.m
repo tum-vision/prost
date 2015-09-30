@@ -1,10 +1,10 @@
 % test-bench for the different linear operators
 
+
 nx = 300;
 ny = 220;
 L = 8;
 
-grad = spmat_gradient3d(nx, ny, L);
 grad_linop = { linop_gradient3d(0, 0, nx, ny, L) };
 %grad_linop = { linop_sparse(0, 0, grad) };
 
