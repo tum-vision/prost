@@ -18,12 +18,12 @@ template<typename T> class ProxZero;
 
 // linops
 template<typename T> class LinOp;
-template<typename T> class LinearOperator;
-template<typename T> class LinOpIdentity;
+template<typename T> class LinOpDiags;
 template<typename T> class LinOpGradient2D;
 template<typename T> class LinOpGradient3D;
 template<typename T> class LinOpSparse;
 template<typename T> class LinOpDataPrec;
+template<typename T> class LinearOperator;
 
 // individual prox constructors
 Prox1D<real>* Prox1DFromMatlab(int idx, int count, const mxArray *data);
@@ -38,7 +38,7 @@ SparseMatrix<real>* MatrixFromMatlab(const mxArray *pm);
 void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **cb_func_handle);
 
 LinearOperator<real>* LinearOperatorFromMatlab(const mxArray *pm);
-LinOpIdentity<real>* LinOpIdentityFromMatlab(size_t row, size_t col, const mxArray *pm);
+LinOpDiags<real>* LinOpDiagsFromMatlab(size_t row, size_t col, const mxArray *pm);
 LinOpSparse<real>* LinOpSparseFromMatlab(size_t row, size_t col, const mxArray *pm);
 LinOpGradient2D<real>* LinOpGradient2DFromMatlab(size_t row, size_t col, const mxArray *pm);
 LinOpGradient3D<real>* LinOpGradient3DFromMatlab(size_t row, size_t col, const mxArray *pm);

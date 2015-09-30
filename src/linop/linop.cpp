@@ -44,12 +44,12 @@ LinOp<T>::~LinOp() {
 
 template<typename T>
 void LinOp<T>::EvalAdd(T *d_res, T *d_rhs) {
-  EvalLocalAdd(&d_res[row_], &d_rhs[row_]);
+  EvalLocalAdd(&d_res[row_], &d_rhs[col_]);
 }
 
 template<typename T>
 void LinOp<T>::EvalAdjointAdd(T *d_res, T *d_rhs) {
-  EvalAdjointLocalAdd(&d_res[col_], &d_rhs[col_]);
+  EvalAdjointLocalAdd(&d_res[col_], &d_rhs[row_]);
 }
 
 template<typename T>
@@ -164,7 +164,7 @@ T LinearOperator<T>::row_sum(size_t row, T alpha) const {
        row >= (operators_[i]->row() + operators_[i]->nrows()))
       continue;
     
-    sum += operators_[i]->row_sum(row, alpha);
+    sum += operators_[i]->row_sum(row - operators_[i]->row(), alpha);
   }
 
   return sum;
@@ -179,7 +179,7 @@ T LinearOperator<T>::col_sum(size_t col, T alpha) const {
        col >= (operators_[i]->col() + operators_[i]->ncols()))
       continue;
     
-    sum += operators_[i]->col_sum(col, alpha);
+    sum += operators_[i]->col_sum(col - operators_[i]->col(), alpha);
   }
 
   return sum;
