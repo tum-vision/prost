@@ -1,6 +1,7 @@
 #ifndef LINOP_HPP_
 #define LINOP_HPP_
 
+#include <cstdlib>
 #include <vector>
 
 /*

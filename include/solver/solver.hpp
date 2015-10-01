@@ -8,18 +8,19 @@
 #include "config.hpp"
 #include "preconditioner.hpp"
 #include "prox/prox.hpp"
-#include "util/sparse_matrix.hpp"
+#include "linop/linop.hpp"
 
 typedef void (*SolverCallbackPtr)(int, real*, real*, bool);
 
 enum SolverBackendType
 {
   kBackendPDHG,
+  kBackendPDHGTiny,
 };
 
 enum AdaptivityType {
   kAdaptNone,           // constant step sizes
-  kAdaptStrong, // adapts step sizes based on strong convexity
+  kAdaptStrong,         // adapts step sizes based on strong convexity parameter
   kAdaptBalance,        // tries to balance residuals
   kAdaptConverge,       // lets one of the residuals converge first, then adapts.
 };
@@ -52,6 +53,10 @@ struct SolverOptions {
     bt_enabled = false;
     bt_beta = 0.95;
     bt_gamma = 0.75;
+
+    // primal dual starting stepsizes
+    tau0 = 1.;
+    sigma0 = 1.;
   }
 
   std::string get_string() const;
@@ -94,18 +99,21 @@ struct SolverOptions {
   // backtracking parameters
   bool bt_enabled;
   real bt_beta, bt_gamma;
+
+  // primal dual parameters
+  real tau0, sigma0;
 };
 
 struct OptimizationProblem {
   OptimizationProblem()
-      : mat(NULL), precond(NULL)
+      : linop(NULL), precond(NULL)
   {
   }
   
   int nrows, ncols;
   std::vector<Prox<real>*> prox_g;
   std::vector<Prox<real>*> prox_hc;
-  SparseMatrix<real> *mat;
+  LinearOperator<real>* linop;
   Preconditioner *precond;
 };
 
@@ -122,7 +130,7 @@ public:
   virtual ~Solver();
 
   // Solver takes ownership of mat
-  void SetMatrix(SparseMatrix<real>* mat);
+  void SetLinearOperator(LinearOperator<real>* linop);
 
   // Solver takes ownership of prox
   void SetProx_g(const std::vector<Prox<real>*>& prox);
