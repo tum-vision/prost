@@ -86,6 +86,9 @@ bool Solver::Initialize() {
   problem_.nrows = problem_.linop->nrows();
   problem_.ncols = problem_.linop->ncols();
 
+  std::cout << problem_.nrows <<std::endl;
+  std::cout << problem_.ncols <<std::endl;
+  
   h_primal_ = new real[problem_.ncols];
   h_dual_ = new real[problem_.nrows];
 
