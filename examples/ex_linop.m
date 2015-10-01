@@ -2,13 +2,16 @@
 
 %%
 % Data term prec relax
-left=0;
-right=1;
+nx = 245;
+ny = 123;
+L = 13;
+left=0.98;
+right=4.68;
 
-data_linop = { linop_data_prec(0, 0, nx, ny, L, left, right) };
+linop = { linop_data_prec(0, 0, nx, ny, L, left, right) };
 
 inp = rand(nx*ny*L+2*nx*ny*(L-1), 1);
-inp2 = rand(nx*ny*L+2*nx*ny*(L-1), 1);
+inp2 = rand(nx*ny*L, 1);
 
 [x,~,~] = pdsolver_eval_linop(linop, inp, false);
 [y,rowsum,colsum] = pdsolver_eval_linop(linop, inp2, true);
