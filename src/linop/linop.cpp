@@ -44,12 +44,12 @@ LinOp<T>::~LinOp() {
 
 template<typename T>
 void LinOp<T>::EvalAdd(T *d_res, T *d_rhs) {
-  EvalLocalAdd(&d_res[row_], &d_rhs[row_]);
+  EvalLocalAdd(&d_res[row_], &d_rhs[col_]);
 }
 
 template<typename T>
 void LinOp<T>::EvalAdjointAdd(T *d_res, T *d_rhs) {
-  EvalAdjointLocalAdd(&d_res[col_], &d_rhs[col_]);
+  EvalAdjointLocalAdd(&d_res[col_], &d_rhs[row_]);
 }
 
 template<typename T>
@@ -117,12 +117,16 @@ bool LinearOperator<T>::Init() {
     }
   }
 
-  if(overlap)
+  if(overlap) {
+    std::cout << "ERROR: LinearOperators are overlapping!" << std::endl;
     return false;
+  }
 
   // this should even work with overflows due to modular arithmetic :-)
-  if(area != nrows_ * ncols_) 
+  if(area != nrows_ * ncols_)  {
+    std::cout << "ERROR: There's empty space between the LinearOperators!" << std::endl;
     return false;
+  }
 
   for(size_t i = 0; i < operators_.size(); i++)
     if(!operators_[i]->Init())
@@ -164,7 +168,7 @@ T LinearOperator<T>::row_sum(size_t row, T alpha) const {
        row >= (operators_[i]->row() + operators_[i]->nrows()))
       continue;
     
-    sum += operators_[i]->row_sum(row, alpha);
+    sum += operators_[i]->row_sum(row - operators_[i]->row(), alpha);
   }
 
   return sum;
@@ -179,7 +183,7 @@ T LinearOperator<T>::col_sum(size_t col, T alpha) const {
        col >= (operators_[i]->col() + operators_[i]->ncols()))
       continue;
     
-    sum += operators_[i]->col_sum(col, alpha);
+    sum += operators_[i]->col_sum(col - operators_[i]->col(), alpha);
   }
 
   return sum;
