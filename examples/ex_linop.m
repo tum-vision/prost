@@ -1,54 +1,64 @@
 % test-bench for the different linear operators
 
-
-% gradient
-
+%%
+% Data term prec relax
 left=0;
 right=1;
 
 data_linop = { linop_data_prec(0, 0, nx, ny, L, left, right) };
 
-%grad_linop = { linop_gradient2d(0, 0, nx, ny, L) };
-%grad_linop = { linop_sparse(0, 0, grad) };
-
 inp = rand(nx*ny*L+2*nx*ny*(L-1), 1);
+inp2 = rand(nx*ny*L+2*nx*ny*(L-1), 1);
 
-% compute laplacian using CUDA
-y = pdsolver_eval_linop(data_linop, inp, false);
-x = pdsolver_eval_linop(data_linop, y, true);
-%%
-% compute laplacian using MATLAB
-%grad = spmat_gradient2d(nx, ny, L);
-data = spmat_data_prec(nx, ny, L, left, right);
+[x,~,~] = pdsolver_eval_linop(linop, inp, false);
+[y,rowsum,colsum] = pdsolver_eval_linop(linop, inp2, true);
+
+K = spmat_data_prec(nx, ny, L, left, right);
 
 tic;
-y_ml = data * inp;
-x_ml = data' * y_ml;
+x_ml = K * inp;
+y_ml = K' * inp2;
 toc;
 
-norm(x_ml - x)
-%norm(y_ml - y);
+rowsum_ml = sum(abs(K), 2);
+colsum_ml = sum(abs(K), 1)';
 
-%nx = 300;
-%ny = 220;
-%L = 8;
-% grad_linop = { linop_gradient3d(0, 0, nx, ny, L) };
-% %grad_linop = { linop_sparse(0, 0, grad) };
+fprintf('norm_diff_forward: %f\n', norm(x-x_ml));
+fprintf('norm_diff_adjoint: %f\n', norm(y-y_ml));
+fprintf('norm_diff_rowsum: %f\n', norm(rowsum-rowsum_ml));
+fprintf('norm_diff_colsum: %f\n', norm(colsum-colsum_ml));
 
-% inp = rand(nx*ny*L, 1);
+%%
+% Gradient
+nx = 300;
+ny = 220;
+L = 8;
+linop = { linop_gradient2d(0, 0, nx, ny, L) };
+%grad_linop = { linop_gradient3d(0, 0, nx, ny, L) };
+%grad_linop = { linop_sparse(0, 0, grad) };
 
-% % compute laplacian using CUDA
-% y = pdsolver_eval_linop(grad_linop, inp, false);
-% x = pdsolver_eval_linop(grad_linop, y, true);
+inp = rand(nx*ny*L, 1);
+inp2 = rand(nx*ny*L*2, 1);
 
-% % compute laplacian using MATLAB
-% tic;
-% y_ml = grad * inp;
-% x_ml = grad' * y_ml;
-% toc;
+[x,~,~] = pdsolver_eval_linop(linop, inp, false);
+[y,rowsum,colsum] = pdsolver_eval_linop(linop, inp2, true);
 
-% norm(x_ml - x)
+K = spmat_gradient2d(nx, ny, L);
 
+tic;
+x_ml = K * inp;
+y_ml = K' * inp2;
+toc;
+
+rowsum_ml = sum(abs(K), 2);
+colsum_ml = sum(abs(K), 1)';
+
+fprintf('norm_diff_forward: %f\n', norm(x-x_ml));
+fprintf('norm_diff_adjoint: %f\n', norm(y-y_ml));
+fprintf('norm_diff_rowsum: %f\n', norm(rowsum-rowsum_ml));
+fprintf('norm_diff_colsum: %f\n', norm(colsum-colsum_ml));
+
+%%
 % diags test
 Ndiags = 29;
 nrows = 5912;
@@ -100,5 +110,3 @@ fprintf('norm_diff_forward: %f\n', norm(x-x_ml));
 fprintf('norm_diff_adjoint: %f\n', norm(y-y_ml));
 fprintf('norm_diff_rowsum: %f\n', norm(rowsum-rowsum_ml));
 fprintf('norm_diff_colsum: %f\n', norm(colsum-colsum_ml));
-
->>>>>>> 4e7b65e559ce94aeff3eda474c5ec97469b6c829
