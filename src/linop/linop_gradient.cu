@@ -48,7 +48,7 @@ void LinOpDivergence2DKernel(T *d_res,
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
   size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
-  size_t y = y_tilde  % ny;
+  size_t y = y_tilde % ny;
   size_t l = y_tilde / ny;
 
   if(x >= nx || y >= ny || l >= L)
@@ -57,11 +57,19 @@ void LinOpDivergence2DKernel(T *d_res,
   T divx, divy;
   size_t idx = y + x * ny + l * nx * ny;
 
-  divy = d_rhs[idx + nx * ny * L];
+  if(y < ny - 1)
+    divy = d_rhs[idx + nx * ny * L];
+  else
+    divy = 0;
+  
   if(y > 0)
     divy -= d_rhs[idx + nx * ny * L - 1];
+
+  if(x < nx - 1)
+    divx = d_rhs[idx];
+  else
+    divx = 0;
   
-  divx = d_rhs[idx];
   if(x > 0)
     divx -= d_rhs[idx - ny];
   
@@ -129,9 +137,17 @@ void LinOpDivergence3DKernel(T *d_res,
   T divx, divy, divl;
   size_t idx = y + x * ny + l * ny * nx;
 
-  divx = d_rhs[idx];
-  divy = d_rhs[idx + nx * ny * L];
-  divl = d_rhs[idx + 2 * nx * ny * L]; 
+  if(x < nx - 1)
+    divx = d_rhs[idx];
+  else
+    divx = 0;
+
+  if(y < ny - 1)
+    divy = d_rhs[idx + nx * ny * L];
+  else
+    divy = 0;
+
+  divl = d_rhs[idx + 2 * nx * ny * L];
 
   if(y > 0)
     divy -= d_rhs[idx + nx * ny * L - 1];
