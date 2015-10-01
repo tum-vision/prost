@@ -8,7 +8,7 @@ LinOpDataPrec<T>::LinOpDataPrec(size_t row,
                                 size_t ny,
                                 size_t L,
                                 T left, T right)
-    : LinOp<T>(row, col, nx*ny*(L + 1 + 2*(L-1)), nx*ny*(L + 2*(L-1))), nx_(nx), ny_(ny), L_(L), left_(left), right_(left)
+    : LinOp<T>(row, col, nx*ny*L, nx*ny*(L + 2*(L-1))), nx_(nx), ny_(ny), L_(L), left_(left), right_(left)
 {
 }
 
