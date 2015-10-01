@@ -21,8 +21,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if(nrhs != 3)
     mexErrMsgTxt("Three inputs required.");
 
-  if(nlhs != 1)
-    mexErrMsgTxt("One output required.");
+  if(nlhs != 3)
+    mexErrMsgTxt("Three outputs (result,rowsum,colsum) required.");
 
   // read input arguments
   LinearOperator<real> *linop = LinearOperatorFromMatlab(prhs[0]);
@@ -36,8 +36,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if(dims[1] != 1)
     mexErrMsgTxt("RHS input to eval_linop should be a vector!");
 
+  mexPrintf("Attempting to init linop...\n");
   if(!linop->Init())
     mexErrMsgTxt("Failed to init linop!");
+  else
+    mexPrintf("Initialized linop correctly Dimensions: nrows=%d, ncols=%d!\n", linop->nrows(), linop->ncols());
 
   res_size = transpose ? linop->ncols() : linop->nrows();
 
@@ -68,10 +71,14 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   Timer t;
   t.start();
 
-  if(transpose)
+  if(transpose) {
+    mexPrintf("Evaluating adjoint...\n");
     linop->EvalAdjoint(d_res, d_rhs);
-  else
+  }
+  else {
+    mexPrintf("Evaluating forward...\n");
     linop->Eval(d_res, d_rhs);
+  }
   
   mexPrintf("LinOp took %f seconds.\n", t.get());
   
@@ -84,6 +91,18 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   double *result_vals = mxGetPr(plhs[0]);
   for(size_t i = 0; i < res_size; i++)
     result_vals[i] = static_cast<double>(h_res[i]);
+
+  plhs[1] = mxCreateDoubleMatrix(linop->nrows(), 1, mxREAL);
+  plhs[2] = mxCreateDoubleMatrix(linop->ncols(), 1, mxREAL);
+
+  double *rowsum = mxGetPr(plhs[1]);
+  double *colsum = mxGetPr(plhs[2]);
+
+  for(size_t i = 0; i < linop->nrows(); i++)
+    rowsum[i] = linop->row_sum(i, 1);
+
+  for(size_t i = 0; i < linop->ncols(); i++)
+    colsum[i] = linop->col_sum(i, 1);
 
   // cleanup
   delete [] h_rhs;

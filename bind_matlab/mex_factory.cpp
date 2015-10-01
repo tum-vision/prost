@@ -12,8 +12,9 @@
 
 #include "linop/linop.hpp"
 #include "linop/linop_gradient.hpp"
-#include "linop/linop_identity.hpp"
+#include "linop/linop_diags.hpp"
 #include "linop/linop_sparse.hpp"
+#include "linop/linop_data_prec.hpp"
 
 /**
  * @brief Returns the prox-function corresponding to the string.
@@ -127,9 +128,13 @@ void SolverOptionsFromMatlab(const mxArray *pm, SolverOptions& opts, mxArray **c
   opts.bt_beta = (real) mxGetScalar(mxGetField(pm, 0, "bt_beta"));
   opts.bt_gamma = (real) mxGetScalar(mxGetField(pm, 0, "bt_gamma"));
   opts.precond_alpha = (real) mxGetScalar(mxGetField(pm, 0, "precond_alpha"));
+  opts.tau0 = (real) mxGetScalar(mxGetField(pm, 0, "tau0"));
+  opts.sigma0 = (real) mxGetScalar(mxGetField(pm, 0, "sigma0"));
 
   if("pdhg" == be_name)
     opts.backend = kBackendPDHG;
+  else if("pdhgtiny" == be_name)
+    opts.backend = kBackendPDHGTiny;
   else
     mexErrMsgTxt("Unknown backend.");
 
@@ -333,6 +338,8 @@ Prox<real>* ProxFromMatlab(const mxArray *pm) {
 }
 
 LinearOperator<real>* LinearOperatorFromMatlab(const mxArray *pm) {
+  LinOpDiags<real>::ResetConstMem();
+
   const mwSize *dims = mxGetDimensions(pm);
   size_t num_linops = dims[0];
 
@@ -357,8 +364,10 @@ LinearOperator<real>* LinearOperatorFromMatlab(const mxArray *pm) {
       linop = LinOpSparseFromMatlab(row, col, data);
     else if("zero" == name)
       linop = LinOpZeroFromMatlab(row, col, data);
-    else if("identity" == name)
-      linop = LinOpIdentityFromMatlab(row, col, data);
+    else if("diags" == name)
+      linop = LinOpDiagsFromMatlab(row, col, data);
+    else if("data_prec" == name)
+      linop = LinOpDataPrecFromMatlab(row, col, data);
 
     if(NULL == linop)
       mexErrMsgTxt("Error creating linop!");
@@ -369,9 +378,32 @@ LinearOperator<real>* LinearOperatorFromMatlab(const mxArray *pm) {
   return result;
 }
 
-LinOpIdentity<real>* LinOpIdentityFromMatlab(size_t row, size_t col, const mxArray *pm)
+LinOpDiags<real>* LinOpDiagsFromMatlab(size_t row, size_t col, const mxArray *pm)
 {  
-  return NULL;
+  std::vector<real> factors;
+  std::vector<ssize_t> offsets;
+
+  size_t nrows = (size_t) mxGetScalar(mxGetCell(pm, 0));
+  size_t ncols = (size_t) mxGetScalar(mxGetCell(pm, 1));
+
+  const mwSize *dim_factors = mxGetDimensions(mxGetCell(pm, 2));
+  const mwSize *dim_offsets = mxGetDimensions(mxGetCell(pm, 3));
+  double *val_factors = mxGetPr(mxGetCell(pm, 2));
+  double *val_offsets = mxGetPr(mxGetCell(pm, 3));
+
+  if(dim_factors[0] != dim_offsets[0] || dim_factors[1] != 1 || dim_offsets[1] != 1)
+    return NULL;
+
+  //mexPrintf("num_offsets=%d, num_factors=%d, nrows=%d, ncols=%d\n", dim_offsets[0], dim_factors[0], nrows, ncols);
+
+  for(size_t i = 0; i < dim_factors[0]; i++) {
+    factors.push_back(val_factors[i]);
+    offsets.push_back((ssize_t) val_offsets[i]);
+  }
+
+  size_t ndiags = factors.size();
+
+  return new LinOpDiags<real>(row, col, nrows, ncols, ndiags, offsets, factors);
 }
 
 LinOpSparse<real>* LinOpSparseFromMatlab(size_t row, size_t col, const mxArray *pm)
@@ -401,5 +433,18 @@ LinOpGradient3D<real>* LinOpGradient3DFromMatlab(size_t row, size_t col, const m
 
 LinOp<real>* LinOpZeroFromMatlab(size_t row, size_t col, const mxArray *pm)
 {
-  return NULL;
+  size_t nrows = (size_t) mxGetScalar(mxGetCell(pm, 0));
+  size_t ncols = (size_t) mxGetScalar(mxGetCell(pm, 1));
+
+  return new LinOp<real>(row, col, nrows, ncols);
+}
+
+LinOpDataPrec<real>* LinOpDataPrecFromMatlab(size_t row, size_t col, const mxArray *pm) {
+  size_t nx = (size_t) mxGetScalar(mxGetCell(pm, 0));
+  size_t ny = (size_t) mxGetScalar(mxGetCell(pm, 1));
+  size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
+  real left = (real) mxGetScalar(mxGetCell(pm, 3));
+  real right = (real) mxGetScalar(mxGetCell(pm, 4));
+
+  return new LinOpDataPrec<real>(row, col, nx, ny, L, left, right);    
 }

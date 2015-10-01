@@ -5,8 +5,8 @@
 std::vector<std::vector<int> > GetIndices(const std::vector<Prox<real> *>& prox);
 void AverageValues(real *vals, const std::vector<std::vector<int> >& indices);
 
-Preconditioner::Preconditioner(SparseMatrix<real> *mat)
-    : mat_(mat), d_left_(NULL), d_right_(NULL)
+Preconditioner::Preconditioner(LinearOperator<real> *linop)
+    : linop_(linop), d_left_(NULL), d_right_(NULL)
 {
 }
 
@@ -16,6 +16,7 @@ Preconditioner::~Preconditioner() {
 }
 
 void Preconditioner::ComputeScalar() {
+/*
   type_ = kPrecondScalar;
 
   real norm = MatrixNormest(*mat_);
@@ -37,6 +38,7 @@ void Preconditioner::ComputeScalar() {
 
   delete [] h_left;
   delete [] h_right;
+*/
 }
 
 void Preconditioner::ComputeAlpha(
@@ -46,8 +48,8 @@ void Preconditioner::ComputeAlpha(
 {
   type_ = kPrecondAlpha;
 
-  int m = mat_->nrows();
-  int n = mat_->ncols();
+  int m = linop_->nrows();
+  int n = linop_->ncols();
 
   real *h_left = new real[m];
   real *h_right = new real[n];
@@ -57,7 +59,7 @@ void Preconditioner::ComputeAlpha(
 
   // compute right preconditioner as sum over matrix columns
   for(int i = 0; i < n; i++) {
-    real sum = mat_->col_sum(i, 2. - alpha);
+    real sum = linop_->col_sum(i, 2. - alpha);
 
     if(sum > 0)
       h_right[i] = 1. / sum;
@@ -67,7 +69,7 @@ void Preconditioner::ComputeAlpha(
   
   // compute left preconditioner as sum over matrix rows
   for(int i = 0; i < m; i++) {
-    real sum = mat_->row_sum(i, alpha);
+    real sum = linop_->row_sum(i, alpha);
 
     if(sum > 0)
       h_left[i] = 1. / sum;

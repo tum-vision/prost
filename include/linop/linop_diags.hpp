@@ -1,5 +1,5 @@
-#ifndef LINOP_IDENTITY_HPP_
-#define LINOP_IDENTITY_HPP_
+#ifndef LINOP_DIAGS_HPP_
+#define LINOP_DIAGS_HPP_
 
 #include "linop.hpp"
 
@@ -12,17 +12,17 @@
  *                 is multiplied with
  */
 template<typename T>
-class LinOpIdentity : public LinOp<T> {
+class LinOpDiags : public LinOp<T> {
  public:
-  LinOpIdentity(size_t row,
-                size_t col,
-                size_t nrows,
-                size_t ncols,
-                size_t ndiags,
-                const std::vector<size_t>& offsets,
-                const std::vector<T>& factors);
+  LinOpDiags(size_t row,
+             size_t col,
+             size_t nrows,
+             size_t ncols,
+             size_t ndiags,
+             const std::vector<ssize_t>& offsets,
+             const std::vector<T>& factors);
   
-  virtual ~LinOpIdentity();
+  virtual ~LinOpDiags();
 
   virtual bool Init();
   virtual void Release();
@@ -31,13 +31,15 @@ class LinOpIdentity : public LinOp<T> {
   virtual T row_sum(size_t row, T alpha) const;
   virtual T col_sum(size_t col, T alpha) const;
   
+  static void ResetConstMem() { cmem_counter_ = 0; }
+
  protected:
   virtual void EvalLocalAdd(T *d_res, T *d_rhs);
   virtual void EvalAdjointLocalAdd(T *d_res, T *d_rhs);
 
   size_t cmem_offset_;
   size_t ndiags_;
-  std::vector<size_t> offsets_;
+  std::vector<ssize_t> offsets_;
   std::vector<float> factors_;
 
   static size_t cmem_counter_;
