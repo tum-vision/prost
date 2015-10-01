@@ -157,7 +157,7 @@ T LinOpDiags<T>::row_sum(size_t row, T alpha) const {
     if(col >= this->ncols_)
       break;
 
-    sum += pow(abs(factors_[i]), alpha);
+    sum += pow(static_cast<T>(abs(factors_[i])), alpha);
   }
 
   return sum;
@@ -175,7 +175,7 @@ T LinOpDiags<T>::col_sum(size_t col, T alpha) const {
       (signed_col - ofs) < (ssize_t)this->nrows_ && 
       (signed_col - ofs) >= 0) 
     {
-      sum += pow(abs(factors_[i]), alpha);
+      sum += pow(static_cast<T>(abs(factors_[i])), alpha);
     }
 
     if(ofs > signed_col)
