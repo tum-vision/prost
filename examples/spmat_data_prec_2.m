@@ -5,7 +5,10 @@ function [K] = spmat_data_prec_2(nx, ny, L, left, right)
     N = nx*ny;
     K = spmat_data_prec(nx, ny, L, left, right);
     Q = kron(speye(N), -ones(L-1, 1))';
+    %K = cat(1, K, sparse(N, N*L+ 2*N*(L-1)));
     K = cat(1, K, cat(2, sparse(N, N*L + N*(L-1)), Q));
+    %K = cat(1, K, sparse(2*N*(L-1), N*L+ 2*N*(L-1)));
     K = cat(1, K, cat(2, sparse(2*N*(L-1), N*L), speye(2*N*(L-1))));
+    
 end
 
