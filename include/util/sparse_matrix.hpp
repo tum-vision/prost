@@ -160,6 +160,7 @@ public:
     assert(h_ptr_[row] <= nnz_);
     assert(h_ptr_[row + 1] >= 0);
     assert(h_ptr_[row + 1] <= nnz_);
+
     if(alpha == 1) {
       for(int i = h_ptr_[row]; i < h_ptr_[row + 1]; i++)
       {
@@ -183,6 +184,7 @@ public:
     assert(h_ptr_t_[col] <= nnz_);
     assert(h_ptr_t_[col + 1] >= 0);
     assert(h_ptr_t_[col + 1] <= nnz_);
+
     for(int i = h_ptr_t_[col]; i < h_ptr_t_[col + 1]; i++) {
       sum += std::pow(std::abs(h_val_t_[i]), alpha);
     }
