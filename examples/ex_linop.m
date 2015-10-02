@@ -52,11 +52,11 @@ return;
 
 %%
 % Data term prec relax
-nx = 245;
-ny = 123;
-L = 13;
-left=0.98;
-right=4.68;
+nx = 123;
+ny = 31;
+L = 20;
+left=0;
+right=1;
 
 linop = { linop_data_prec(0, 0, nx, ny, L, left, right) };
 
@@ -83,37 +83,37 @@ fprintf('norm_diff_colsum: %f\n', norm(colsum-colsum_ml));
 
 %%
 % Linop data prec 2
-nx = 2;
-ny = 1;
-L = 3;
+nx = 211;
+ny = 103;
+L = 33;
 left=0.98;
 right=4.68;
 N=nx*ny;
 Q = kron(speye(N), -ones(L-1, 1))';
-linop = {};
-linop{1, 1} = linop_zero(0, 0, N, N*L+N*(L-1)); 
-linop{2, 1} = linop_sparse(0, N*L+N*(L-1), Q);
-
-inp2 = rand(N, 1);
-inp = rand(N*L+2*N*(L-1), 1);
+linop = { linop_data_prec(0, 0, nx, ny, L, left, right);
+          linop_zero(N*L, 0, N, N*L+N*(L-1)); linop_sparse(N*L, N*L+N*(L-1), Q);...
+          linop_zero(N*L+N, 0, N*2*(L-1), N*L); linop_identity(N*L+N, N*L, N*2*(L-1))
+};
+inp2 = rand(N*L + N + 2*N*(L-1), 1);
+inp = rand(N*L + 2*N*(L-1), 1);
 
 [x,~,~] = pdsolver_eval_linop(linop, inp, false);
 [y,rowsum,colsum] = pdsolver_eval_linop(linop, inp2, true);
 
-% K = spmat_data_prec_2(nx, ny, L, left, right);
-% 
-% tic;
-% x_ml = K * inp;
-% y_ml = K' * inp2;
-% toc;
-% 
-% rowsum_ml = sum(abs(K), 2);
-% colsum_ml = sum(abs(K), 1)';
-% 
-% fprintf('norm_diff_forward: %f\n', norm(x-x_ml));
-% fprintf('norm_diff_adjoint: %f\n', norm(y-y_ml));
-% fprintf('norm_diff_rowsum: %f\n', norm(rowsum-rowsum_ml));
-% fprintf('norm_diff_colsum: %f\n', norm(colsum-colsum_ml));
+K = spmat_data_prec_2(nx, ny, L, left, right);
+
+tic;
+x_ml = K * inp;
+y_ml = K' * inp2;
+toc;
+
+rowsum_ml = sum(abs(K), 2);
+colsum_ml = sum(abs(K), 1)';
+
+fprintf('norm_diff_forward: %f\n', norm(x-x_ml));
+fprintf('norm_diff_adjoint: %f\n', norm(y-y_ml));
+fprintf('norm_diff_rowsum: %f\n', norm(rowsum-rowsum_ml));
+fprintf('norm_diff_colsum: %f\n', norm(colsum-colsum_ml));
 
 %%
 % Gradient

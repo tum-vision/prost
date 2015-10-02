@@ -132,7 +132,6 @@ LinOpDataPrec<T>::~LinOpDataPrec() {
 
 template<typename T>
 void LinOpDataPrec<T>::EvalLocalAdd(T *d_res, T *d_rhs) {
-
   dim3 block(1, 128, 1);
   dim3 grid((nx_ + block.x - 1) / block.x,
             (ny_*L_ + block.y - 1) / block.y,
