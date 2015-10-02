@@ -1,6 +1,56 @@
 % test-bench for the different linear operators
 
 %%
+% Sparse Matrix test
+
+% build big block matrix out of many sparse matrices
+K = [];
+linop = {};
+idx = 1;
+row = 0;
+nrows = 321;
+ncols = 117;
+
+By = 12;
+Bx = 14;
+
+for i=1:By
+    
+    K_row = [];
+    col = 0;
+    for j=1:Bx
+        K_mat = sprand(nrows,ncols,0.01);
+        K_row = cat(2, K_row, K_mat);
+        linop{idx, 1} = linop_sparse(row, col, K_mat);
+        idx = idx + 1;
+        col = col + ncols;
+    end
+    
+    row = row + nrows;
+    K = cat(1, K, K_row);
+end
+
+inp = rand(ncols*Bx, 1);
+inp2 = rand(nrows*By, 1);
+
+[x,~,~] = pdsolver_eval_linop(linop, inp, false);
+[y,rowsum,colsum] = pdsolver_eval_linop(linop, inp2, true);
+
+x_ml = K*inp;
+y_ml = K'*inp2;
+
+rowsum_ml = sum(abs(K), 2);
+colsum_ml = sum(abs(K), 1)';
+
+fprintf('norm_diff_forward: %f\n', norm(x-x_ml));
+fprintf('norm_diff_adjoint: %f\n', norm(y-y_ml));
+fprintf('norm_diff_rowsum: %f\n', norm(rowsum-rowsum_ml));
+fprintf('norm_diff_colsum: %f\n', norm(colsum-colsum_ml));
+
+return;
+
+
+%%
 % Data term prec relax
 nx = 245;
 ny = 123;
@@ -43,8 +93,6 @@ Q = kron(speye(N), -ones(L-1, 1))';
 linop = {};
 linop{1, 1} = linop_zero(0, 0, N, N*L+N*(L-1)); 
 linop{2, 1} = linop_sparse(0, N*L+N*(L-1), Q);
-
-
 
 inp2 = rand(N, 1);
 inp = rand(N*L+2*N*(L-1), 1);

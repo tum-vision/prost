@@ -44,12 +44,12 @@ void LinOpSparse<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
 
 template<typename T>
 T LinOpSparse<T>::row_sum(size_t row, T alpha) const {
-  return mat_->row_sum(row - this->row_, alpha);
+  return mat_->row_sum(row, alpha);
 }
 
 template<typename T>
 T LinOpSparse<T>::col_sum(size_t col, T alpha) const {
-  return mat_->col_sum(col - this->col_, alpha);
+  return mat_->col_sum(col, alpha);
 }
 
 template class LinOpSparse<float>;
