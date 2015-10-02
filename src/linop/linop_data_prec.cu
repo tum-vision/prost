@@ -8,7 +8,7 @@ LinOpDataPrec<T>::LinOpDataPrec(size_t row,
                                 size_t ny,
                                 size_t L,
                                 T left, T right)
-    : LinOp<T>(row, col, nx*ny*L, nx*ny*(L + 2*(L-1))), nx_(nx), ny_(ny), L_(L), left_(left), right_(left)
+    : LinOp<T>(row, col, nx*ny*L, nx*ny*(L + 2*(L-1))), nx_(nx), ny_(ny), L_(L), left_(left), right_(right)
 {
 }
 
@@ -31,8 +31,8 @@ void LinOpDataPrecKernel(T *d_res,
     return;
 
   size_t idx_u = y + x * ny + l * nx * ny;
-  size_t idx_s = nx*ny*L + L*ny*x + y*L + l;
-  size_t idx_w = nx*ny*L + (L-1)*ny*nx + L*ny*x + y*L + l;
+  size_t idx_s = nx*ny*L + (L-1)*ny*x + y*(L-1) + l;
+  size_t idx_w = idx_s + (L-1)*ny*nx;
   
 
 
@@ -43,10 +43,9 @@ void LinOpDataPrecKernel(T *d_res,
   d_res[idx_u] += d_rhs[idx_u];
   if(l==0) {
     d_res[idx_u] += (1 / delta_t) * (d_rhs[idx_s] + (t+delta_t) * d_rhs[idx_w]);    
-  } else if(l==L) {
+  } else if(l==L-1) {
     d_res[idx_u] += 
-        (1 / delta_t) * (-d_rhs[idx_s-1] - 
-        (t-delta_t) * d_rhs[idx_w-1]);   
+        (1 / delta_t) * (-d_rhs[idx_s-1] - (t-delta_t) * d_rhs[idx_w-1]);   
   } else {
     d_res[idx_u] += 
         (1 / delta_t) * (-d_rhs[idx_s-1] + d_rhs[idx_s] - 
@@ -93,13 +92,12 @@ void LinOpDataPrecAdjointSKernel(T *d_res,
     return;
 
   size_t idx_v = y + x * ny + l * nx * ny;
-  size_t idx_v1 = y + x * ny + (l+1) * nx * ny;
-  size_t idx_s = nx*ny*L + x*ny*L + y*L + l;
-  size_t idx_r = idx_s + nx*ny;
+  size_t idx_vp1 = y + x * ny + (l+1) * nx * ny;
+  size_t idx_s = nx*ny*L + x*ny*(L-1) + y*(L-1) + l;
   
   T delta_t = (right - left) / (L-1);
   
-  d_res[idx_s] += d_rhs[idx_r] + (1 / delta_t) * (d_rhs[idx_v] - d_rhs[idx_v1]);
+  d_res[idx_s] += (1 / delta_t) * (d_rhs[idx_v] - d_rhs[idx_vp1]);
 }
 
 template<typename T>
@@ -119,15 +117,13 @@ void LinOpDataPrecAdjointWKernel(T *d_res,
     return;
 
   size_t idx_v = y + x * ny + l * nx * ny;
-  size_t idx_v1 = y + x * ny + (l+1) * nx * ny;
-  size_t idx_w = nx*ny*L + nx*ny*(L-1) + x*ny*L + y*L + l;
-  size_t idx_z = idx_w + nx*ny;
-  size_t idx_q = nx*ny*L + x*ny + y;
+  size_t idx_vp1 = y + x * ny + (l+1) * nx * ny;
+  size_t idx_w = nx*ny*L + nx*ny*(L-1) + x*ny*(L-1) + y*(L-1) + l;
   
   T delta_t = (right - left) / (L-1);
   T t = left + l * delta_t;
   
-  d_res[idx_w] += -d_rhs[idx_q] + d_rhs[idx_z] + (1 / delta_t) * ((t+delta_t) * d_rhs[idx_v] - t*d_rhs[idx_v1]);
+  d_res[idx_w] += (1 / delta_t) * ((t+delta_t) * d_rhs[idx_v] - t*d_rhs[idx_vp1]);
 }
 
 template<typename T>
@@ -148,17 +144,17 @@ void LinOpDataPrec<T>::EvalLocalAdd(T *d_res, T *d_rhs) {
 template<typename T>
 void LinOpDataPrec<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
 
-  dim3 block(2, 128, 1);
+  dim3 block(1, 128, 1);
   dim3 gridU((nx_ + block.x - 1) / block.x,
-            (ny_*(L_-1) + block.y - 1) / block.y,
+            (ny_*L_ + block.y - 1) / block.y,
             1);
   dim3 gridSW((nx_ + block.x - 1) / block.x,
             (ny_*(L_-1) + block.y - 1) / block.y,
             1);
 
   LinOpDataPrecAdjointUKernel<T><<<gridU, block>>>(d_res, d_rhs, nx_, ny_, L_, left_, right_);
-  LinOpDataPrecAdjointSKernel<T><<<gridSW, block>>>(d_res, d_rhs, nx_, ny_, L_-1, left_, right_);
-  LinOpDataPrecAdjointWKernel<T><<<gridSW, block>>>(d_res, d_rhs, nx_, ny_, L_-1, left_, right_);
+  LinOpDataPrecAdjointSKernel<T><<<gridSW, block>>>(d_res, d_rhs, nx_, ny_, L_, left_, right_);
+  LinOpDataPrecAdjointWKernel<T><<<gridSW, block>>>(d_res, d_rhs, nx_, ny_, L_, left_, right_);
 }
 
 template<typename T>
@@ -166,7 +162,7 @@ T LinOpDataPrec<T>::row_sum(size_t row, T alpha) const {
     if(row >= nx_*ny_*L_)
         return 1;
 
-    size_t l = row % L_;
+    size_t l = row / (nx_*ny_);
 
     T delta_t = (right_ - left_) / (L_-1);
     T t = left_ + l * delta_t;
@@ -174,7 +170,7 @@ T LinOpDataPrec<T>::row_sum(size_t row, T alpha) const {
 
     if(l == 0)
         return 1 + (1 + t + delta_t) / delta_t;
-    if(l==L_)
+    if(l==L_-1)
         return 1 + (1 + t - delta_t) / delta_t;
 
     return 1 + (2*(1+t)) / delta_t;
@@ -187,12 +183,12 @@ T LinOpDataPrec<T>::col_sum(size_t col, T alpha) const {
 
     T delta_t = (right_ - left_) / (L_-1);
     if(col < nx_*ny_*L_ + nx_*ny_*(L_-1))
-        return 1 + (2 / delta_t);
+        return 2 / delta_t;
 
-    size_t l = col % (L_-1);
+    size_t l = (col - nx_*ny_*L_ - nx_*ny_*(L_-1)) % (L_-1);
     T t = left_ + l * delta_t;
 
-    return 2 + (t + t + delta_t) / delta_t;
+    return (t + delta_t + t) / delta_t;
 }
 
 template class LinOpDataPrec<float>;

@@ -1,4 +1,4 @@
-function [linop] = linop_identity(row, col, nrows, ncols)  
-    data = { nrows, ncols, [1], [0] };
+function [linop] = linop_identity(row, col, n)  
+    data = { n, n, 1, 0 };
     linop = { 'diags', row, col, data };
 end
