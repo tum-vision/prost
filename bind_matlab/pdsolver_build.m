@@ -6,7 +6,7 @@ if ismac
     cuda_inc = '/usr/local/cuda/include';
 end
 
-unix('make -C ../build/ -j16');
+%unix('make -C ../build/ -j16');
 
 if ismac
     eval(sprintf(['mex -g -largeArrayDims -output pdsolver ' ...
