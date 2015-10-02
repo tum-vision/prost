@@ -22,6 +22,7 @@ class LinOp {
   void EvalAdjointAdd(T *d_res, T *d_rhs);
 
   // required for preconditioners
+  // row and col are "local" for the operator, which means they start at 0
   virtual T row_sum(size_t row, T alpha) const { return 0; }
   virtual T col_sum(size_t col, T alpha) const { return 0; }
 
