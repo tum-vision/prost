@@ -5,6 +5,7 @@
 #include "prox/prox.hpp"
 #include "prox/prox_1d.hpp"
 #include "prox/prox_epi_conjquadr.hpp"
+#include "prox/prox_epi_piecew_lin.hpp"
 #include "prox/prox_moreau.hpp"
 #include "prox/prox_norm2.hpp"
 #include "prox/prox_simplex.hpp"
@@ -264,6 +265,67 @@ ProxEpiConjQuadr<real>* ProxEpiConjQuadrFromMatlab(
 /**
  * @brief ...
  */
+ProxEpiPiecewLin<real>* ProxEpiPiecewLinFromMatlab(
+    int idx,
+    int count,
+    bool interleaved,
+    const mxArray *data)
+{
+  mexPrintf("Mex factory\n");
+  EpiPiecewLinCoeffs<real> coeffs;
+
+  const mwSize *dims;
+  double *val;
+
+  dims = mxGetDimensions(mxGetCell(data, 0));
+  val = mxGetPr(mxGetCell(data, 0));
+
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.x.push_back((real)val[j]);
+  mexPrintf("Mex factory\n");
+  
+  dims = mxGetDimensions(mxGetCell(data, 1));
+  val = mxGetPr(mxGetCell(data, 1));
+  
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.y.push_back((real)val[j]);
+  
+  
+  dims = mxGetDimensions(mxGetCell(data, 2));
+  val = mxGetPr(mxGetCell(data, 2));
+  
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.alpha.push_back((real)val[j]);
+  
+  
+  dims = mxGetDimensions(mxGetCell(data, 3));
+  val = mxGetPr(mxGetCell(data, 3));
+  
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.beta.push_back((real)val[j]);
+  
+  
+  dims = mxGetDimensions(mxGetCell(data, 4));
+  val = mxGetPr(mxGetCell(data, 4));
+  
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.index.push_back((real)val[j]);
+  
+  
+  dims = mxGetDimensions(mxGetCell(data, 5));
+  val = mxGetPr(mxGetCell(data, 5));
+  
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.count.push_back((real)val[j]);
+  
+  std::cout << "Mex factory "<<std::endl;
+  
+  return new ProxEpiPiecewLin<real>(idx, count, interleaved, coeffs);
+}
+
+/**
+ * @brief ...
+ */
 ProxMoreau<real>* ProxMoreauFromMatlab(const mxArray *data) {
   return new ProxMoreau<real>(ProxFromMatlab(mxGetCell(data, 0)));
 }
@@ -324,13 +386,16 @@ Prox<real>* ProxFromMatlab(const mxArray *pm) {
     p = ProxNorm2FromMatlab(idx, count, dim, interleaved, data);
   else if("epi_conjquadr" == name)
     p = ProxEpiConjQuadrFromMatlab(idx, count, interleaved, data);
-  else if("moreau" == name)
+  else if("epi_piecew_lin" == name) {
+          mexPrintf("hallo\n");
+    p = ProxEpiPiecewLinFromMatlab(idx, count, interleaved, data);
+  } else if("moreau" == name)
     p = ProxMoreauFromMatlab(data);
   else if("simplex" == name)
     p = ProxSimplexFromMatlab(idx, count, dim, interleaved, data);
   else if("zero" == name)
     p = ProxZeroFromMatlab(idx, count);
-
+  
   if(NULL == p) 
     mexPrintf("Failure creating prox<'%s',idx=%d,cnt=%d,dim=%d,interleaved=%d,diagsteps=%d>...", name.c_str(), idx, count, dim, interleaved, diagsteps);
 

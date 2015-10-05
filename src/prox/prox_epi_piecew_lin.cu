@@ -3,6 +3,7 @@
 #include <cassert>
 #include <cuda_runtime.h>
 #include "config.hpp"
+#include <iostream>
 
 template<typename T>
 __global__
@@ -14,7 +15,7 @@ void ProxEpiPiecewLinKernel(T *d_arg,
 {
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
-  if(tx < count) {
+  /**if(tx < count) {
     T result[2];
 
     // get v = (x0, y0) and alpha,beta and count,index
@@ -37,8 +38,8 @@ void ProxEpiPiecewLinKernel(T *d_arg,
     n_slope[0] = alpha;
     n_slope[1] = -1;
 
-    T x1 = coeffs.d_ptr_x[0];
-    T y1 = coeffs.d_ptr_y[0];
+    T x1 = coeffs.d_ptr_x[index];
+    T y1 = coeffs.d_ptr_y[index];
     T p[2];
     p[0] = x1;
     p[1] = y1;
@@ -85,8 +86,8 @@ void ProxEpiPiecewLinKernel(T *d_arg,
           // point is not feasible wrt to i-th piece
           if(!halfspace_1 && !halfspace_2) {
             // point lies in (i-1)-th normal cone => projection is the "knick"
-            result[0] = v[0];
-            result[1] = v[1]; 
+            result[0] = x1;
+            result[1] = y1; 
             projected = true;
             break;
           }
@@ -133,8 +134,8 @@ void ProxEpiPiecewLinKernel(T *d_arg,
         // point is not feasible wrt to i-th piece
         if(!halfspace_1 && !halfspace_2) {
           // point lies in last normal cone => projection is the last "knick"
-          result[0] = v[0];
-          result[1] = v[1]; 
+          result[0] = x1;
+          result[1] = y1; 
           projected = true;
         } else if(halfspace_2) {
           // point lies in last rectangle => projection is the 
@@ -161,7 +162,7 @@ void ProxEpiPiecewLinKernel(T *d_arg,
       d_res[tx + count * 0] = result[0];
       d_res[tx + count * 1] = result[1];
     }
-  }
+  }**/
 }
 
 template<typename T>
@@ -182,13 +183,16 @@ ProxEpiPiecewLin<T>::~ProxEpiPiecewLin() {
 template<typename T>
 bool ProxEpiPiecewLin<T>::Init() {
   
+  std::cout << "Init" <<std::endl;
   if(coeffs_.x.empty() || coeffs_.y.empty() 
     || coeffs_.alpha.empty() || coeffs_.beta.empty() || 
        coeffs_.index.empty() || coeffs_.count.empty())
     return false;
 
-  
-  
+  for(int i = 0; i < this->count_; i++) {
+    std::cout << coeffs_.index[i]<< "  => " <<coeffs_.count[i]<<std::endl;
+  }
+  /**
   // copy x and y
   size_t count_xy = coeffs_.index[this->count_-1] + coeffs_.count[this->count_-1];
 
@@ -247,7 +251,8 @@ bool ProxEpiPiecewLin<T>::Init() {
 
   cudaMemcpy(d_ptr_index, &coeffs_.index[0], sizeof(size_t) * this->count_, cudaMemcpyHostToDevice);
   coeffs_dev_.d_ptr_index = d_ptr_index;
-
+**/
+  std::cout << "Copy success" <<std::endl;
 
   return true;
 }
@@ -273,13 +278,14 @@ void ProxEpiPiecewLin<T>::EvalLocal(T *d_arg,
   dim3 block(kBlockSizeCUDA, 1, 1);
   dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
-  ProxEpiPiecewLinKernel<T>
+   std::cout << "Eval" <<std::endl;
+  /**ProxEpiPiecewLinKernel<T>
       <<<grid, block>>>(
           d_arg,
           d_res,
           coeffs_dev_,
           this->count_,
-          this->interleaved_);
+          this->interleaved_);**/
 }
 
 // Explicit template instantiation
