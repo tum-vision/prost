@@ -271,7 +271,6 @@ ProxEpiPiecewLin<real>* ProxEpiPiecewLinFromMatlab(
     bool interleaved,
     const mxArray *data)
 {
-  mexPrintf("Mex factory\n");
   EpiPiecewLinCoeffs<real> coeffs;
 
   const mwSize *dims;
@@ -282,7 +281,6 @@ ProxEpiPiecewLin<real>* ProxEpiPiecewLinFromMatlab(
 
   for(int j = 0; j < dims[0]; j++)
     coeffs.x.push_back((real)val[j]);
-  mexPrintf("Mex factory\n");
   
   dims = mxGetDimensions(mxGetCell(data, 1));
   val = mxGetPr(mxGetCell(data, 1));
@@ -309,16 +307,14 @@ ProxEpiPiecewLin<real>* ProxEpiPiecewLinFromMatlab(
   val = mxGetPr(mxGetCell(data, 4));
   
   for(int j = 0; j < dims[0]; j++)
-    coeffs.index.push_back((real)val[j]);
+    coeffs.index.push_back((size_t)val[j]);
   
   
   dims = mxGetDimensions(mxGetCell(data, 5));
   val = mxGetPr(mxGetCell(data, 5));
   
   for(int j = 0; j < dims[0]; j++)
-    coeffs.count.push_back((real)val[j]);
-  
-  std::cout << "Mex factory "<<std::endl;
+    coeffs.count.push_back((size_t)val[j]);
   
   return new ProxEpiPiecewLin<real>(idx, count, interleaved, coeffs);
 }
@@ -386,10 +382,9 @@ Prox<real>* ProxFromMatlab(const mxArray *pm) {
     p = ProxNorm2FromMatlab(idx, count, dim, interleaved, data);
   else if("epi_conjquadr" == name)
     p = ProxEpiConjQuadrFromMatlab(idx, count, interleaved, data);
-  else if("epi_piecew_lin" == name) {
-          mexPrintf("hallo\n");
+  else if("epi_piecew_lin" == name)
     p = ProxEpiPiecewLinFromMatlab(idx, count, interleaved, data);
-  } else if("moreau" == name)
+  else if("moreau" == name)
     p = ProxMoreauFromMatlab(data);
   else if("simplex" == name)
     p = ProxSimplexFromMatlab(idx, count, dim, interleaved, data);

@@ -15,13 +15,13 @@ void ProxEpiPiecewLinKernel(T *d_arg,
 {
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
-  /**if(tx < count) {
+  if(tx < count) {
     T result[2];
 
     // get v = (x0, y0) and alpha,beta and count,index
     T alpha = coeffs.d_ptr_alpha[tx];
     T beta = coeffs.d_ptr_beta[tx];
-    size_t count = coeffs.d_ptr_count[tx];
+    size_t count_local = coeffs.d_ptr_count[tx];
     size_t index = coeffs.d_ptr_index[tx];
 
     T v[2];
@@ -37,57 +37,64 @@ void ProxEpiPiecewLinKernel(T *d_arg,
     T n_slope[2];
     n_slope[0] = alpha;
     n_slope[1] = -1;
-
+    
     T x1 = coeffs.d_ptr_x[index];
     T y1 = coeffs.d_ptr_y[index];
     T p[2];
     p[0] = x1;
     p[1] = y1;
-    bool feasible = PointInHalfspace(v, p, n_slope, 2);
 
+    bool feasible = PointInHalfspace(v, p, n_slope, 2);
+    
     T n_halfspace[2];
     n_halfspace[0] = 1;
     n_halfspace[1] = alpha;
+
     bool halfspace_1 = PointInHalfspace(v, p, n_halfspace, 2);
 
     bool projected = false;
 
     if(!feasible && halfspace_1) {
-        // point is not feasible wrt to 0-th piece and
-        //  lies in rectangle => projection is the 
-        //  respective half space projection
-        T t = x1*n_slope[0] + y1*n_slope[1];
-        ProjectHalfspace(v, n_slope, t, result, 2);
-        projected = true;
+      // point is not feasible wrt to 0-th piece and
+      //  lies in rectangle => projection is the 
+      //  respective half space projection
+
+      T t = x1*n_slope[0] + y1*n_slope[1];
+      ProjectHalfspace(v, n_slope, t, result, 2);
+      projected = true;
     }
 
     if(!projected) {
-      for(size_t i = 0; i < count-1; i++) {
+      for(size_t i = 0; i < count_local-1; i++) {
         // read "knick" at i+1
         T x2 = coeffs.d_ptr_x[index+i+1];
         T y2 = coeffs.d_ptr_y[index+i+1];
 
         // compute slope
-        T c = (x2-x1) / (y2-y1);
+        T c = (y2-y1) / (x2-x1);
 
         // compute vector normal to slope
         n_slope[0] = c;
         n_slope[1] = -1;
-      
+
         // check whether point v is feasible wrt i-th piece
         feasible = PointInHalfspace(v, p, n_slope, 2);
 
         n_halfspace[0] = -1;
         n_halfspace[1] = -c;
 
+
         bool halfspace_2 = PointInHalfspace(v, p, n_halfspace, 2);
 
+        p[0] = x2;
+        p[1] = y2;
         if(!feasible) {
           // point is not feasible wrt to i-th piece
           if(!halfspace_1 && !halfspace_2) {
             // point lies in (i-1)-th normal cone => projection is the "knick"
             result[0] = x1;
             result[1] = y1; 
+
             projected = true;
             break;
           }
@@ -96,32 +103,35 @@ void ProxEpiPiecewLinKernel(T *d_arg,
           //  together with the two knicks define a reactangle
           n_halfspace[0] = -n_halfspace[0];
           n_halfspace[1] = -n_halfspace[1];
-          
+
           // check wether point lies in i-th halfspace
-          p[0] = x2;
-          p[1] = y2;
           halfspace_1 = PointInHalfspace(v, p, n_halfspace, 2);
           if(halfspace_2 && halfspace_1) {
             // point lies in i-th rectangle => projection is the 
             //  respective half space projection
+
             T t = x1*n_slope[0] + y1*n_slope[1];
             ProjectHalfspace(v, n_slope, t, result, 2);
+
             projected = true;
             break;
           }
+
         }
- 
+
         // hand over variables for next iteration
         x1 = x2;
         y1 = y2;
       }
     }
 
+ 
+
     if(!projected) {
       // compute vector normal to slope
       n_slope[0] = beta;
-      n_slope[1] = -1;
-      
+      n_slope[1] = -1; 
+
       // check whether point v is feasible wrt i-th piece
       feasible = PointInHalfspace(v, p, n_slope, 2);
 
@@ -136,17 +146,20 @@ void ProxEpiPiecewLinKernel(T *d_arg,
           // point lies in last normal cone => projection is the last "knick"
           result[0] = x1;
           result[1] = y1; 
+
           projected = true;
         } else if(halfspace_2) {
           // point lies in last rectangle => projection is the 
           //  respective half space projection
+
           T t = x1*n_slope[0] + y1*n_slope[1];
           ProjectHalfspace(v, n_slope, t, result, 2);
+
           projected = true;
         }
       }
     }
-   
+
     // point has not been projected. That means we output the original point    
     if(!projected) {
       result[0] = v[0];
@@ -157,12 +170,11 @@ void ProxEpiPiecewLinKernel(T *d_arg,
     if(interleaved) {
       d_res[tx * 2 + 0] = result[0];
       d_res[tx * 2 + 1] = result[1];
-    }
-    else {
+    } else {
       d_res[tx + count * 0] = result[0];
       d_res[tx + count * 1] = result[1];
     }
-  }**/
+  }
 }
 
 template<typename T>
@@ -183,76 +195,118 @@ ProxEpiPiecewLin<T>::~ProxEpiPiecewLin() {
 template<typename T>
 bool ProxEpiPiecewLin<T>::Init() {
   
-  std::cout << "Init" <<std::endl;
   if(coeffs_.x.empty() || coeffs_.y.empty() 
     || coeffs_.alpha.empty() || coeffs_.beta.empty() || 
        coeffs_.index.empty() || coeffs_.count.empty())
     return false;
+  
 
-  for(int i = 0; i < this->count_; i++) {
-    std::cout << coeffs_.index[i]<< "  => " <<coeffs_.count[i]<<std::endl;
-  }
-  /**
+  T *d_ptr_T = NULL;
+
   // copy x and y
   size_t count_xy = coeffs_.index[this->count_-1] + coeffs_.count[this->count_-1];
 
-  // copy x
-  T *d_ptr_x = NULL;
-  cudaMalloc((void **)&d_ptr_x, count_xy * sizeof(T));
-  if(cudaGetLastError() != cudaSuccess)
-    return false;
+  size_t size = count_xy * sizeof(T);
 
-  cudaMemcpy(d_ptr_x, &coeffs_.x[0], sizeof(T) * count_xy, cudaMemcpyHostToDevice);
-  coeffs_dev_.d_ptr_x = d_ptr_x;
+  // copy x
+  cudaMalloc((void **)&d_ptr_T, size);
+  cudaError err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
+    return false;
+  }
+  cudaMemcpy(d_ptr_T, &coeffs_.x[0], size, cudaMemcpyHostToDevice);
+  err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
+    return false;
+  }
+  coeffs_dev_.d_ptr_x = d_ptr_T;
 
   // copy y
-  T *d_ptr_y = NULL;
-  cudaMalloc((void **)&d_ptr_y, count_xy * sizeof(T));
-  if(cudaGetLastError() != cudaSuccess)
+  cudaMalloc((void **)&d_ptr_T, size);
+  err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
     return false;
+  }
 
-  cudaMemcpy(d_ptr_y, &coeffs_.y[0], sizeof(T) * count_xy, cudaMemcpyHostToDevice);
-  coeffs_dev_.d_ptr_y = d_ptr_y;
+  cudaMemcpy(d_ptr_T, &coeffs_.y[0], size, cudaMemcpyHostToDevice);
+  err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
+    return false;
+  }
+  coeffs_dev_.d_ptr_y = d_ptr_T;
 
   // copy alpha
-  T *d_ptr_alpha = NULL;
-  cudaMalloc((void **)&d_ptr_alpha, this->count_ * sizeof(T));
-  if(cudaGetLastError() != cudaSuccess)
+  size = this->count_ * sizeof(T);
+  cudaMalloc((void **)&d_ptr_T, size);
+  err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
     return false;
-
-  cudaMemcpy(d_ptr_alpha, &coeffs_.alpha[0], sizeof(T) * this->count_, cudaMemcpyHostToDevice);
-  coeffs_dev_.d_ptr_alpha = d_ptr_alpha;
+  }
+  cudaMemcpy(d_ptr_T, &coeffs_.alpha[0], size, cudaMemcpyHostToDevice);
+  err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
+    return false;
+  }
+  coeffs_dev_.d_ptr_alpha = d_ptr_T;
 
 
   // copy beta
-  T *d_ptr_beta = NULL;
-  cudaMalloc((void **)&d_ptr_beta, this->count_ * sizeof(T));
-  if(cudaGetLastError() != cudaSuccess)
+  cudaMalloc((void **)&d_ptr_T, size);
+  err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
     return false;
+  }
 
-  cudaMemcpy(d_ptr_beta, &coeffs_.beta[0], sizeof(T) * this->count_, cudaMemcpyHostToDevice);
-  coeffs_dev_.d_ptr_beta = d_ptr_beta;
+  cudaMemcpy(d_ptr_T, &coeffs_.beta[0], size, cudaMemcpyHostToDevice);
+  err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
+    return false;
+  }
+  coeffs_dev_.d_ptr_beta = d_ptr_T;
 
 
   // copy count
-  size_t *d_ptr_count = NULL;
-  cudaMalloc((void **)&d_ptr_count, this->count_ * sizeof(size_t));
-  if(cudaGetLastError() != cudaSuccess)
-    return false;
+  size = this->count_ * sizeof(size_t);
 
-  cudaMemcpy(d_ptr_count, &coeffs_.count[0], sizeof(size_t) * this->count_, cudaMemcpyHostToDevice);
-  coeffs_dev_.d_ptr_count = d_ptr_count;
+  size_t *d_ptr_size_t = NULL;
+  cudaMalloc((void **)&d_ptr_size_t, size);
+  err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
+    return false;
+  }
+
+  cudaMemcpy(d_ptr_size_t, &coeffs_.count[0], size, cudaMemcpyHostToDevice);
+  err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
+    return false;
+  }
+  coeffs_dev_.d_ptr_count = d_ptr_size_t;
 
   // copy index
-  size_t *d_ptr_index = NULL;
-  cudaMalloc((void **)&d_ptr_index, this->index_ * sizeof(size_t));
-  if(cudaGetLastError() != cudaSuccess)
+  cudaMalloc((void **)&d_ptr_size_t, size);
+  err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
     return false;
+  }
 
-  cudaMemcpy(d_ptr_index, &coeffs_.index[0], sizeof(size_t) * this->count_, cudaMemcpyHostToDevice);
-  coeffs_dev_.d_ptr_index = d_ptr_index;
-**/
-  std::cout << "Copy success" <<std::endl;
+  cudaMemcpy(d_ptr_size_t, &coeffs_.index[0], size, cudaMemcpyHostToDevice);
+  err = cudaGetLastError();
+  if(err != cudaSuccess) {
+    std::cout << cudaGetErrorString(err)<< std::endl;            
+    return false;
+  }
+  coeffs_dev_.d_ptr_index = d_ptr_size_t;
 
   return true;
 }
@@ -278,14 +332,13 @@ void ProxEpiPiecewLin<T>::EvalLocal(T *d_arg,
   dim3 block(kBlockSizeCUDA, 1, 1);
   dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
-   std::cout << "Eval" <<std::endl;
-  /**ProxEpiPiecewLinKernel<T>
+   ProxEpiPiecewLinKernel<T>
       <<<grid, block>>>(
           d_arg,
           d_res,
           coeffs_dev_,
           this->count_,
-          this->interleaved_);**/
+          this->interleaved_);
 }
 
 // Explicit template instantiation
