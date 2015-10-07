@@ -1,4 +1,6 @@
 TODOs:
+ o if someone passes a sparse-matrix instead of a linear operator to the 
+   solver, automatically build a LinOpSparse inside the mex-Function.
  o int -> size_t
  o prox operator constructor in matlab doesn't need index -- infer
    this automatically!

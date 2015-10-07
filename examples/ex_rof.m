@@ -12,7 +12,7 @@ K = grad_forw_2d(nx, ny, 1);
 
 linop = { linop_gradient2d(0, 0, nx, ny, 1) };
 
-lmb = 0.25; 
+lmb = 1 / 25; 
 
 %% setup prox operators
 %prox_g = { prox_1d(0, nx * ny, 'square', 1, f, 1, 0, 0) };

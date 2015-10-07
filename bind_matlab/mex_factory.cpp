@@ -278,41 +278,31 @@ ProxEpiPiecewLin<real>* ProxEpiPiecewLinFromMatlab(
 
   dims = mxGetDimensions(mxGetCell(data, 0));
   val = mxGetPr(mxGetCell(data, 0));
-
   for(int j = 0; j < dims[0]; j++)
     coeffs.x.push_back((real)val[j]);
   
   dims = mxGetDimensions(mxGetCell(data, 1));
   val = mxGetPr(mxGetCell(data, 1));
-  
   for(int j = 0; j < dims[0]; j++)
     coeffs.y.push_back((real)val[j]);
   
-  
   dims = mxGetDimensions(mxGetCell(data, 2));
   val = mxGetPr(mxGetCell(data, 2));
-  
   for(int j = 0; j < dims[0]; j++)
     coeffs.alpha.push_back((real)val[j]);
   
-  
   dims = mxGetDimensions(mxGetCell(data, 3));
   val = mxGetPr(mxGetCell(data, 3));
-  
   for(int j = 0; j < dims[0]; j++)
     coeffs.beta.push_back((real)val[j]);
   
-  
   dims = mxGetDimensions(mxGetCell(data, 4));
   val = mxGetPr(mxGetCell(data, 4));
-  
   for(int j = 0; j < dims[0]; j++)
     coeffs.index.push_back((size_t)val[j]);
   
-  
   dims = mxGetDimensions(mxGetCell(data, 5));
   val = mxGetPr(mxGetCell(data, 5));
-  
   for(int j = 0; j < dims[0]; j++)
     coeffs.count.push_back((size_t)val[j]);
   
