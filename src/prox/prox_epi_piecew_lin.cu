@@ -1,9 +1,13 @@
 #include "prox/prox_epi_piecew_lin.hpp"
 
 #include <cassert>
-#include <cuda_runtime.h>
-#include "config.hpp"
 #include <iostream>
+#include <cuda_runtime.h>
+
+#include "config.hpp"
+
+using std::cout;
+using std::endl;
 
 template<typename T>
 __global__
@@ -199,15 +203,21 @@ bool ProxEpiPiecewLin<T>::Init() {
   if(coeffs_.x.empty() || coeffs_.y.empty() 
     || coeffs_.alpha.empty() || coeffs_.beta.empty() || 
        coeffs_.index.empty() || coeffs_.count.empty())
+    return false;  
+
+  if((coeffs_.index.size() != this->count_) ||
+    (coeffs_.count.size() != this->count_))
+  {
+    cout << "count_ doesn't match size of indicies/counts array" << endl;
     return false;
-  
+}
   // Ensure convexity
   for(int i = 0; i < this->count_; i++) {
     T slope_left = coeffs_.alpha[i];
     for(int j = coeffs_.index[i]; j < coeffs_.index[i] + coeffs_.count[i] - 1; j++) {
       T slope_right = (coeffs_.y[j+1]-coeffs_.y[j]) / (coeffs_.x[j+1]-coeffs_.x[j]);
       if(slope_right < slope_left) {
-        std::cout << "Error: Non-convex energy" <<std::endl;
+        std::cout <<std::endl<< "Error: Non-convex energy" <<std::endl;
         return false;
       }
       slope_left = slope_right;
@@ -220,11 +230,23 @@ bool ProxEpiPiecewLin<T>::Init() {
 
   T *d_ptr_T = NULL;
 
+/*
+  cout << "index.size() = " << coeffs_.index.size() << endl;
+  cout << "count.size() = " << coeffs_.count.size() << endl;
+
+  cout << "coeffs_.index(end) = " << coeffs_.index[this->count_ - 1] << endl;
+  cout << "coeffs_.count(end) = " << coeffs_.count[this->count_ - 1] << endl;
+*/
+
   // copy x and y
   size_t count_xy = coeffs_.index[this->count_-1] + coeffs_.count[this->count_-1];
-
   size_t size = count_xy * sizeof(T);
+/*
+  cout << "this->count_=" << this->count_ << endl;
+  cout << "count_xy=" << count_xy << endl;
 
+  return false;
+*/
   // copy x
   cudaMalloc((void **)&d_ptr_T, size);
   cudaError err = cudaGetLastError();
