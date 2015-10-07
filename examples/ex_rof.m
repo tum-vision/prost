@@ -42,12 +42,12 @@ opts = pdsolver_opts();
 opts.adapt = 'balance';
 opts.verbose = false;
 opts.bt_enabled = false;
-opts.max_iters = 25000;
+opts.max_iters = 10000;
 opts.cb_iters = 100;
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;
-opts.tol_primal = 0.01;
-opts.tol_dual = 0.01;
+opts.tol_primal = 0.1;
+opts.tol_dual = 0.1;
 opts.callback = @(it, x, y) ex_rof_callback(K, f, lmb, it, x, y);
 [x, y] = pdsolver(linop, prox_g, prox_hstar, opts);
 
