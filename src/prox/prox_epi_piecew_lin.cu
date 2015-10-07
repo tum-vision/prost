@@ -201,6 +201,22 @@ bool ProxEpiPiecewLin<T>::Init() {
        coeffs_.index.empty() || coeffs_.count.empty())
     return false;
   
+  // Ensure convexity
+  for(int i = 0; i < this->count_; i++) {
+    T slope_left = coeffs_.alpha[i];
+    for(int j = coeffs_.index[i]; j < coeffs_.index[i] + coeffs_.count[i] - 1; j++) {
+      T slope_right = (coeffs_.y[j+1]-coeffs_.y[j]) / (coeffs_.x[j+1]-coeffs_.x[j]);
+      if(slope_right < slope_left) {
+        std::cout << "Error: Non-convex energy" <<std::endl;
+        return false;
+      }
+      slope_left = slope_right;
+    }
+    if(coeffs_.beta[i] < slope_left) {
+      std::cout << "Error: Non-convex energy" <<std::endl;
+      return false;
+    }
+  }
 
   T *d_ptr_T = NULL;
 
