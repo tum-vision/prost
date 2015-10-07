@@ -44,7 +44,7 @@ void ProxEpiPiecewLinKernel(T *d_arg,
     p[0] = x1;
     p[1] = y1;
 
-    bool feasible = PointInHalfspace(v, p, n_slope, 2);
+    bool feasible_1 = PointInHalfspace(v, p, n_slope, 2);
     
     T n_halfspace[2];
     n_halfspace[0] = 1;
@@ -54,7 +54,7 @@ void ProxEpiPiecewLinKernel(T *d_arg,
 
     bool projected = false;
 
-    if(!feasible && halfspace_1) {
+    if(!feasible_1 && halfspace_1) {
       // point is not feasible wrt to 0-th piece and
       //  lies in rectangle => projection is the 
       //  respective half space projection
@@ -78,7 +78,7 @@ void ProxEpiPiecewLinKernel(T *d_arg,
         n_slope[1] = -1;
 
         // check whether point v is feasible wrt i-th piece
-        feasible = PointInHalfspace(v, p, n_slope, 2);
+        bool feasible_2 = PointInHalfspace(v, p, n_slope, 2);
 
         n_halfspace[0] = -1;
         n_halfspace[1] = -c;
@@ -88,8 +88,8 @@ void ProxEpiPiecewLinKernel(T *d_arg,
 
         p[0] = x2;
         p[1] = y2;
-        if(!feasible) {
-          // point is not feasible wrt to i-th piece
+        if(!feasible_1 || !feasible_2) {
+          // point is not feasible wrt to i-th piece or (i-1)-th piece
           if(!halfspace_1 && !halfspace_2) {
             // point lies in (i-1)-th normal cone => projection is the "knick"
             result[0] = x1;
@@ -122,6 +122,7 @@ void ProxEpiPiecewLinKernel(T *d_arg,
         // hand over variables for next iteration
         x1 = x2;
         y1 = y2;
+        feasible_1 = feasible_2;
       }
     }
 
@@ -133,15 +134,15 @@ void ProxEpiPiecewLinKernel(T *d_arg,
       n_slope[1] = -1; 
 
       // check whether point v is feasible wrt i-th piece
-      feasible = PointInHalfspace(v, p, n_slope, 2);
+      bool feasible_2 = PointInHalfspace(v, p, n_slope, 2);
 
       n_halfspace[0] = -1;
       n_halfspace[1] = -beta;
 
       bool halfspace_2 = PointInHalfspace(v, p, n_halfspace, 2);
 
-      if(!feasible) {
-        // point is not feasible wrt to i-th piece
+      if(!feasible_1 || !feasible_2) {
+        // point is not feasible wrt to i-th piece or (i-1)-th piece
         if(!halfspace_1 && !halfspace_2) {
           // point lies in last normal cone => projection is the last "knick"
           result[0] = x1;
