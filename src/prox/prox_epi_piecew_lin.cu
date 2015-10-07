@@ -1,13 +1,11 @@
 #include "prox/prox_epi_piecew_lin.hpp"
 
 #include <cassert>
-#include <iostream>
 #include <cuda_runtime.h>
-
 #include "config.hpp"
+#include <iostream>
 
-using std::cout;
-using std::endl;
+using namespace std;
 
 template<typename T>
 __global__
@@ -48,17 +46,17 @@ void ProxEpiPiecewLinKernel(T *d_arg,
     p[0] = x1;
     p[1] = y1;
 
-    bool feasible_1 = PointInHalfspace(v, p, n_slope, 2);
+    bool feasible_left = PointInHalfspace(v, p, n_slope, 2);
     
     T n_halfspace[2];
     n_halfspace[0] = 1;
     n_halfspace[1] = alpha;
 
-    bool halfspace_1 = PointInHalfspace(v, p, n_halfspace, 2);
+    bool halfspace_left = PointInHalfspace(v, p, n_halfspace, 2);
 
     bool projected = false;
 
-    if(!feasible_1 && halfspace_1) {
+    if(!feasible_left && halfspace_left) {
       // point is not feasible wrt to 0-th piece and
       //  lies in rectangle => projection is the 
       //  respective half space projection
@@ -82,19 +80,19 @@ void ProxEpiPiecewLinKernel(T *d_arg,
         n_slope[1] = -1;
 
         // check whether point v is feasible wrt i-th piece
-        bool feasible_2 = PointInHalfspace(v, p, n_slope, 2);
+        bool feasible_right = PointInHalfspace(v, p, n_slope, 2);
 
         n_halfspace[0] = -1;
         n_halfspace[1] = -c;
 
 
-        bool halfspace_2 = PointInHalfspace(v, p, n_halfspace, 2);
+        bool halfspace_right = PointInHalfspace(v, p, n_halfspace, 2);
 
         p[0] = x2;
         p[1] = y2;
-        if(!feasible_1 || !feasible_2) {
+        if(!feasible_left || !feasible_right) {
           // point is not feasible wrt to i-th piece or (i-1)-th piece
-          if(!halfspace_1 && !halfspace_2) {
+          if(!halfspace_left && !halfspace_right) {
             // point lies in (i-1)-th normal cone => projection is the "knick"
             result[0] = x1;
             result[1] = y1; 
@@ -109,8 +107,8 @@ void ProxEpiPiecewLinKernel(T *d_arg,
           n_halfspace[1] = -n_halfspace[1];
 
           // check wether point lies in i-th halfspace
-          halfspace_1 = PointInHalfspace(v, p, n_halfspace, 2);
-          if(halfspace_2 && halfspace_1) {
+          halfspace_left = PointInHalfspace(v, p, n_halfspace, 2);
+          if(halfspace_right && halfspace_left) {
             // point lies in i-th rectangle => projection is the 
             //  respective half space projection
 
@@ -126,7 +124,7 @@ void ProxEpiPiecewLinKernel(T *d_arg,
         // hand over variables for next iteration
         x1 = x2;
         y1 = y2;
-        feasible_1 = feasible_2;
+        feasible_left = feasible_right;
       }
     }
 
@@ -138,22 +136,22 @@ void ProxEpiPiecewLinKernel(T *d_arg,
       n_slope[1] = -1; 
 
       // check whether point v is feasible wrt i-th piece
-      bool feasible_2 = PointInHalfspace(v, p, n_slope, 2);
+      bool feasible_right = PointInHalfspace(v, p, n_slope, 2);
 
       n_halfspace[0] = -1;
       n_halfspace[1] = -beta;
 
-      bool halfspace_2 = PointInHalfspace(v, p, n_halfspace, 2);
+      bool halfspace_right = PointInHalfspace(v, p, n_halfspace, 2);
 
-      if(!feasible_1 || !feasible_2) {
+      if(!feasible_left || !feasible_right) {
         // point is not feasible wrt to i-th piece or (i-1)-th piece
-        if(!halfspace_1 && !halfspace_2) {
+        if(!halfspace_left && !halfspace_right) {
           // point lies in last normal cone => projection is the last "knick"
           result[0] = x1;
           result[1] = y1; 
 
           projected = true;
-        } else if(halfspace_2) {
+        } else if(halfspace_right) {
           // point lies in last rectangle => projection is the 
           //  respective half space projection
 
@@ -198,8 +196,7 @@ ProxEpiPiecewLin<T>::~ProxEpiPiecewLin() {
 }
 
 template<typename T>
-bool ProxEpiPiecewLin<T>::Init() {
-  
+bool ProxEpiPiecewLin<T>::Init() { 
   if(coeffs_.x.empty() || coeffs_.y.empty() 
     || coeffs_.alpha.empty() || coeffs_.beta.empty() || 
        coeffs_.index.empty() || coeffs_.count.empty())
