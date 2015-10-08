@@ -1,4 +1,5 @@
 TODOs:
+ o hardcoded adaptivity every 250 steps --> add parameter
  o if someone passes a sparse-matrix instead of a linear operator to the 
    solver, automatically build a LinOpSparse inside the mex-Function.
  o int -> size_t
