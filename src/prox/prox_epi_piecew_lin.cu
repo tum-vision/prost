@@ -46,7 +46,10 @@ void ProxEpiPiecewLinKernel(T *d_arg,
     p[0] = x1;
     p[1] = y1;
 
-    bool feasible_left = PointInHalfspace(v, p, n_slope, 2);
+
+
+
+/*    bool feasible_left = PointInHalfspace(v, p, n_slope, 2);
     
     T n_halfspace[2];
     n_halfspace[0] = 1;
@@ -167,7 +170,10 @@ void ProxEpiPiecewLinKernel(T *d_arg,
     if(!projected) {
       result[0] = v[0];
       result[1] = v[1];      
-    }
+    } */
+
+
+    
     
     // write out result
     if(interleaved) {
@@ -213,6 +219,8 @@ bool ProxEpiPiecewLin<T>::Init() {
     T slope_left = coeffs_.alpha[i];
     for(int j = coeffs_.index[i]; j < coeffs_.index[i] + coeffs_.count[i] - 1; j++) {
       T slope_right = (coeffs_.y[j+1]-coeffs_.y[j]) / (coeffs_.x[j+1]-coeffs_.x[j]);
+    
+        std::cout <<slope_right <<"   "<< slope_left<<endl;
       if(slope_right < slope_left) {
         std::cout <<std::endl<< "Error: Non-convex energy:" << i <<std::endl;
         return false;
@@ -220,6 +228,7 @@ bool ProxEpiPiecewLin<T>::Init() {
       slope_left = slope_right;
     }
     if(coeffs_.beta[i] < slope_left) {
+std::cout <<coeffs_.beta[i] <<"   "<< slope_left<<endl;
       std::cout << "Error: Non-convex energy:" << i << std::endl;
       return false;
     }
