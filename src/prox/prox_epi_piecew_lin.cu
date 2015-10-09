@@ -213,7 +213,8 @@ bool ProxEpiPiecewLin<T>::Init() {
   {
     cout << "count_ doesn't match size of indicies/counts array" << endl;
     return false;
-}
+  }
+
   // Ensure convexity
   for(int i = 0; i < this->count_; i++) {
     T slope_left = coeffs_.alpha[i];
@@ -223,13 +224,14 @@ bool ProxEpiPiecewLin<T>::Init() {
         std::cout <<slope_right <<"   "<< slope_left<<endl;
       if(slope_right < slope_left) {
         std::cout <<std::endl<< "Error: Non-convex energy:" << i <<std::endl;
+        cout << "slope_left=" << slope_left << ", slope_right=" << slope_right << endl;
         return false;
       }
       slope_left = slope_right;
     }
     if(coeffs_.beta[i] < slope_left) {
-std::cout <<coeffs_.beta[i] <<"   "<< slope_left<<endl;
-      std::cout << "Error: Non-convex energy:" << i << std::endl;
+      std::cout << "Error: Non-convex energy (right bdry):" << i << std::endl;
+      cout << "slope_left=" << slope_left << ", slope_right=" << coeffs_.beta[i] << endl;
       return false;
     }
   }
@@ -377,7 +379,7 @@ void ProxEpiPiecewLin<T>::EvalLocal(T *d_arg,
   dim3 block(kBlockSizeCUDA, 1, 1);
   dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
-   ProxEpiPiecewLinKernel<T>
+  ProxEpiPiecewLinKernel<T>
       <<<grid, block>>>(
           d_arg,
           d_res,
