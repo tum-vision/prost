@@ -49,7 +49,7 @@ void ProxEpiPiecewLinKernel(T *d_arg,
 
 
 
-/*    bool feasible_left = PointInHalfspace(v, p, n_slope, 2);
+    bool feasible_left = PointInHalfspace(v, p, n_slope, 2);
     
     T n_halfspace[2];
     n_halfspace[0] = 1;
@@ -170,10 +170,7 @@ void ProxEpiPiecewLinKernel(T *d_arg,
     if(!projected) {
       result[0] = v[0];
       result[1] = v[1];      
-    } */
-
-
-    
+    }
     
     // write out result
     if(interleaved) {
