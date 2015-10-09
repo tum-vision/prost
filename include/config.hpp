@@ -3,8 +3,6 @@
 
 static const int kBlockSizeCUDA = 256;
 
-// TODO: refactor everything into templates
-//typedef float real;
 typedef float real;
 
 #endif

@@ -316,15 +316,17 @@ void SolverBackendPDHG::PerformIteration() {
 
     case kAdaptBalance: { // adapt based on residuals
 
-      if(res_primal_ > opts_.ad_balance.s * res_dual_ * opts_.ad_balance.delta) {
-        tau_ = tau_ / (1 - alpha_);
-        sigma_ = sigma_ * (1 - alpha_);
-        alpha_ = alpha_ * opts_.ad_balance.nu;
-      }
-      if(res_primal_ < opts_.ad_balance.s * res_dual_ / opts_.ad_balance.delta) {
-        tau_ = tau_ * (1 - alpha_);
-        sigma_ = sigma_ / (1 - alpha_);
-        alpha_ = alpha_ * opts_.ad_balance.nu;
+      if(iteration_ % 250 == 0) {
+        if(res_primal_ > opts_.ad_balance.s * res_dual_ * opts_.ad_balance.delta) {
+          tau_ = tau_ / (1 - alpha_);
+          sigma_ = sigma_ * (1 - alpha_);
+          alpha_ = alpha_ * opts_.ad_balance.nu;
+        }
+        if(res_primal_ < opts_.ad_balance.s * res_dual_ / opts_.ad_balance.delta) {
+          tau_ = tau_ * (1 - alpha_);
+          sigma_ = sigma_ / (1 - alpha_);
+          alpha_ = alpha_ * opts_.ad_balance.nu;
+        }
       }
 
     } break;

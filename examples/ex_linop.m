@@ -47,16 +47,13 @@ fprintf('norm_diff_adjoint: %f\n', norm(y-y_ml));
 fprintf('norm_diff_rowsum: %f\n', norm(rowsum-rowsum_ml));
 fprintf('norm_diff_colsum: %f\n', norm(colsum-colsum_ml));
 
-return;
-
-
 %%
 % Data term prec relax
 nx = 123;
 ny = 31;
 L = 20;
 left=0;
-right=1;
+right=255;
 
 linop = { linop_data_prec(0, 0, nx, ny, L, left, right) };
 
@@ -114,6 +111,8 @@ fprintf('norm_diff_forward: %f\n', norm(x-x_ml));
 fprintf('norm_diff_adjoint: %f\n', norm(y-y_ml));
 fprintf('norm_diff_rowsum: %f\n', norm(rowsum-rowsum_ml));
 fprintf('norm_diff_colsum: %f\n', norm(colsum-colsum_ml));
+
+return;
 
 %%
 % Gradient
