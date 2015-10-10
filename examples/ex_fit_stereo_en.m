@@ -61,19 +61,17 @@ prox_g = { prox_1d(0, (deg+1)*(L-1), 'abs', 1, 0, delta, 0, 0) };
 
 %% solve problem
 opts = pdsolver_opts();
-opts.verbose = true;
-opts.adapt = 'converge';
+opts.adapt = 'balance';
+opts.verbose = false;
 opts.bt_enabled = false;
-
-opts.max_iters = 100000;
-opts.cb_iters = 10;
-
+opts.max_iters = 10000;
+opts.cb_iters = 100;
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;
-opts.tol_primal = 0.0025;
-opts.tol_dual = 0.0025;
-opts.callback = @(it, x, y) fprintf('%d\n', it);
-[A, qrs] = pdsolver(K, prox_g, prox_hc, opts);
+opts.tol_primal = 0.1;
+opts.tol_dual = 0.1;
+linop = { linop_sparse(0, 0, K) };
+[A, qrs] = pdsolver(linop, prox_g, prox_hc, opts);
 A = reshape(A, [deg+1, L-1])';
 %%
 hold on;
