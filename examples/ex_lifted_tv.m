@@ -21,10 +21,10 @@
 
 %% data term
 im = imread('data/24004.jpg');
-im = imresize(im, 1);
+im = imresize(im, 0.1);
 [ny, nx] = size(im);
 
-L = 64;  % number of labels
+L = 10;  % number of labels
 
 t = linspace(0, 1, L); % label space, equidistant
 N = nx * ny;
@@ -61,7 +61,7 @@ K = [K1' K3'; K2' K4'; K5 K6];
 
 %% prox operators
 prox_g = { 
-     prox_1d(0, N*L,'ind_geq0', 1, 0, 1, f, 0), 
+     prox_1d(0, N*L,'ind_geq0', 1, 0, 1, f, 0);...
      prox_zero(N*L, 2*N*(L-1)) };
 
 prox_hc = { prox_zero(0, 2*N*L) };
@@ -98,7 +98,8 @@ opts.tol_dual = 0.001;
 opts.callback = @(it, x, y) ex_lifted_tv_callback(it, x, y, f, nx, ...
                                                   ny, L, t, Kgrad, ...
                                                   f2, lmb);
-[uw, qrs] = pdsolver(K, prox_g, prox_hc, opts);
+linop = { linop_sparse(0, 0, K) };
+[uw, qrs] = pdsolver(linop, prox_g, prox_hc, opts);
 
 
 %% obtain "unlifted" result by computing the barycenter
@@ -109,8 +110,8 @@ u = reshape(uw(1:nx*ny*L), nx*ny, L) * t';
 % u3 = reshape(uw(2*nx*ny+1:3*nx*ny), nx*ny, 1);
 % u4 = reshape(uw(3*nx*ny+1:4*nx*ny), nx*ny, 1);
 
-%figure;
+figure;
 %subplot(1,1,1);
-%imshow(reshape(u, ny, nx)); % solution
+imshow(reshape(u, ny, nx)); % solution
 
 
