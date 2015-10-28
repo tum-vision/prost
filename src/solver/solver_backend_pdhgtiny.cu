@@ -158,7 +158,7 @@ std::string SolverBackendPDHGTiny::status() {
   return std::string("");
 }
 
-int SolverBackendPDHGTiny::gpu_mem_amount() {
+size_t SolverBackendPDHGTiny::gpu_mem_amount() {
   int m = problem_.linop->nrows();
   int n = problem_.linop->ncols();
 

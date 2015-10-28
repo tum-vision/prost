@@ -4,5 +4,6 @@
 static const int kBlockSizeCUDA = 256;
 
 typedef float real;
+//typedef double real;
 
 #endif
