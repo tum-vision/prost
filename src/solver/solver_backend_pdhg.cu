@@ -311,7 +311,9 @@ void SolverBackendPDHG::PerformIteration() {
       break;
 
     case kAdaptStrong: // adapt based on strong convexity constant gamma
-      // TODO: implement me!
+      theta_ = 1 / sqrt(1 + 2 * gamma_ * tau_);
+      tau_ = theta_ * tau_;
+      sigma_ = sigma_ / theta_;
       break;
 
     case kAdaptBalance: { // adapt based on residuals
@@ -373,6 +375,7 @@ bool SolverBackendPDHG::Initialize() {
   sigma_ = 1;
 */
 
+  gamma_ = opts_.ad_strong.gamma;
   tau_ = opts_.tau0;
   sigma_ = opts_.sigma0;
   theta_ = 1;
@@ -429,7 +432,7 @@ std::string SolverBackendPDHG::status() {
   return ss.str();
 }
 
-int SolverBackendPDHG::gpu_mem_amount() {
+size_t SolverBackendPDHG::gpu_mem_amount() {
   int m = problem_.linop->nrows();
   int n = problem_.linop->ncols();
 

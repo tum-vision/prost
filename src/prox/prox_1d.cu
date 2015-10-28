@@ -29,20 +29,25 @@ void Prox1DKernel(
         coeffs.val[i] = coeffs.d_ptr[i][tx];
     }
 
-    // compute step-size
-    tau = invert_tau ? (1. / (tau * d_tau[tx])) : (tau * d_tau[tx]);
+    if(coeffs.val[2] == 0) // c == 0 -> prox_zero -> return argument
+      d_res[tx] = d_arg[tx];
+    else
+    {
+      // compute step-size
+      tau = invert_tau ? (1. / (tau * d_tau[tx])) : (tau * d_tau[tx]);
 
-    // compute scaled prox argument and step 
-    const T arg = ((coeffs.val[0] * (d_arg[tx] - coeffs.val[3] * tau)) /
-                   (1. + tau * coeffs.val[4])) - coeffs.val[1];
+      // compute scaled prox argument and step 
+      const T arg = ((coeffs.val[0] * (d_arg[tx] - coeffs.val[3] * tau)) /
+        (1. + tau * coeffs.val[4])) - coeffs.val[1];
     
-    const T step = (coeffs.val[2] * coeffs.val[0] * coeffs.val[0] * tau) /
-                   (1. + tau * coeffs.val[4]);
+      const T step = (coeffs.val[2] * coeffs.val[0] * coeffs.val[0] * tau) /
+        (1. + tau * coeffs.val[4]);
 
-    // compute scaled prox and store result
-    d_res[tx] = 
+      // compute scaled prox and store result
+      d_res[tx] = 
         (prox.Eval(arg, step, coeffs.val[5], coeffs.val[6]) + coeffs.val[1])
         / coeffs.val[0];
+    }
   }
 }
 

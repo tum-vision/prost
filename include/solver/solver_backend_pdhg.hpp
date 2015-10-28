@@ -23,7 +23,7 @@ public:
   virtual std::string status();
 
   // returns amount of gpu memory required in bytes
-  virtual int gpu_mem_amount();
+  virtual size_t gpu_mem_amount();
   
 protected:
   // cublas is required to sum residuals
@@ -46,6 +46,7 @@ protected:
   real alpha_; // adaptive step size parameter
   real res_primal_; // summed primal residual
   real res_dual_; // summed dual residual
+  real gamma_;
 
   // for adaptive step size rule from Boyd's paper
   int adc_l_; 

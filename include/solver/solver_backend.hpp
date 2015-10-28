@@ -27,7 +27,7 @@ public:
   virtual std::string status() = 0;
 
   // returns amount of gpu memory required in bytes
-  virtual int gpu_mem_amount() = 0;
+  virtual size_t gpu_mem_amount() = 0;
 
 protected:
   OptimizationProblem problem_;
