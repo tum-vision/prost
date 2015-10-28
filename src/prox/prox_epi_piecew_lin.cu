@@ -217,8 +217,6 @@ bool ProxEpiPiecewLin<T>::Init() {
     T slope_left = coeffs_.alpha[i];
     for(int j = coeffs_.index[i]; j < coeffs_.index[i] + coeffs_.count[i] - 1; j++) {
       T slope_right = (coeffs_.y[j+1]-coeffs_.y[j]) / (coeffs_.x[j+1]-coeffs_.x[j]);
-    
-        std::cout <<slope_right <<"   "<< slope_left<<endl;
       if(slope_right < slope_left) {
         std::cout <<std::endl<< "Error: Non-convex energy:" << i <<std::endl;
         cout << "slope_left=" << slope_left << ", slope_right=" << slope_right << endl;
