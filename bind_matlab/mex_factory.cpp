@@ -293,7 +293,6 @@ ProxEpiConjQuadrScaled<real>* ProxEpiConjQuadrScaledFromMatlab(
   }
 
   real scaling = (real) mxGetScalar(mxGetCell(data, PROX_EPI_CONJQUADR_NUM_COEFFS));
-  mexPrintf("scaling=%f\n", scaling);
   
   return new ProxEpiConjQuadrScaled<real>(idx, count, interleaved, coeffs, scaling);
 }
@@ -507,8 +506,9 @@ LinOpGradient2D<real>* LinOpGradient2DFromMatlab(size_t row, size_t col, const m
   size_t nx = (size_t) mxGetScalar(mxGetCell(pm, 0));
   size_t ny = (size_t) mxGetScalar(mxGetCell(pm, 1));
   size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
+  bool label_first = (bool) mxGetScalar(mxGetCell(pm, 3));
 
-  return new LinOpGradient2D<real>(row, col, nx, ny, L);
+  return new LinOpGradient2D<real>(row, col, nx, ny, L, label_first);
 }
 
 LinOpGradient3D<real>* LinOpGradient3DFromMatlab(size_t row, size_t col, const mxArray *pm)
