@@ -16,6 +16,7 @@
 #include "linop/linop_diags.hpp"
 #include "linop/linop_sparse.hpp"
 #include "linop/linop_data_prec.hpp"
+#include "linop/linop_data_graph_prec.hpp"
 
 /**
  * @brief Returns the prox-function corresponding to the string.
@@ -418,6 +419,8 @@ LinearOperator<real>* LinearOperatorFromMatlab(const mxArray *pm) {
       linop = LinOpDiagsFromMatlab(row, col, data);
     else if("data_prec" == name)
       linop = LinOpDataPrecFromMatlab(row, col, data);
+    else if("data_graph_prec" == name)
+      linop = LinOpDataGraphPrecFromMatlab(row, col, data);
 
     if(NULL == linop)
       mexErrMsgTxt("Error creating linop!");
@@ -498,3 +501,14 @@ LinOpDataPrec<real>* LinOpDataPrecFromMatlab(size_t row, size_t col, const mxArr
 
   return new LinOpDataPrec<real>(row, col, nx, ny, L, left, right);    
 }
+
+LinOpDataGraphPrec<real>* LinOpDataGraphPrecFromMatlab(size_t row, size_t col, const mxArray *pm) {
+  size_t nx = (size_t) mxGetScalar(mxGetCell(pm, 0));
+  size_t ny = (size_t) mxGetScalar(mxGetCell(pm, 1));
+  size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
+  real left = (real) mxGetScalar(mxGetCell(pm, 3));
+  real right = (real) mxGetScalar(mxGetCell(pm, 4));
+
+  return new LinOpDataGraphPrec<real>(row, col, nx, ny, L, left, right);    
+}
+
