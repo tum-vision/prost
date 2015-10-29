@@ -15,8 +15,8 @@ endif()
 #if(UNIX)
 #endif()
 
-set(CUDA_NVCC_FLAGS "-arch=sm_52 -O3")
-#set(CUDA_NVCC_FLAGS "-arch=compute_12 -code=sm_12 -O3")
+#set(CUDA_NVCC_FLAGS "-arch=sm_52 -O3")
+set(CUDA_NVCC_FLAGS "-arch=compute_12 -code=sm_12 -O3")
 
 include_directories("include")
 
