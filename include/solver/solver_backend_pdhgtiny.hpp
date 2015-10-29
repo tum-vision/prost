@@ -23,7 +23,7 @@ public:
   virtual std::string status();
 
   // returns amount of gpu memory required in bytes
-  virtual int gpu_mem_amount();
+  virtual size_t gpu_mem_amount();
   
 protected:
   // algorithm variables

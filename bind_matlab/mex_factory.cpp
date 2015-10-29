@@ -5,6 +5,7 @@
 #include "prox/prox.hpp"
 #include "prox/prox_1d.hpp"
 #include "prox/prox_epi_conjquadr.hpp"
+#include "prox/prox_epi_conjquadr_scaled.hpp"
 #include "prox/prox_epi_piecew_lin.hpp"
 #include "prox/prox_moreau.hpp"
 #include "prox/prox_norm2.hpp"
@@ -266,6 +267,41 @@ ProxEpiConjQuadr<real>* ProxEpiConjQuadrFromMatlab(
 /**
  * @brief ...
  */
+ProxEpiConjQuadrScaled<real>* ProxEpiConjQuadrScaledFromMatlab(
+    int idx,
+    int count,
+    bool interleaved,
+    const mxArray *data)
+{
+  EpiConjQuadrCoeffs<real> coeffs;
+
+  const mwSize *dims;
+  double *val;
+
+  std::vector<real>* coeff_array[PROX_EPI_CONJQUADR_NUM_COEFFS] = {
+    &coeffs.a,
+    &coeffs.b,
+    &coeffs.c,
+    &coeffs.alpha,
+    &coeffs.beta };
+
+  for(int i = 0; i < PROX_EPI_CONJQUADR_NUM_COEFFS; ++i) {
+    dims = mxGetDimensions(mxGetCell(data, i));
+    val = mxGetPr(mxGetCell(data, i));
+
+    for(int j = 0; j < dims[0]; j++)
+      (*coeff_array[i]).push_back((real)val[j]);
+  }
+
+  real scaling = (real) mxGetScalar(mxGetCell(data, PROX_EPI_CONJQUADR_NUM_COEFFS));
+  
+  return new ProxEpiConjQuadrScaled<real>(idx, count, interleaved, coeffs, scaling);
+}
+
+
+/**
+ * @brief ...
+ */
 ProxEpiPiecewLin<real>* ProxEpiPiecewLinFromMatlab(
     int idx,
     int count,
@@ -373,6 +409,8 @@ Prox<real>* ProxFromMatlab(const mxArray *pm) {
     p = ProxNorm2FromMatlab(idx, count, dim, interleaved, data);
   else if("epi_conjquadr" == name)
     p = ProxEpiConjQuadrFromMatlab(idx, count, interleaved, data);
+  else if("epi_conjquadr_scaled" == name)
+    p = ProxEpiConjQuadrScaledFromMatlab(idx, count, interleaved, data);
   else if("epi_piecew_lin" == name)
     p = ProxEpiPiecewLinFromMatlab(idx, count, interleaved, data);
   else if("moreau" == name)
@@ -471,8 +509,9 @@ LinOpGradient2D<real>* LinOpGradient2DFromMatlab(size_t row, size_t col, const m
   size_t nx = (size_t) mxGetScalar(mxGetCell(pm, 0));
   size_t ny = (size_t) mxGetScalar(mxGetCell(pm, 1));
   size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
+  bool label_first = (bool) mxGetScalar(mxGetCell(pm, 3));
 
-  return new LinOpGradient2D<real>(row, col, nx, ny, L);
+  return new LinOpGradient2D<real>(row, col, nx, ny, L, label_first);
 }
 
 LinOpGradient3D<real>* LinOpGradient3DFromMatlab(size_t row, size_t col, const mxArray *pm)
