@@ -188,8 +188,8 @@ fprintf('norm_diff_colsum: %f\n', norm(colsum-colsum_ml));
 nx = 300;
 ny = 220;
 L = 8;
-%linop = { linop_gradient2d(0, 0, nx, ny, L) };
-linop = { linop_gradient3d(0, 0, nx, ny, L) };
+linop = { linop_gradient2d(0, 0, nx, ny, L) };
+%linop = { linop_gradient3d(0, 0, nx, ny, L) };
 
 inp = rand(nx*ny*L, 1);
 inp2 = rand(nx*ny*L*3, 1);
@@ -197,8 +197,8 @@ inp2 = rand(nx*ny*L*3, 1);
 [x,~,~] = pdsolver_eval_linop(linop, inp, false);
 [y,rowsum,colsum] = pdsolver_eval_linop(linop, inp2, true);
 
-%K = spmat_gradient2d(nx, ny, L);
-K = spmat_gradient3d(nx, ny, L);
+K = spmat_gradient2d(nx, ny, L);
+%K = spmat_gradient3d(nx, ny, L);
 
 tic;
 x_ml = K * inp;
