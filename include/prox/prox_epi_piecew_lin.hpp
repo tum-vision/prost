@@ -31,12 +31,16 @@ struct EpiPiecewLinCoeffsDevice {
 template<typename T>
 class ProxEpiPiecewLin : public Prox<T> {
  public:
-  ProxEpiPiecewLin(size_t index,
-                   size_t count,
-                   bool interleaved,
-                   const EpiPiecewLinCoeffs<T>& coeffs);
+  ProxEpiPiecewLin(
+    size_t index,
+    size_t count,
+    bool interleaved,
+    const EpiPiecewLinCoeffs<T>& coeffs,
+    T scaling = 1);
 
   virtual ~ProxEpiPiecewLin();
+
+  virtual size_t gpu_mem_amount(); 
 
   virtual bool Init();
   virtual void Release();
@@ -50,6 +54,7 @@ protected:
   
   EpiPiecewLinCoeffs<T> coeffs_;
   EpiPiecewLinCoeffsDevice<T> coeffs_dev_;
+  T scaling_;
 };
 
 #ifdef __CUDACC__

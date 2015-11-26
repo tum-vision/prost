@@ -9,11 +9,13 @@ using namespace std;
 
 template<typename T>
 __global__
-void ProxEpiPiecewLinKernel(T *d_arg,
-                            T *d_res,
-                            EpiPiecewLinCoeffsDevice<T> coeffs,
-                            size_t count,
-                            bool interleaved)
+void ProxEpiPiecewLinKernel(
+  T *d_arg,
+  T *d_res,
+  EpiPiecewLinCoeffsDevice<T> coeffs,
+  size_t count,
+  bool interleaved,
+  T scaling)
 {
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
@@ -28,11 +30,11 @@ void ProxEpiPiecewLinKernel(T *d_arg,
 
     T v[2];
     if(interleaved) {
-      v[0] = d_arg[tx * 2 + 0];
-      v[1] = d_arg[tx * 2 + 1];
+      v[0] = d_arg[tx * 2 + 0] / scaling;
+      v[1] = d_arg[tx * 2 + 1] / scaling;
     } else {
-      v[0] = d_arg[tx + count * 0];
-      v[1] = d_arg[tx + count * 1];
+      v[0] = d_arg[tx + count * 0] / scaling;
+      v[1] = d_arg[tx + count * 1] / scaling;
     }
     
     // compute vector normal to slope for feasibility-check
@@ -174,22 +176,24 @@ void ProxEpiPiecewLinKernel(T *d_arg,
     
     // write out result
     if(interleaved) {
-      d_res[tx * 2 + 0] = result[0];
-      d_res[tx * 2 + 1] = result[1];
+      d_res[tx * 2 + 0] = result[0] * scaling;
+      d_res[tx * 2 + 1] = result[1] * scaling;
     } else {
-      d_res[tx + count * 0] = result[0];
-      d_res[tx + count * 1] = result[1];
+      d_res[tx + count * 0] = result[0] * scaling;
+      d_res[tx + count * 1] = result[1] * scaling;
     }
   }
 }
 
 template<typename T>
-ProxEpiPiecewLin<T>::ProxEpiPiecewLin(size_t index,
-                                      size_t count,
-                                      bool interleaved,
-                                      const EpiPiecewLinCoeffs<T>& coeffs)
+ProxEpiPiecewLin<T>::ProxEpiPiecewLin(
+  size_t index,
+  size_t count,
+  bool interleaved,
+  const EpiPiecewLinCoeffs<T>& coeffs,
+  T scaling)
     
-    : Prox<T>(index, count, 2, interleaved, false), coeffs_(coeffs)
+  : Prox<T>(index, count, 2, interleaved, false), coeffs_(coeffs), scaling_(scaling)
 {
 }
 
@@ -376,11 +380,28 @@ void ProxEpiPiecewLin<T>::EvalLocal(T *d_arg,
 
   ProxEpiPiecewLinKernel<T>
       <<<grid, block>>>(
-          d_arg,
-          d_res,
-          coeffs_dev_,
-          this->count_,
-          this->interleaved_);
+        d_arg,
+        d_res,
+        coeffs_dev_,
+        this->count_,
+        this->interleaved_,
+        this->scaling_);
+}
+
+template<typename T>
+size_t ProxEpiPiecewLin<T>::gpu_mem_amount() {
+  size_t num_bytes = 0;
+
+  size_t count_xy = coeffs_.index[this->count_-1] + coeffs_.count[this->count_-1];
+  size_t size = count_xy * sizeof(T);
+
+  num_bytes += 2 * size;
+  size = this->count_ * sizeof(T);
+  num_bytes += 2 * size;
+  size = this->count_ * sizeof(size_t);
+  num_bytes += 2 * size;
+
+  return num_bytes;
 }
 
 // Explicit template instantiation

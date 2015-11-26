@@ -26,7 +26,7 @@ class ProxEpiConjQuadrScaled : public Prox<T> {
 
   virtual bool Init();
   virtual void Release();
-  
+
 protected:
   virtual void EvalLocal(T *d_arg,
                          T *d_res,

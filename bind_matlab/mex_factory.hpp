@@ -17,6 +17,7 @@ template<typename T> class ProxMoreau;
 template<typename T> class ProxSimplex;
 template<typename T> class ProxZero;
 template<typename T> class ProxEpiPiecewLin;
+template<typename T> class ProxEpiParabola;
 
 // linops
 template<typename T> class LinOp;
@@ -34,6 +35,7 @@ ProxNorm2<real>* ProxNorm2FromMatlab(int idx, int count, int dim, bool interleav
 ProxEpiConjQuadr<real>* ProxEpiConjQuadrFromMatlab(int idx, int count, bool interleaved, const mxArray *data);
 ProxEpiConjQuadrScaled<real>* ProxEpiConjQuadrScaledFromMatlab(int idx, int count, bool interleaved, const mxArray *data);
 ProxEpiPiecewLin<real>* ProxEpiPiecewLinFromMatlab(int idx, int count, bool interleaved, const mxArray *data);
+ProxEpiParabola<real>* ProxEpiParabolaFromMatlab(int idx, int count, int dim, const mxArray *data);
 ProxMoreau<real>* ProxMoreauFromMatlab(const mxArray *data);
 ProxSimplex<real>* ProxSimplexFromMatlab(int idx, int count, int dim, bool interleaved, const mxArray *data);
 ProxZero<real>* ProxZeroFromMatlab(int idx, int count);

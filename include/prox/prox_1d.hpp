@@ -15,6 +15,7 @@ enum Prox1DFunction {
   kIndGeq0,            // delta(x>=0)
   kIndEq0,             // delta(x=0)
   kIndBox01,           // delta(0<=x<=1)
+  kL0,                 // |x|^0
   
   kNumProx1DFunctions,
   kInvalidProx = -1
@@ -147,6 +148,16 @@ struct Prox1DMaxPos0 {
       return x0;
 
     return 0.;
+  }
+};
+
+template<typename T>
+struct Prox1DL0 {
+  inline __device__ T Eval(T x0, T tau, T alpha, T beta) const {
+    if(x0*x0 > 2 * tau)
+      return x0;
+
+    return 0;
   }
 };
 
