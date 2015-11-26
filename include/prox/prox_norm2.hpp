@@ -7,6 +7,8 @@
  * @brief Provides proximal operator for sum of 2-norms, with a nonlinear
  *        function ProxFunction1D applied to the norm.
  *
+ *
+ *
  */
 template<typename T>
 class ProxNorm2 : public Prox1D<T> {

@@ -7,6 +7,7 @@
 #include "prox/prox_epi_conjquadr.hpp"
 #include "prox/prox_epi_conjquadr_scaled.hpp"
 #include "prox/prox_epi_piecew_lin.hpp"
+#include "prox/prox_epi_parabola.hpp"
 #include "prox/prox_moreau.hpp"
 #include "prox/prox_norm2.hpp"
 #include "prox/prox_simplex.hpp"
@@ -33,7 +34,8 @@ Prox1DFunction Prox1DFunctionFromString(std::string name) {
     "ind_leq0",
     "ind_geq0",
     "ind_eq0",
-    "ind_box01" };
+    "ind_box01",
+    "l0" };
 
   static Prox1DFunction funcs[] = {
     kZero,
@@ -43,7 +45,8 @@ Prox1DFunction Prox1DFunctionFromString(std::string name) {
     kIndLeq0,
     kIndGeq0,
     kIndEq0,
-    kIndBox01 };
+    kIndBox01,
+    kL0 };
 
   for(int i = 0; i < kNumProx1DFunctions; i++)
     if(names[i] == name)
@@ -342,8 +345,10 @@ ProxEpiPiecewLin<real>* ProxEpiPiecewLinFromMatlab(
   val = mxGetPr(mxGetCell(data, 5));
   for(int j = 0; j < dims[0]; j++)
     coeffs.count.push_back((size_t)val[j]);
+
+  real scaling = mxGetScalar(mxGetCell(data, 6));
   
-  return new ProxEpiPiecewLin<real>(idx, count, interleaved, coeffs);
+  return new ProxEpiPiecewLin<real>(idx, count, interleaved, coeffs, scaling);
 }
 
 /**
@@ -384,6 +389,20 @@ ProxZero<real>* ProxZeroFromMatlab(int idx, int count) {
   return new ProxZero<real>(idx, count);
 }
 
+ProxEpiParabola<real>* ProxEpiParabolaFromMatlab(int idx, int count, int dim, const mxArray *data) {
+  const mwSize *dims;
+  double *val;
+
+  dims = mxGetDimensions(mxGetCell(data, 0));
+  val = mxGetPr(mxGetCell(data, 0));
+  real alpha = (real)mxGetScalar(mxGetCell(data,1));
+
+  std::vector<real> g;
+  for(int j = 0; j < dims[0]; j++)
+    g.push_back((real)val[j]);
+
+  return new ProxEpiParabola<real>(idx, count, dim, g, alpha);
+}
 
 /**
  * @brief ...
@@ -413,6 +432,8 @@ Prox<real>* ProxFromMatlab(const mxArray *pm) {
     p = ProxEpiConjQuadrScaledFromMatlab(idx, count, interleaved, data);
   else if("epi_piecew_lin" == name)
     p = ProxEpiPiecewLinFromMatlab(idx, count, interleaved, data);
+  else if("epi_parabola" == name)
+    p = ProxEpiParabolaFromMatlab(idx, count, dim, data);
   else if("moreau" == name)
     p = ProxMoreauFromMatlab(data);
   else if("simplex" == name)
@@ -519,8 +540,9 @@ LinOpGradient3D<real>* LinOpGradient3DFromMatlab(size_t row, size_t col, const m
   size_t nx = (size_t) mxGetScalar(mxGetCell(pm, 0));
   size_t ny = (size_t) mxGetScalar(mxGetCell(pm, 1));
   size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
+  bool label_first = (bool) mxGetScalar(mxGetCell(pm, 3));
 
-  return new LinOpGradient3D<real>(row, col, nx, ny, L);
+  return new LinOpGradient3D<real>(row, col, nx, ny, L, label_first);
 }
 
 LinOp<real>* LinOpZeroFromMatlab(size_t row, size_t col, const mxArray *pm)

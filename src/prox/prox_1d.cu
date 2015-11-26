@@ -170,6 +170,10 @@ void Prox1D<T>::EvalLocal(T *d_arg,
       CALL_PROX_1D_KERNEL(Prox1DIndBox01);
       break;
 
+    case kL0: 
+      CALL_PROX_1D_KERNEL(Prox1DL0);
+      break;
+
     default:
       break;
   }

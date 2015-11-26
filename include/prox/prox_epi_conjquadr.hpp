@@ -25,11 +25,11 @@ struct EpiConjQuadrCoeffsDevice {
  */
 template<typename T>
 class ProxEpiConjQuadr : public Prox<T> {
- public:
+public:
   ProxEpiConjQuadr(size_t index,
-                   size_t count,
-                   bool interleaved,
-                   const EpiConjQuadrCoeffs<T>& coeffs);
+    size_t count,
+    bool interleaved,
+    const EpiConjQuadrCoeffs<T>& coeffs);
 
   virtual ~ProxEpiConjQuadr();
 
@@ -38,10 +38,10 @@ class ProxEpiConjQuadr : public Prox<T> {
   
 protected:
   virtual void EvalLocal(T *d_arg,
-                         T *d_res,
-                         T *d_tau,
-                         T tau,
-                         bool invert_tau);
+    T *d_res,
+    T *d_tau,
+    T tau,
+    bool invert_tau);
   
   EpiConjQuadrCoeffs<T> coeffs_;
   EpiConjQuadrCoeffsDevice<T> coeffs_dev_;
@@ -55,10 +55,10 @@ protected:
  */
 template<typename T>
 inline __device__ void ProjectParabolaSimple(const T& x0,
-                                             const T& y0,
-                                             const T& alpha,
-                                             T& x,
-                                             T& y)
+  const T& y0,
+  const T& alpha,
+  T& x,
+  T& y)
 {
   // nothing to do?
   if(y0 >= alpha * (x0 * x0)) {
@@ -103,22 +103,22 @@ inline __device__ void ProjectParabolaSimple(const T& x0,
  */
 template<typename T>
 inline __device__ void ProjectParabolaGeneral(const T& x0,
-                                              const T& y0,
-                                              const T& p,
-                                              const T& q,
-                                              const T& r,
-                                              T& x,
-                                              T& y)
+  const T& y0,
+  const T& p,
+  const T& q,
+  const T& r,
+  T& x,
+  T& y)
 {
   T tildex;
   T tildey;
   
   ProjectParabolaSimple<T>(
-      x0 + q / (2. * p),
-      y0 + q * q / (4. * p) - r,
-      p,
-      tildex,
-      tildey);
+    x0 + q / (2. * p),
+    y0 + q * q / (4. * p) - r,
+    p,
+    tildex,
+    tildey);
   
   x = tildex - q / (2. * p);
   y = tildey - q * q / (4. * p) + r;
@@ -130,10 +130,10 @@ inline __device__ void ProjectParabolaGeneral(const T& x0,
  */
 template<typename T>
 inline __device__ void ProjectHalfspace(const T *v,
-                                        const T *n,
-                                        const T& t,
-                                        T* result,
-                                        int d)
+  const T *n,
+  const T& t,
+  T* result,
+  int d)
 {
   T dot = 0, sq_norm = 0;
 
@@ -154,9 +154,9 @@ inline __device__ void ProjectHalfspace(const T *v,
  */
 template<typename T>
 inline __device__ bool PointInHalfspace(const T* v,
-                                        const T* p,
-                                        const T* n,
-                                        int d)
+  const T* p,
+  const T* n,
+  int d)
 {
   T dot = 0;
   for(int i = 0; i < d; i++) 
