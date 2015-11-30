@@ -8,7 +8,7 @@
 #include "prox/prox_epi_conjquadr_scaled.hpp"
 #include "prox/prox_epi_piecew_lin.hpp"
 #include "prox/prox_epi_parabola.hpp"
-#include "prox/prox_hyperplane.hpp"
+#include "prox/prox_halfspace.hpp"
 #include "prox/prox_moreau.hpp"
 #include "prox/prox_norm2.hpp"
 #include "prox/prox_simplex.hpp"
@@ -356,10 +356,11 @@ ProxEpiPiecewLin<real>* ProxEpiPiecewLinFromMatlab(
 /**
  * @brief ...
  */
-ProxHyperplane<real>* ProxHyperplaneFromMatlab(
+ProxHalfspace<real>* ProxHalfspaceFromMatlab(
     int idx,
     int count,
     int dim,
+    bool interleaved,
     const mxArray *data)
 {
   const mwSize *dims;
@@ -367,12 +368,12 @@ ProxHyperplane<real>* ProxHyperplaneFromMatlab(
     
   dims = mxGetDimensions(mxGetCell(data, 0));
   val = mxGetPr(mxGetCell(data, 0));
-  std::vector<real> b;
+  std::vector<real> a;
   
   for(int j = 0; j < dims[0]; j++)
-    b.push_back((real)val[j]);
+    a.push_back((real)val[j]);
   
-  return new ProxHyperplane<real>(idx, count, dim, b);
+  return new ProxHalfspace<real>(idx, count, dim, interleaved, a);
 }
 
 
@@ -459,8 +460,8 @@ Prox<real>* ProxFromMatlab(const mxArray *pm) {
     p = ProxEpiPiecewLinFromMatlab(idx, count, interleaved, data);
   else if("epi_parabola" == name)
     p = ProxEpiParabolaFromMatlab(idx, count, dim, data);
-  else if("hyperplane" == name)
-    p = ProxHyperplaneFromMatlab(idx, count, dim, data);
+  else if("halfspace" == name)
+    p = ProxHalfspaceFromMatlab(idx, count, dim, interleaved, data);
   else if("moreau" == name)
     p = ProxMoreauFromMatlab(data);
   else if("simplex" == name)
