@@ -16,6 +16,7 @@ enum Prox1DFunction {
   kIndEq0,             // delta(x=0)
   kIndBox01,           // delta(0<=x<=1)
   kL0,                 // |x|^0
+  kHuber,              // huber(x)
   
   kNumProx1DFunctions,
   kInvalidProx = -1
@@ -158,6 +159,16 @@ struct Prox1DL0 {
       return x0;
 
     return 0;
+  }
+};
+
+template<typename T>
+struct ProxHuber {
+  // min_x huber_alpha(x) + (1/2tau) (x-x0)^2
+  inline __device__ T Eval(T x0, T tau, T alpha, T beta) const {
+    T result = (x0 / tau) / (static_cast<T>(1) + alpha / tau);
+    result /= max(static_cast<T>(1), abs(result));  
+    return x0 - tau * result;
   }
 };
 

@@ -3,6 +3,8 @@
 #include "config.hpp"
 #include "util/cuwrap.hpp"
 
+#include <iostream>
+
 template<class ProxFunc1D, typename T>
 __global__
 void ProxNorm2Kernel(
@@ -139,6 +141,10 @@ void ProxNorm2<T>::EvalLocal(T *d_arg,
 
     case kL0:
       CALL_PROX_NORM2_KERNEL(Prox1DL0);
+      break;
+
+    case kHuber:
+      CALL_PROX_NORM2_KERNEL(ProxHuber);
       break;
 
     default:
