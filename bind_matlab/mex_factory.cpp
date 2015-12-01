@@ -36,7 +36,9 @@ Prox1DFunction Prox1DFunctionFromString(std::string name) {
     "ind_geq0",
     "ind_eq0",
     "ind_box01",
-    "l0" };
+    "l0",
+    "huber" 
+  };
 
   static Prox1DFunction funcs[] = {
     kZero,
@@ -47,7 +49,9 @@ Prox1DFunction Prox1DFunctionFromString(std::string name) {
     kIndGeq0,
     kIndEq0,
     kIndBox01,
-    kL0 };
+    kL0,
+    kHuber 
+  };
 
   for(int i = 0; i < kNumProx1DFunctions; i++)
     if(names[i] == name)

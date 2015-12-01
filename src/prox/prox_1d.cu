@@ -174,6 +174,10 @@ void Prox1D<T>::EvalLocal(T *d_arg,
       CALL_PROX_1D_KERNEL(Prox1DL0);
       break;
 
+    case kHuber: 
+      CALL_PROX_1D_KERNEL(ProxHuber);
+      break;
+
     default:
       break;
   }
