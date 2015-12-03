@@ -13,7 +13,7 @@ void MoreauPrescale(T *d_scaled_arg,
                     size_t count,
                     bool invert_tau)
 { 
-  int tx = threadIdx.x + blockDim.x * blockIdx.x;
+  size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
   if(tx < count) {
     if(invert_tau)

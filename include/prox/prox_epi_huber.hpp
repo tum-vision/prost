@@ -7,7 +7,7 @@
 #include "prox_epi_parabola.hpp"
 
 /**
- * @brief Computes orthogonal projection of (phi^x,phi^t) onto the convex set
+ * @brief Computes orthogonal projection of (phi^x, phi^t) onto the convex set
  *        C = { (phi^x, phi^t) | phi^t + g >= alpha * |phi^x|^2,  |phi^x| <= 1 }
  */
 template<typename T>
@@ -18,8 +18,7 @@ public:
     size_t count,
     size_t dim,
     const std::vector<T>& g,
-    T alpha,
-    T label_dist);
+    T alpha);
 
   virtual ~ProxEpiHuber();
 
@@ -36,7 +35,6 @@ protected:
   T *d_g_;
   std::vector<T> g_;
   T alpha_;
-  T label_dist_;
 };
 
 #endif

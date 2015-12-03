@@ -8,8 +8,10 @@
 #include "prox/prox_epi_conjquadr_scaled.hpp"
 #include "prox/prox_epi_piecew_lin.hpp"
 #include "prox/prox_epi_parabola.hpp"
+#include "prox/prox_epi_huber.hpp"
 #include "prox/prox_halfspace.hpp"
 #include "prox/prox_moreau.hpp"
+#include "prox/prox_plus_linterm.hpp"
 #include "prox/prox_norm2.hpp"
 #include "prox/prox_simplex.hpp"
 #include "prox/prox_zero.hpp"
@@ -388,6 +390,24 @@ ProxMoreau<real>* ProxMoreauFromMatlab(const mxArray *data) {
   return new ProxMoreau<real>(ProxFromMatlab(mxGetCell(data, 0)));
 }
 
+ProxPlusLinterm<real>* ProxPlusLintermFromMatlab(const mxArray *data) {
+  const mwSize *dims;
+  double *val;
+  
+  dims = mxGetDimensions(mxGetCell(data, 1));
+  val = mxGetPr(mxGetCell(data, 1));
+
+  std::vector<real> coeffs;
+  
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.push_back((real)val[j]);
+
+  return new ProxPlusLinterm<real>(
+    ProxFromMatlab(mxGetCell(data, 0)), 
+    coeffs);
+}
+
+
 /**
  * @brief ...
  */
@@ -434,6 +454,21 @@ ProxEpiParabola<real>* ProxEpiParabolaFromMatlab(int idx, int count, int dim, co
   return new ProxEpiParabola<real>(idx, count, dim, g, alpha);
 }
 
+ProxEpiHuber<real>* ProxEpiHuberFromMatlab(int idx, int count, int dim, const mxArray *data) {
+  const mwSize *dims;
+  double *val;
+
+  dims = mxGetDimensions(mxGetCell(data, 0));
+  val = mxGetPr(mxGetCell(data, 0));
+  real alpha = (real)mxGetScalar(mxGetCell(data,1));
+
+  std::vector<real> g;
+  for(int j = 0; j < dims[0]; j++)
+    g.push_back((real)val[j]);
+
+  return new ProxEpiHuber<real>(idx, count, dim, g, alpha);
+}
+
 /**
  * @brief ...
  */
@@ -464,10 +499,14 @@ Prox<real>* ProxFromMatlab(const mxArray *pm) {
     p = ProxEpiPiecewLinFromMatlab(idx, count, interleaved, data);
   else if("epi_parabola" == name)
     p = ProxEpiParabolaFromMatlab(idx, count, dim, data);
+  else if("epi_huber" == name)
+    p = ProxEpiHuberFromMatlab(idx, count, dim, data);
   else if("halfspace" == name)
     p = ProxHalfspaceFromMatlab(idx, count, dim, interleaved, data);
   else if("moreau" == name)
     p = ProxMoreauFromMatlab(data);
+  else if("plus_linterm" == name)
+    p = ProxPlusLintermFromMatlab(data);
   else if("simplex" == name)
     p = ProxSimplexFromMatlab(idx, count, dim, interleaved, data);
   else if("zero" == name)
@@ -574,7 +613,16 @@ LinOpGradient3D<real>* LinOpGradient3DFromMatlab(size_t row, size_t col, const m
   size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
   bool label_first = (bool) mxGetScalar(mxGetCell(pm, 3));
 
-  return new LinOpGradient3D<real>(row, col, nx, ny, L, label_first);
+  real hx = (real) mxGetScalar(mxGetCell(pm, 4));
+  real hy = (real) mxGetScalar(mxGetCell(pm, 5));
+  real ht = (real) mxGetScalar(mxGetCell(pm, 6));
+
+  return new LinOpGradient3D<real>(
+    row, col, nx, ny, L, label_first, 
+    std::vector<real>(),
+    std::vector<real>(),
+    std::vector<real>(),
+    hx, hy, ht);
 }
 
 LinOp<real>* LinOpZeroFromMatlab(size_t row, size_t col, const mxArray *pm)

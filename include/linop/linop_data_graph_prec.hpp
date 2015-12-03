@@ -4,8 +4,7 @@
 #include "linop.hpp"
 
 /**
- * @brief Assumes pixel-first (matlab style, rows first) ordering and
- *        outputs dx dy pixelwise ordered.
+ * @brief ...
  *
  */
 template<typename T>
@@ -16,7 +15,6 @@ class LinOpDataGraphPrec : public LinOp<T> {
 
   // required for preconditioners
   virtual T row_sum(size_t row, T alpha) const;
-  
   virtual T col_sum(size_t col, T alpha) const;
   
  protected:

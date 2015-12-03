@@ -6,7 +6,7 @@ im = imread('data/24004.jpg');
 im = imresize(im, 1);
 [ny, nx] = size(im);
 
-f = double(im(:)) / 255.;
+%f = double(im(:)) / 255.;
 
 K = grad_forw_2d(nx, ny, 1);
 
@@ -26,7 +26,7 @@ lmb = 1;
 
 % testing Moreau prox
 prox_g = { prox_1d(0, nx * ny, 'square', 1, f, lmb, 0, 0) };
-prox_hstar = { prox_moreau(prox_norm2(0, nx * ny, 2, false, 'l0', ...
+prox_hstar = { prox_moreau(prox_norm2(0, nx * ny, 2, false, 'abs', ...
                                       1, 0, 1, 0, 0)) }; 
 
 global plot_primal;
@@ -39,16 +39,16 @@ plot_iters=[];
 
 %% set options and run algorithm
 opts = pdsolver_opts();
-opts.adapt = 'strong';
+opts.adapt = 'converge';
 opts.ads_gamma = lmb/2;
 opts.verbose = true;
 opts.bt_enabled = false;
-opts.max_iters = 1000;
+opts.max_iters = 10000;
 opts.cb_iters = 2;
 opts.precond = 'alpha';
 opts.precond_alpha = 1.;
-opts.tol_primal = 0.001;
-opts.tol_dual = 0.001;
+opts.tol_primal = 0.1;
+opts.tol_dual = 0.1;
 opts.callback = @(it, x, y) disp(''); % ex_rof_callback(K, f, 1/lmb, it, x, y);
 
 tic;
@@ -62,10 +62,10 @@ imshow(reshape(f, ny, nx));
 subplot(1,2,2);
 imshow(reshape(x, ny, nx));
 
-% u_proj = x;
-% Kmat = spmat_gradient2d(nx,ny,1);
-% [m, n] = size(Kmat);
-% grad = Kmat * u_proj(:);
-% gradnorms = sqrt(grad(1:n).^2 + grad(n+1:end).^2);
-% en_prim = 0.5 * sum((u_proj(:)-f2).^2) + lmb * sum(gradnorms);
-% fprintf('primal_energy=%f\n', en_prim);
+u_proj = x;
+Kmat = spmat_gradient2d(nx,ny,1);
+[m, n] = size(Kmat);
+grad = Kmat * u_proj(:);
+gradnorms = sqrt(grad(1:n).^2 + grad(n+1:end).^2);
+en_prim = 0.5 * sum((u_proj(:)-f2).^2) + lmb * sum(gradnorms);
+fprintf('primal_energy=%f\n', en_prim);
