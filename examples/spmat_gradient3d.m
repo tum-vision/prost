@@ -1,4 +1,13 @@
-function [grad] = spmat_gradient3d(nx, ny, L)
+function [grad] = spmat_gradient3d(nx, ny, L, hx, hy, ht)
+    
+    switch nargin
+      case 3
+        hx = 1;
+        hy = 1;
+        ht = 1;
+    end
+        
+    
 %spmat_gradient2d Assembles linear operator for gradient
 %   Input args are nx, ny, the dimension of the image and L, the number of labels.
 %   Returns linear operator for gradient. Has the form (Dx1 | Dx2 |
@@ -13,6 +22,10 @@ function [grad] = spmat_gradient3d(nx, ny, L)
 
     dz = spdiags([-ones(ny*nx*L,1) ones(ny*nx*L,1)], ...
                  [0, ny*nx], nx*ny*L, nx*ny*L);
+    
+    dx = dx ./ hx;
+    dy = dy ./ hy;
+    dz = dz ./ ht;
     
     grad = cat(1, ...
                kron(speye(L), dx), ...

@@ -22,7 +22,9 @@ class LinOpGradient2D : public LinOp<T> {
     bool label_first = false,
     const std::vector<T>& m11 = std::vector<T>(), 
     const std::vector<T>& m12 = std::vector<T>(), 
-    const std::vector<T>& m22 = std::vector<T>());
+    const std::vector<T>& m22 = std::vector<T>(),
+    T hx = static_cast<T>(1), // grid discretization
+    T hy = static_cast<T>(1));
   virtual ~LinOpGradient2D();
 
   virtual bool Init();
@@ -44,6 +46,7 @@ class LinOpGradient2D : public LinOp<T> {
 
   std::vector<T> m11_, m12_, m22_;
   T *d_m11_, *d_m12_, *d_m22_; // weighted 2d gradient 
+  T hx_, hy_; // grid spacing
 };
 
 /**
@@ -63,7 +66,10 @@ class LinOpGradient3D : public LinOp<T> {
     bool label_first = false,
     const std::vector<T>& m11 = std::vector<T>(), 
     const std::vector<T>& m12 = std::vector<T>(), 
-    const std::vector<T>& m22 = std::vector<T>());
+    const std::vector<T>& m22 = std::vector<T>(),
+    T hx = static_cast<T>(1),
+    T hy = static_cast<T>(1),
+    T ht = static_cast<T>(1));
 
   virtual ~LinOpGradient3D();
 
@@ -86,6 +92,7 @@ class LinOpGradient3D : public LinOp<T> {
 
   std::vector<T> m11_, m12_, m22_;
   T *d_m11_, *d_m12_, *d_m22_; // weighted gradient
+  T hx_, hy_, ht_;
 };
 
 #endif

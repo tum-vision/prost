@@ -2,13 +2,17 @@
 
 #include <iostream>
 
+// TODO: implement hx, hy
 template<typename T>
-__global__
-void LinOpGradient2DKernel(T *d_res,
-                           T *d_rhs,
-                           size_t nx,
-                           size_t ny,
-                           size_t L)
+__global__ void 
+LinOpGradient2DKernel(
+  T *d_res,
+  T *d_rhs,
+  size_t nx,
+  size_t ny,
+  size_t L,
+  T hx,
+  T hy)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
   size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
@@ -37,14 +41,17 @@ void LinOpGradient2DKernel(T *d_res,
   d_res[idx + nx * ny * L] += gy;
 }
 
-
+// TODO: implement hx, hy
 template<typename T>
-__global__
-void LinOpDivergence2DKernel(T *d_res,
-                             T *d_rhs,
-                             size_t nx,
-                             size_t ny,
-                             size_t L)
+__global__ void 
+LinOpDivergence2DKernel(
+  T *d_res,
+  T *d_rhs,
+  size_t nx,
+  size_t ny,
+  size_t L,
+  T hx,
+  T hy)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
   size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
@@ -77,12 +84,16 @@ void LinOpDivergence2DKernel(T *d_res,
 }
 
 template<typename T>
-__global__
-void LinOpGradient3DKernel(T *d_res,
-                           T *d_rhs,
-                           size_t nx,
-                           size_t ny,
-                           size_t L)
+__global__ void 
+LinOpGradient3DKernel(
+  T *d_res,
+  T *d_rhs,
+  size_t nx,
+  size_t ny,
+  size_t L,
+  T hx,
+  T hy,
+  T ht)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
   size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
@@ -112,19 +123,23 @@ void LinOpGradient3DKernel(T *d_res,
   else
     gl = -val_pt; // dirichlet
 
-  d_res[idx] += gx;
-  d_res[idx + ny * nx * L] += gy;
-  d_res[idx + 2 * ny * nx * L] += gl;
+  d_res[idx] += gx/hx;
+  d_res[idx + ny * nx * L] += gy/hy;
+  d_res[idx + 2 * ny * nx * L] += gl/ht;
 }
 
 
 template<typename T>
-__global__
-void LinOpDivergence3DKernel(T *d_res,
-                             T *d_rhs,
-                             size_t nx,
-                             size_t ny,
-                             size_t L)
+__global__ void 
+LinOpDivergence3DKernel(
+  T *d_res,
+  T *d_rhs,
+  size_t nx,
+  size_t ny,
+  size_t L,
+  T hx,
+  T hy,
+  T ht)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
   size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
@@ -158,17 +173,20 @@ void LinOpDivergence3DKernel(T *d_res,
   if(l > 0)
     divl -= d_rhs[idx + 2 * nx * ny * L - nx * ny];
 
-  d_res[idx] -= (divx + divy + divl); // adjoint is minus the divergence
+  d_res[idx] -= (divx/hx + divy/hy + divl/ht); // adjoint is minus the divergence
 }
 
+// TODO: implement hx, hy
 template<typename T>
-__global__
-void LinOpGradient2DKernelLabelFirst(
+__global__ void 
+LinOpGradient2DKernelLabelFirst(
   T *d_res,
   T *d_rhs,
   size_t nx,
   size_t ny,
-  size_t L)
+  size_t L,
+  T hx,
+  T hy)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
   size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
@@ -197,15 +215,17 @@ void LinOpGradient2DKernelLabelFirst(
   d_res[idx + nx * ny * L] += gy;
 }
 
-
+// TODO: implement hx, hy
 template<typename T>
-__global__
-void LinOpDivergence2DKernelLabelFirst(
+__global__ void 
+LinOpDivergence2DKernelLabelFirst(
   T *d_res,
   T *d_rhs,
   size_t nx,
   size_t ny,
-  size_t L)
+  size_t L,
+  T hx,
+  T hy)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
   size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
@@ -244,7 +264,10 @@ LinOpGradient3DKernelLabelFirst(
   T *d_rhs,
   size_t nx,
   size_t ny,
-  size_t L)
+  size_t L,
+  T hx,
+  T hy,
+  T ht)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
   size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
@@ -275,9 +298,9 @@ LinOpGradient3DKernelLabelFirst(
   else
     gl = -val_pt; // dirichlet
 
-  d_res[idx] += gx;
-  d_res[idx + ny * nx * L] += gy;
-  d_res[idx + 2 * ny * nx * L] += gl;
+  d_res[idx] += gx/hx;
+  d_res[idx + ny * nx * L] += gy/hy;
+  d_res[idx + 2 * ny * nx * L] += gl/ht;
 }
 
 
@@ -288,7 +311,10 @@ LinOpDivergence3DKernelLabelFirst(
   T *d_rhs,
   size_t nx,
   size_t ny,
-  size_t L)
+  size_t L,
+  T hx,
+  T hy,
+  T ht)
 {
   size_t x = threadIdx.x + blockDim.x * blockIdx.x;
   size_t y_tilde = threadIdx.y + blockDim.y * blockIdx.y;
@@ -323,7 +349,7 @@ LinOpDivergence3DKernelLabelFirst(
   if(l > 0)
     divl -= d_rhs[idx + 2 * nx * ny * L - 1];
 
-  d_res[idx] -= (divx + divy + divl); // adjoint is minus the divergence
+  d_res[idx] -= (divx/hx + divy/hy + divl/ht); // adjoint is minus the divergence
 }
 
 template<typename T>
@@ -336,10 +362,12 @@ LinOpGradient2D<T>::LinOpGradient2D(
   bool label_first, 
   const std::vector<T>& m11, 
   const std::vector<T>& m12, 
-  const std::vector<T>& m22)
+  const std::vector<T>& m22,
+  T hx,
+  T hy)
   : LinOp<T>(row, col, nx*ny*L*2, nx*ny*L), 
     nx_(nx), ny_(ny), L_(L), d_m11_(0), d_m12_(0), d_m22_(0), label_first_(label_first),
-    m11_(m11), m12_(m12), m22_(m22)
+    m11_(m11), m12_(m12), m22_(m22), hx_(hx), hy_(hy)
 {
 }
 
@@ -356,7 +384,7 @@ void LinOpGradient2D<T>::EvalLocalAdd(T *d_res, T *d_rhs) {
       (ny_*L_ + block.y - 1) / block.y,
       1);
 
-    LinOpGradient2DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
+    LinOpGradient2DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_, hx_, hy_);
   }
   else {
     dim3 block(1, 128, 1);
@@ -364,7 +392,7 @@ void LinOpGradient2D<T>::EvalLocalAdd(T *d_res, T *d_rhs) {
       (ny_*L_ + block.y - 1) / block.y,
       1);
 
-    LinOpGradient2DKernelLabelFirst<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
+    LinOpGradient2DKernelLabelFirst<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_, hx_, hy_);
   }
 }
 
@@ -377,7 +405,7 @@ void LinOpGradient2D<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
       (ny_*L_ + block.y - 1) / block.y,
       1);
 
-    LinOpDivergence2DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
+    LinOpDivergence2DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_, hx_, hy_);
   }
   else {
     dim3 block(2, 128, 1);
@@ -385,7 +413,7 @@ void LinOpGradient2D<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
       (ny_*L_ + block.y - 1) / block.y,
       1);
 
-    LinOpDivergence2DKernelLabelFirst<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
+    LinOpDivergence2DKernelLabelFirst<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_, hx_, hy_);
   }
 }
 
@@ -420,10 +448,13 @@ LinOpGradient3D<T>::LinOpGradient3D(
   bool label_first,
   const std::vector<T>& m11, 
   const std::vector<T>& m12, 
-  const std::vector<T>& m22)
+  const std::vector<T>& m22,
+  T hx,
+  T hy,
+  T ht)
 
   : LinOp<T>(row, col, nx*ny*L*3, nx*ny*L), nx_(nx), ny_(ny), L_(L), label_first_(label_first), 
-    d_m11_(0), d_m12_(0), d_m22_(0), m11_(m11), m12_(m12), m22_(m22)
+    d_m11_(0), d_m12_(0), d_m22_(0), m11_(m11), m12_(m12), m22_(m22), hx_(hx), hy_(hy), ht_(ht)
 {
 }
 
@@ -440,7 +471,7 @@ void LinOpGradient3D<T>::EvalLocalAdd(T *d_res, T *d_rhs) {
       (ny_*L_ + block.y - 1) / block.y,
       1);
     
-    LinOpGradient3DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
+    LinOpGradient3DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_, hx_, hy_, ht_);
   }
   else {
     dim3 block(1, 128, 1);
@@ -448,7 +479,7 @@ void LinOpGradient3D<T>::EvalLocalAdd(T *d_res, T *d_rhs) {
       (ny_*L_ + block.y - 1) / block.y,
       1);
 
-    LinOpGradient3DKernelLabelFirst<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
+    LinOpGradient3DKernelLabelFirst<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_, hx_, hy_, ht_);
   }
 }
 
@@ -461,7 +492,7 @@ void LinOpGradient3D<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
       (ny_*L_ + block.y - 1) / block.y,
       1);
 
-    LinOpDivergence3DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
+    LinOpDivergence3DKernel<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_, hx_, hy_, ht_);
   }
   else
   {
@@ -470,18 +501,23 @@ void LinOpGradient3D<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
       (ny_*L_ + block.y - 1) / block.y,
       1);
 
-    LinOpDivergence3DKernelLabelFirst<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_);
+    LinOpDivergence3DKernelLabelFirst<<<grid, block>>>(d_res, d_rhs, nx_, ny_, L_, hx_, hy_, ht_);
   }
 }
 
 template<typename T>
 T LinOpGradient3D<T>::row_sum(size_t row, T alpha) const { 
-  return 2; 
+  if(row < nx_ * ny_ * L_)
+    return 2. / hx_;
+  else if(row < 2 * nx_ * ny_ * L_)
+    return 2. / hy_;
+  else
+    return 2. / ht_;
 }
 
 template<typename T>
 T LinOpGradient3D<T>::col_sum(size_t col, T alpha) const { 
-  return 6; 
+  return (2. / hx_ + 2. / hy_ + 2. / ht_);
 }
 
 template<typename T>

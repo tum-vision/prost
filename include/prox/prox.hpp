@@ -4,6 +4,7 @@
 #include <stddef.h>
 
 template<typename T> class ProxMoreau;
+template<typename T> class ProxPlusLinterm;
 
 /**
  * @brief Virtual base class for all proximal operators. Implements prox
@@ -23,6 +24,7 @@ template<typename T> class ProxMoreau;
 template<typename T>
 class Prox {
   friend class ProxMoreau<T>;
+  friend class ProxPlusLinterm<T>;
   
 public:
   Prox(size_t index, size_t count, size_t dim, bool interleaved, bool diagsteps) :
