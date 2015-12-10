@@ -1,67 +1,137 @@
 TODOs:
- o hardcoded adaptivity every 250 steps --> add parameter
+ o rename pdsolver, introduce namespace 
+ o epi_huber -> epi_conj_huber (TM)
+ o Create doxygen
+ o Add folder for unit-tests
+
+ o Brain-stormed folder structre:
+   pdsolver
+     bind_matlab
+       test
+       examples
+  
+     -> In CMakeLists.txt die Datei externalpaths includen, included src/cuda/pdsolver
+
+  preciserelaxation
+    src/
+      cuda
+        pdsolver
+          prox
+            prox_epi_conjquadr.cpp
+          linop
+            linop_data_graphprec.cpp
+          bind_matlab
+            prox_epi_conjquadr.m
+            test
+
+        .. papersachen
+
+      pure_matlab
+        .. masterarbeitssachen
+
+ o prox Basisklasse hat index & size
+   - ProxSeparableSum erbt von Prox,
+   - ProxSeparableSumSimple ersetzt Prox1D, ProxNorm2, ProxEpiParabola, etc
+   - ProxSimplex : ProxSeparableSum
+   - ProxEpiMaxLin : ProxSeparableSum
+   - ProxMoreau : Prox
+   - ProxScaled : Prox
+   - ProxLinTerm : Prox
+
+ o prox'en umschreiben á la
+
+""
+template<typename T, struct ElementaryProxOperation<T>, size_t dim> 
+__global__
+void KernelProxSeparableSum(
+  thrust::device_vector<char> raw_data,
+  ElementaryProxOperation<T>::Data *data,  // eigentlich mit thrust
+  const ElementaryProxOperation<T>& prox)
+{
+  int tx = ...;
+
+  if(tx>...) {
+
+    Data dataAtPoint(raw_data, tx * ..., dim);
+
+    prox(&arg[tx], &result[tx], dataAtPoint, dim);
+  }
+}
+
+
+
+thrust::device_vector<Data> 
+
+template<typename T, size_t dim, size_t shMemInBytes = 0>
+struct ProxEpiParabola : public ElementaryProxOperation<T>
+{
+  template<typename T, size_t dim>
+  struct Data {
+    T a, b, c, d, e, alpha, beta;
+    T normal[dim];
+  };
+
+  // prox im R^3 implementieren
+  virtual operator()(T *argument, T *result, const DataEpiParabola& dataAtPoint, size_t dim)
+  {
+  for(int i =0; i<dim; i++)
+     dataAtPoint->normal[i]
+  }
+};
+""
+
+ o Factory a la ShapeAnalyzer für Proxen und LinOps
+ (o Clean up mex_factory.cpp, const char* and function pointer arrays
+   instead of big if statements. write helper functions for MATLAB stuff.)
+ o prox_1d als arbitrary_transformation
+ o use thrust::device_vector instead of raw pointers everywhere
+ o thrust exceptions
+ o shared_ptr und C++11 features for(auto a : liste) verwenden
+ o hardcoded adaptivity every 250 steps --> add parameter 
  o if someone passes a sparse-matrix instead of a linear operator to the 
    solver, automatically build a LinOpSparse inside the mex-Function.
  o int -> size_t
  o prox operator constructor in matlab doesn't need index -- infer
    this automatically!
- o default arguments for prox operator
+ o ? default arguments for prox operator
  o mexPrintf instead of std::cout <<... or general PRINTF define
  o Implement alpha != 1 for preconds.
  o Do math functions for double/float properly
- o Fix bug where residuals are 0 at beginning?
+ o ? Fix bug where residuals are 0 at beginning?
  o Add templates instead of typedef real float...
- o Write proper Makefiles
+ o ? Write proper Makefiles
  o Check whether is necessary to static_cast<real>(1) and so
    on... (compile time cast!!)
- o Do sanity check before creating the prox operators (don't allocate
+ o ? Do sanity check before creating the prox operators (don't allocate
    stuff inside the constructor)
  o Test Simplex prox (multilabel segmentation example, with few
  labels)
- o Clean up mex_factory.cpp, const char* and function pointer arrays
-   instead of big if statements. write helper functions for MATLAB stuff.
- 
- o Lifted TV stereo example
- o Epigraph prox, continuous relaxation
- o Add LinearOperator class, for now only LinearOperatorSparseMatrix,
-   maybe LinearOperatorZero (cudaMemset) and LinearOperatorIdentity (cudaMemcpy). 
- o Write helper functions for interleaved index calculation and
-   double=>real conversion
+ o Add LinOpZero and make LinOp an abstract base class
+ o Add LinOpTranspose
+ o Remove interleaved flag
  o Write proper error handling/checking code, with exceptions and have
-   meaningful error messages. Have DEBUG mode, which outputs lots of information.
- o Resolve all TODOs in code
- o Implement debug/verbose flag where solver outputs lots of stuff
+   meaningful error messages. 
+ o Add own exception class
+ o Have DEBUG/Verbose mode, which outputs lots of information.
  o Write CMakeLists.txt and pdsolver_build.m properly so it builds
-   nicely everywhere
- o Check coding style with lint
- o Investigate why everything crashes when MATLAB GUI is on but works
-   with console
- o Reference MATLAB implementation of backends/proxs for debugging?
+   nicely everywhere (Mac, Linux, Windows)
+ o Check coding style with lint / use cpplint to ensure google-style-guide
  o run with valgrind/cuda-memcheck/cuda-gdb to check for memleaks
- o Check for Memory Leaks and Out-Of-Bounds accesses in CUDA kernels.
- o Add doxygen comments
- o -Werror, -Wall compiler flags
- o Unit tests for prox operators, etc
- o Check how fast a naive multi-GPU sparse/matrix vector product is,
-   add multi-GPU support if slowdown isn't too large. Multi-GPU support
-   requires refactoring of most parts of the library... maybe have
-   something like a Vector-class or OptimVariable-class which resides
-   on several GPUs and the LinearOperator and ProximalOperator class
-   can act on it. It should also support basic operations like adding,
-   scaling, reductions, etc.
-   If everything has to get refactored anyways, one might consider
-   also adding CPU support. Check how switching between CPU/GPU works
-   e.g. in Caffe. Also check how Multi-GPU support works in Caffe.
+ o Compile with -Werror, -Wall compiler flags
+ o Unit tests for prox operators
+ o Python/C/C++ bindings
+ o prox_1d die function als template parameter
+
+Very future work:
  o Graph Projection Splitting backend with indirect CG solver
    (e.g. CGLS).
- o Python/C/C++ bindings
- o Implement some example problems
- o Inertial/overrelaxed primal-dual? 
- o Look into matrix equilibriation preconditioner, constrained
-   equilibriation
  o Subgradient projection for initialization?!
 
 Done:
+ x Check for Memory Leaks and Out-Of-Bounds accesses in CUDA kernels.
+ x Investigate why everything crashes when MATLAB GUI is on but works
+   with console
+ x Lifted TV stereo example
  x Lifted TV rof denoising example
  x Adapt to google C++ style guide
  x MATLAB callback, output primal-dual gap in ex_rof.m
@@ -75,26 +145,33 @@ Done:
  x Add check if prox operators cover the whole primal/dual domain
  x Stopping Criterion?
  x Test Moreau prox
+ x Epigraph prox, continuous relaxation
+ x Add LinearOperator class, for now only LinearOperatorSparseMatrix,
+   maybe LinearOperatorZero (cudaMemset) and LinearOperatorIdentity (cudaMemcpy). 
+ x Write helper functions for interleaved index calculation and
+   double=>real conversion
 
 Ideas of cool Prox-Operators to implement:
- o huber, identity, 0 <= x <= 1, x <= 0, max(0, x), pogs
- o check Combettes papers
+ o implement prox_scaled, remove prox_epi_conjquadr_scaled
+ o identity, 0 <= x <= 1, x <= 0, max(0, x), pogs
  o q>1, elastic net
  o constraint sets from lifting papers
  o nuclear norm
  o x^T A x + b^T x + c
  o second order cone projection
- o halfspace projection
- o linear operator (1/2) ||Ax-b||^2 with cuFFT
- o linear operator (preconditioned) conjugate gradient
  o elastic net
- o projection onto epigraph of x^T A x + b^T x + c?
+ o projection onto epigraph of shifted parabola ||x - f||^2 = a x^T x + b^T x
  o l_infty norms, full l1 ball
  o general function of singular values?
  o mixed matrix norms
  o (nonconvex nuclear norm)
  o (l^q (0<=q<infty) 1d, nuclear & 2-norm)
  o (mumford-shah 1d & 2-norm)
+ o Prox-Transformationen aus Combettes Paper
+
+ external?
+ o linear operator (1/2) ||Ax-b||^2 with cuFFT
+ o linear operator (preconditioned) conjugate gradient
  o (smooth (semiconvex) mumford-shah 1d & 2-norm)
- o ...?
+
  
