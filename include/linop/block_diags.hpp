@@ -1,7 +1,7 @@
-#ifndef LINOP_DIAGS_HPP_
-#define LINOP_DIAGS_HPP_
+#ifndef BLOCK_DIAGS_HPP_
+#define BLOCK_DIAGS_HPP_
 
-#include "linop.hpp"
+#include "block.hpp"
 
 /**
  * @brief Linear operator implementation of the MATLAB command speye.
@@ -11,10 +11,11 @@
  * @param factors: array of size ndiags, constant factor each diagonal
  *                 is multiplied with
  */
+namespace linop {
 template<typename T>
-class LinOpDiags : public LinOp<T> {
+class BlockDiags : public Block<T> {
  public:
-  LinOpDiags(size_t row,
+  BlockDiags(size_t row,
              size_t col,
              size_t nrows,
              size_t ncols,
@@ -22,7 +23,7 @@ class LinOpDiags : public LinOp<T> {
              const std::vector<ssize_t>& offsets,
              const std::vector<T>& factors);
   
-  virtual ~LinOpDiags();
+  virtual ~BlockDiags();
 
   virtual bool Init();
   virtual void Release();
@@ -44,5 +45,5 @@ class LinOpDiags : public LinOp<T> {
 
   static size_t cmem_counter_;
 };
-
+}
 #endif

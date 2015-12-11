@@ -1,10 +1,9 @@
-#ifndef PROX_HPP_
-#define PROX_HPP_
+#ifndef PROX_SEPARABLE_SUM_HPP_
+#define PROX_SEPARABLE_SUM_HPP_
 
 #include <stddef.h>
 
-template<typename T> class ProxMoreau;
-template<typename T> class ProxPlusLinterm;
+#include "prox.hpp"
 
 /**
  * @brief Virtual base class for all proximal operators. Implements prox
@@ -21,23 +20,11 @@ template<typename T> class ProxPlusLinterm;
  *        chunks of count_ many elements.
  *
  */
-template<typename T>
-class Prox {
-  friend class ProxMoreau<T>;
-  friend class ProxPlusLinterm<T>;
-  
+template<typename T, class OPERATION, size_t DIM>
+class ProxSeparableSum : public Prox<T> {
 public:
-  Prox(size_t index, size_t count, size_t dim, bool diagsteps) :
-    index_(index),
-    count_(count),
-    dim_(dim),
-    diagsteps_(diagsteps) { }
+  ProxSeparableSum(size_t index, size_t count);
 
-  Prox(const Prox<T>& other) :
-    index_(other.index_),
-    count_(other.count_),
-    dim_(other.dim_),
-    diagsteps_(other.diagsteps_) { }
   
   virtual ~Prox() {}
 
@@ -69,6 +56,7 @@ public:
   size_t index() const { return index_; }
   size_t dim() const { return dim_; }
   size_t count() const { return count_; }
+  bool interleaved() const { return interleaved_; }
   bool diagsteps() const { return diagsteps_; }
   size_t end() const { return index_ + count_ * dim_ - 1; }
   
@@ -91,10 +79,7 @@ protected:
                          T tau,
                          bool invert_tau) = 0;
   
-  size_t index_; 
-  size_t count_; 
-  size_t dim_;
-  bool diagsteps_; // able to handle diagonal matrices as step size?
+  
 };
 
 #endif
