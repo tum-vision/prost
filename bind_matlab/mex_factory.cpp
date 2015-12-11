@@ -379,6 +379,8 @@ ProxHalfspace<real>* ProxHalfspaceFromMatlab(
   
   for(int j = 0; j < dims[0]; j++)
     a.push_back((real)val[j]);
+
+  std::vector<ProxBla::Data> data;
   
   return new ProxHalfspace<real>(idx, count, dim, interleaved, a);
 }
