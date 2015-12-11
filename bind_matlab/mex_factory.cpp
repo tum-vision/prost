@@ -10,6 +10,7 @@
 #include "prox/prox_epi_parabola.hpp"
 #include "prox/prox_epi_huber.hpp"
 #include "prox/prox_halfspace.hpp"
+#include "prox/prox_epi_max_lin.hpp"
 #include "prox/prox_moreau.hpp"
 #include "prox/prox_plus_linterm.hpp"
 #include "prox/prox_norm2.hpp"
@@ -382,6 +383,43 @@ ProxHalfspace<real>* ProxHalfspaceFromMatlab(
   return new ProxHalfspace<real>(idx, count, dim, interleaved, a);
 }
 
+/**
+ * @brief ...
+ */
+ProxEpiMaxLin<real>* ProxEpiMaxLinFromMatlab(
+    int idx,
+    int count,
+    int dim,
+    bool interleaved,
+    const mxArray *data)
+{
+  EpiMaxLinCoeffs<real> coeffs;
+
+  const mwSize *dims;
+  double *val;
+
+  dims = mxGetDimensions(mxGetCell(data, 0));
+  val = mxGetPr(mxGetCell(data, 0));
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.t.push_back((real)val[j]);
+  
+  dims = mxGetDimensions(mxGetCell(data, 1));
+  val = mxGetPr(mxGetCell(data, 1));
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.b.push_back((real)val[j]);
+
+  dims = mxGetDimensions(mxGetCell(data, 2));
+  val = mxGetPr(mxGetCell(data, 2));
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.index.push_back((size_t)val[j]);
+  
+  dims = mxGetDimensions(mxGetCell(data, 3));
+  val = mxGetPr(mxGetCell(data, 3));
+  for(int j = 0; j < dims[0]; j++)
+    coeffs.count.push_back((size_t)val[j]);
+  
+  return new ProxEpiMaxLin<real>(idx, count, dim, interleaved, coeffs);
+}
 
 /**
  * @brief ...
@@ -503,6 +541,8 @@ Prox<real>* ProxFromMatlab(const mxArray *pm) {
     p = ProxEpiHuberFromMatlab(idx, count, dim, data);
   else if("halfspace" == name)
     p = ProxHalfspaceFromMatlab(idx, count, dim, interleaved, data);
+  else if("epi_max_lin" == name)
+    p = ProxEpiMaxLinFromMatlab(idx, count, dim, interleaved, data);
   else if("moreau" == name)
     p = ProxMoreauFromMatlab(data);
   else if("plus_linterm" == name)
