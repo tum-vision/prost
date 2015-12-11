@@ -12,15 +12,14 @@
  */
 namespace prox {
 template<typename T, size_t DIM>
-class ElemOperationNorm2 {
+struct ElemOperationNorm2 {
  public:
  struct Data {
     T a[DIM];
     T c, d;
  };
 
- protected:
-  virtual void operator()(T* arg, T* res, Data* data);
+ virtual void operator()(T* arg, T* res, Data* data);
 };
 }
 #endif
