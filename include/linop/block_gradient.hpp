@@ -1,7 +1,7 @@
-#ifndef LINOP_GRADIENT_HPP_
-#define LINOP_GRADIENT_HPP_
+#ifndef BLOCK_GRADIENT_HPP_
+#define BLOCK_GRADIENT_HPP_
 
-#include "linop.hpp"
+#include "block.hpp"
 
 /**
  * @brief Assumes pixel-first (matlab style, rows first) ordering and
@@ -10,10 +10,12 @@
  *        If label_first == true, assumes label first then rows then cols 
  *        ordering but still outputs dx dy pixelwise ordered.
  */
+namespace linop {
+
 template<typename T>
-class LinOpGradient2D : public LinOp<T> {
+class BlockGradient2D : public Block<T> {
  public:
-  LinOpGradient2D(
+  BlockGradient2D(
     size_t row, 
     size_t col, 
     size_t nx, 
@@ -25,7 +27,7 @@ class LinOpGradient2D : public LinOp<T> {
     const std::vector<T>& m22 = std::vector<T>(),
     T hx = static_cast<T>(1), // grid discretization
     T hy = static_cast<T>(1));
-  virtual ~LinOpGradient2D();
+  virtual ~BlockGradient2D();
 
   virtual bool Init();
   virtual void Release();
@@ -55,9 +57,9 @@ class LinOpGradient2D : public LinOp<T> {
  *
  */
 template<typename T>
-class LinOpGradient3D : public LinOp<T> {
+class BlockGradient3D : public Block<T> {
  public:
-  LinOpGradient3D(
+  BlockGradient3D(
     size_t row, 
     size_t col, 
     size_t nx, 
@@ -71,7 +73,7 @@ class LinOpGradient3D : public LinOp<T> {
     T hy = static_cast<T>(1),
     T ht = static_cast<T>(1));
 
-  virtual ~LinOpGradient3D();
+  virtual ~BlockGradient3D();
 
   virtual bool Init();
   virtual void Release();
@@ -94,5 +96,5 @@ class LinOpGradient3D : public LinOp<T> {
   T *d_m11_, *d_m12_, *d_m22_; // weighted gradient
   T hx_, hy_, ht_;
 };
-
+}
 #endif

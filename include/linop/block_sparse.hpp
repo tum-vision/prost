@@ -1,21 +1,22 @@
-#ifndef LINOP_SPARSE_HPP_
-#define LINOP_SPARSE_HPP_
+#ifndef BLOCK_SPARSE_HPP_
+#define BLOCK_SPARSE_HPP_
 
-#include "linop.hpp"
+#include "block.hpp"
 #include "util/sparse_matrix.hpp"
 
 /**
  * @brief Linear Operator represented as a sparse matrix. Takes ownership
  *        of the pointer to the SparseMatrix.
  */
+namespace linop {
 template<typename T>
-class LinOpSparse : public LinOp<T> {
+class BlockSparse : public LinOp<T> {
  public:
-  LinOpSparse(size_t row,
+  BlockSparse(size_t row,
               size_t col,
               SparseMatrix<T> *mat);
 
-  virtual ~LinOpSparse();
+  virtual ~BlockSparse();
 
   virtual bool Init();
   virtual void Release();
@@ -32,5 +33,5 @@ class LinOpSparse : public LinOp<T> {
   
   SparseMatrix<T> *mat_;
 };
-
+}
 #endif
