@@ -1,5 +1,5 @@
-#ifndef LINOPERATOR_HPP_
-#define LINOPERATOR_HPP_
+#ifndef LIN_OPERATOR_HPP_
+#define LIN_OPERATOR_HPP_
 
 #include <cstdlib>
 #include <vector>
