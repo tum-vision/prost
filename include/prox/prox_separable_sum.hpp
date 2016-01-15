@@ -20,9 +20,29 @@
  *        chunks of count_ many elements.
  *
  */
-template<typename T, class OPERATION, size_t DIM>
+template<typename T, class ELEM_OPERATION>
 class ProxSeparableSum : public Prox<T> {
 public:
+ class Vector {
+    public:
+      Vector(T* data, tx) : data_(data) {
+
+      }
+
+      inline __device__ T operator[](size_t i) {
+        // Out of bounds check?
+
+        index = parent_.interleaved_ ? (tx * ELEM_OPERATION::dim + i) : (tx + parent_.count * i);
+
+        return data[index];
+      }
+    private:
+    size_t tx_;
+
+    T* data_;
+    ProxSeparableSum* parent_;
+  }; 
+    
   ProxSeparableSum(size_t index, size_t count);
 
   
@@ -32,7 +52,7 @@ public:
    * @brief Initializes the prox Operator, copies data to the GPU.
    *
    */
-  virtual bool Init() { return true; }
+  virtual bool Init();
 
   /**
    * @brief Cleans up GPU data.
@@ -53,12 +73,6 @@ public:
 
   // set/get methods
   virtual size_t gpu_mem_amount() { return 0; }  
-  size_t index() const { return index_; }
-  size_t dim() const { return dim_; }
-  size_t count() const { return count_; }
-  bool interleaved() const { return interleaved_; }
-  bool diagsteps() const { return diagsteps_; }
-  size_t end() const { return index_ + count_ * dim_ - 1; }
   
 protected:
   /**
@@ -77,7 +91,7 @@ protected:
                          T *d_res,
                          T *d_tau,
                          T tau,
-                         bool invert_tau) = 0;
+                         bool invert_tau);
   
   
 };
