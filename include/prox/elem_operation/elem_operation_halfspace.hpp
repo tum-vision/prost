@@ -1,5 +1,5 @@
-#ifndef PROX_HALFSPACE_HPP_
-#define PROX_HALFSPACE_HPP_
+#ifndef ELEM_OPERATION_HALFSPACE_HPP_
+#define ELEM_OPERATION_HALFSPACE_HPP_
 
 #include <vector>
 

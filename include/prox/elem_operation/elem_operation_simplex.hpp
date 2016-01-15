@@ -1,5 +1,5 @@
-#ifndef PROX_SIMPLEX_HPP_
-#define PROX_SIMPLEX_HPP_
+#ifndef ELEM_OPERATION_SIMPLEX_HPP_
+#define ELEM_OPERATION_SIMPLEX_HPP_
 
 #include <vector>
 #include "prox.hpp"
@@ -19,31 +19,16 @@
  *        because there's not enough shared mem. Sorting in global mem
  *        would be much too slow.
  */
-template<typename T>
-class ProxSimplex : public Prox<T> {
- public:
-  ProxSimplex(size_t index,
-              size_t count,
-              size_t dim,
-              bool interleaved,
-              const std::vector<T>& coeffs);
+namespace prox {
+template<typename T, size_t DIM>
+struct ElemOperationSimplex {
+ struct Data {
+    T a[DIM];
+    T c, d;
+ };
 
-  virtual ~ProxSimplex();
-
-  virtual bool Init();
-  virtual void Release();
-  virtual size_t gpu_mem_amount();
-
- protected:
-  virtual void EvalLocal(T *d_arg,
-                         T *d_res,
-                         T *d_tau,
-                         T tau,
-                         bool invert_tau);
-
-protected:
-  std::vector<T> coeffs_;
-  T *d_coeffs_;
+ virtual void operator()(T* arg, T* res, Data &data);
 };
+}
 
 #endif
