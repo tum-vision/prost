@@ -19,15 +19,15 @@ void ProxSeparableSumKernel(
 {
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
-  
-
   if(tx < count) {
     ELEM_OPERATION::Data data = d_data[tx];
     
-    Vector(d_res, tx) res;
-    Vector(d_arg, tx) arg;
+    Vector(this, d_res, tx) d_res_v;
+    Vector(this, d_arg, tx) d_arg_v;
+    Vector(this, d_tau, tx) d_tau_v;
+    
 
-    ELEM_OPERATION(res, arg, data);
+    ELEM_OPERATION(d_res_v, d_arg_v, d_tau_v, tau, invert_tau, data);
   }
 }
 
