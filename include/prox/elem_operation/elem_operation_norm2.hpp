@@ -13,14 +13,14 @@
 namespace prox {
 namespace elemOperation {
 template<typename T, size_t DIM, OPERATION_1D>
-struct ElemOperationNorm2 {
+struct ElemOperationNorm2 : public ElemOperation<DIM> {
  struct Data {
     T a, b, c, d, e, alpha, beta;
  };
- 
- static const size_t dim = DIM;
 
- virtual void operator()(ProxSeparableSum<T, ElemOperationNorm2>::Vector& arg, ProxSeparableSum<T, ElemOperationNorm2>::Vector& res, Data& data);
+ typedef Vec ProxSeparableSum<T, ElemOperationNorm2>::Vector;
+ 
+ virtual void operator()(Vec& arg, Vec& res, Data& data);
 };
 }
 }
