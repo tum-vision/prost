@@ -15,27 +15,27 @@ void ProxSeparableSumKernel(
     bool invert_tau,
     bool interleaved,
     ELEM_OPERATION::Data* d_data,
-    size_t count)
+    size_t count,
+    ProxSeparableSum<T, ELEM_OPERATION>* parent)
 {
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
   if(tx < count) {
     ELEM_OPERATION::Data data = d_data[tx];
     
-    Vector(this, d_res, tx) d_res_v;
-    Vector(this, d_arg, tx) d_arg_v;
-    Vector(this, d_tau, tx) d_tau_v;
+    Vector(parent, d_res, tx) d_res_v;
+    Vector(parent, d_arg, tx) d_arg_v;
+    Vector(parent, d_tau, tx) d_tau_v;
     
 
-    ELEM_OPERATION(d_res_v, d_arg_v, d_tau_v, tau, invert_tau, data);
+    ELEM_OPERATION(d_res_v, d_arg_v, d_tau_v, tau, data, invert_tau);
   }
 }
 
-template<typename T>
-ProxNorm2<T>::ProxNorm2(size_t index,
+template<typename T, class ELEM_OPERATION>
+ProxSeparableSum<T, ELEM_OPERATION>::ProxSeparableSum(size_t index,
                         size_t count,
-                        const Prox1DCoefficients<T>& coeffs,
-                        const Prox1DFunction& func) :
+                        const Prox1DCoefficients<T>& coeffs) :
     Prox1D<T>(index, count, coeffs, func)
 {
   this->diagsteps_ = false;
