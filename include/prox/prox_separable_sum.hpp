@@ -23,28 +23,36 @@
 template<typename T, class ELEM_OPERATION>
 class ProxSeparableSum : public Prox<T> {
 public:
- class Vector {
- public:
-  Vector(ProxSeparableSum<T, ELEM_OPERATION>* parent, T* data, tx) : 
+  class Vector {
+  public:
+    Vector(ProxSeparableSum<T, ELEM_OPERATION>* parent, T* data, tx) : 
       parent_(parent),
       data_(data),
       tx_(tx) {
 
-  }
+    }
 
-  inline __device__ T operator[](size_t i) {
-    // Out of bounds check?
+    inline __device__ T operator[](size_t i) const {
+      // Out of bounds check?
+      index = parent_.interleaved_ ? (tx * ELEM_OPERATION::dim + i) : (tx + parent_.count * i);
 
-    index = parent_.interleaved_ ? (tx * ELEM_OPERATION::dim + i) : (tx + parent_.count * i);
+      return data[index];
+    }
+  
+    inline __device__ T& operator[](size_t i) {
+      // Out of bounds check?
 
-    return data[index];
-  }
+      index = parent_.interleaved_ ? (tx * ELEM_OPERATION::dim + i) : (tx + parent_.count * i);
+
+      return data[index];
+    }
+    
   private:
     size_t tx_;
 
     T* data_;
     ProxSeparableSum<T, ELEM_OPERATION>* parent_;
-  }; 
+  };
     
   ProxSeparableSum(size_t index, size_t count);
 
