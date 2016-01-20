@@ -1,7 +1,11 @@
-#ifndef PROX_SEPARABLE_SUM_HPP_
-#define PROX_SEPARABLE_SUM_HPP_
+#ifndef PROX_ELEM_OPERATION_HPP_
+#define PROX_ELEM_OPERATION_HPP_
 
-#include "prox.hpp"
+#include <stddef.h>
+
+#include "prox_separable_sum.hpp"
+#include "shared_mem.hpp"
+
 
 using namespace thrust;
 using namespace std;
@@ -21,22 +25,18 @@ using namespace std;
  *        chunks of count_ many elements.
  *
  */
-template<typename T>
-class ProxSeparableSum : public Prox<T> {
-public:
-  ProxSeparableSum(size_t index, size_t count, size_t dim, bool interleaved, bool diagsteps) : Prox(index, count*dim, diagsteps),
-    count_(count),
-    dim_(dim),
-    interleaved_(interleaved) {}
-
+template<typename T, class ELEM_OPERATION>
+class ProxElemOperation : public ProxSeparableSum<T> {
+public:    
+  ProxElemOperation(size_t index, size_t count, interleaved, diagsteps, const vector<ELEM_OPERATION::Coefficients>& coeffs);
   
-  virtual ~ProxSeparableSum() {}
+  virtual ~Prox() {}
 
   /**
    * @brief Initializes the prox Operator, copies data to the GPU.
    *
    */
-  virtual bool Init() { return true; }
+  virtual bool Init();
 
   /**
    * @brief Cleans up GPU data.
@@ -45,11 +45,8 @@ public:
   virtual void Release() {}
 
   // set/get methods
-  virtual size_t gpu_mem_amount() = 0;
-  size_t dim() const { return dim_; }
-  size_t count() const { return count_; }
-  bool interleaved() const { return interleaved_; }
-
+  virtual size_t gpu_mem_amount(); 
+  
 protected:
   /**
    * @brief Evaluates the prox operator on the GPU, local meaning that
@@ -69,9 +66,9 @@ protected:
                          T tau,
                          bool invert_tau);
   
-  size_t count_; 
-  size_t dim_;
-  bool interleaved_; // ordering of elements if dim > 1
+private:
+  vector<ELEM_OPERATION::Coefficients> coeffs_;
+  device_vector<ELEM_OPERATION::Coefficients> d_coeffs_;
 };
 
 #endif
