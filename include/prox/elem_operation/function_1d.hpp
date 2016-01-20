@@ -11,6 +11,11 @@ namespace prox {
 namespace elemOperation {
 
 template<typename T>
+struct Coefficients1D {
+    T a, b, c, d, e, alpha, beta;
+};
+    
+template<typename T>
 struct Function1DZero {
   inline __device__ T operator()(T x0, T tau, T alpha, T beta) const {
     return x0;

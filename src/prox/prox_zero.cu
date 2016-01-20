@@ -1,8 +1,8 @@
 #include "prox/prox_zero.hpp"
 
 template<typename T>
-ProxZero<T>::ProxZero(size_t index, size_t count) :
-    Prox<T>(index, count, 1, false, true)
+ProxZero<T>::ProxZero(size_t index, size_t size) :
+    Prox<T>(index, size, true)
 {
 }
 
@@ -11,16 +11,13 @@ ProxZero<T>::~ProxZero() {
 }
 
 template<typename T>
-void ProxZero<T>::EvalLocal(T *d_arg,
-                            T *d_res,
-                            T *d_tau,
+void ProxZero<T>::EvalLocal(device_vector<T> d_arg,
+                            device_vector<T> d_res,
+                            device_vector<T> d_tau,
                             T tau,
-                            bool invert_tau)
-{
-  cudaMemcpy(d_res,
-             d_arg,
-             sizeof(T) * this->count_,
-             cudaMemcpyDeviceToDevice);
+                            bool invert_tau) {
+  copy(d_arg.begin(), d_arg.end(),
+             d_res.begin());
 }
 
 // Explicit template instantiation
