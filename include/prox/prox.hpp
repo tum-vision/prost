@@ -2,9 +2,13 @@
 #define PROX_HPP_
 
 #include <stddef.h>
+#include <thrust/device_vector.h>
 
 template<typename T> class ProxMoreau;
 template<typename T> class ProxPlusLinterm;
+
+using namespace thrust;
+using namespace std;
 
 /**
  * @brief Virtual base class for all proximal operators. Implements prox
@@ -27,17 +31,15 @@ class Prox {
   friend class ProxPlusLinterm<T>;
   
 public:
-  Prox(size_t index, size_t count, size_t dim, bool diagsteps) :
+  Prox(size_t index, size_t size, bool diagsteps) :
     index_(index),
-    count_(count),
-    dim_(dim),
+    size_(size),
     diagsteps_(diagsteps) { }
 
   Prox(const Prox<T>& other) :
     index_(other.index_),
-    count_(other.count_),
-    dim_(other.dim_),
-    diagsteps_(other.diagsteps_) { }
+    size_(other.size_),
+    diagsteps_(other_.diagsteps) { }
   
   virtual ~Prox() {}
 
@@ -62,15 +64,14 @@ public:
    * @param Scalar step size.
    * @param Diagonal step sizes.
    */
-  void Eval(T *d_arg, T *d_res, T *d_tau, T tau);
+  void Eval(device_vector<T> d_arg, device_vector<T> d_res, device_vector<T> d_tau, T tau);
 
   // set/get methods
   virtual size_t gpu_mem_amount() { return 0; }  
   size_t index() const { return index_; }
-  size_t dim() const { return dim_; }
-  size_t count() const { return count_; }
+  size_t size() const { return size_; }
+  size_t end() const { return index_ + size_ - 1; }
   bool diagsteps() const { return diagsteps_; }
-  size_t end() const { return index_ + count_ * dim_ - 1; }
   
 protected:
   /**
@@ -85,15 +86,14 @@ protected:
    * @param Perform the prox with inverted step sizes?
    *
    */
-  virtual void EvalLocal(T *d_arg,
-                         T *d_res,
-                         T *d_tau,
+  virtual void EvalLocal(device_vector<T> d_arg,
+                         device_vector<T> d_res,
+                         device_vector<T> d_tau,
                          T tau,
-                         bool invert_tau) = 0;
+                         bool invert_tau);
   
   size_t index_; 
-  size_t count_; 
-  size_t dim_;
+  size_t size_;
   bool diagsteps_; // able to handle diagonal matrices as step size?
 };
 

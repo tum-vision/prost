@@ -3,6 +3,13 @@
 
 #include "prox.hpp"
 
+#include <thrust/for_each.h>
+#include <thrust/device_vector.h>
+#include <thrust/iterator/zip_iterator.h>
+
+using namespace thrust;
+using namespace std;
+
 /**
  * @brief Evaluates the conjugate prox using Moreau's identity.
  *
@@ -10,7 +17,7 @@
 template<typename T>
 class ProxMoreau : public Prox<T> {
 public:
-  ProxMoreau(Prox<T> *conjugate);
+  ProxMoreau(unique_ptr<Prox<T>> conjugate);
   virtual ~ProxMoreau();
 
   virtual bool Init();
@@ -19,12 +26,12 @@ public:
   virtual size_t gpu_mem_amount();
 
 protected:
-  Prox<T> *conjugate_;
-  T *d_scaled_arg_;
+  unique_ptr<Prox<T>> conjugate_;
+  device_vector<T> d_scaled_arg_;
 
-  virtual void EvalLocal(T *d_arg,
-                         T *d_res,
-                         T *d_tau,
+  virtual void EvalLocal(device_vector<T> d_arg,
+                         device_vector<T> d_res,
+                         device_vector<T> d_tau,
                          T tau,
                          bool invert_tau);
 

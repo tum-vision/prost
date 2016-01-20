@@ -1,7 +1,8 @@
 #ifndef ELEM_OPERATION_1D_HPP_
 #define ELEM_OPERATION_1D_HPP_
 
-
+#include "elem_operation.hpp"
+#include "function_1d.hpp"
 /**
  * @brief Provides proximal operator for fully separable 1D functions:
  * 
@@ -15,36 +16,37 @@ namespace prox {
 namespace elemOperation {
 template<typename T, class FUN_1D>
 struct ElemOperation1D : public ElemOperation<1> {
-  struct Coefficients {
-    T a, b, c, d, e, alpha, beta;
-  };
+  struct Coefficients : public Coefficients1D<T> {};
 
-  typedef Vec ProxSeparableSum<T, ElemOperation1D>::Vector;
- 
- 
-  inline __device__ void operator()(Vec& d_arg, Vec& d_res, Vec& d_tau, T tau, Coefficients& coeffs, bool invert_tau) {
+  ElemOperation1D(Coefficients& coeffs) : coeffs_(coeffs) {} 
+  
+  inline __device__ void operator()(Vector<T, ElemOperation1D>& arg, Vector<T, ElemOperation1D>& res, Vector<T, ElemOperation1D>& tau_diag, T tau_scal, bool invert_tau, SharedMem<ElemOperation1D>& shared_mem) {
 
-    //TODO check coeffs.val[i] == NULL
+    //TODO check coeffs_.val[i] == NULL
 
-    if(coeffs.c == 0) // c == 0 -> prox_zero -> return argument
-      d_res[0] = d_arg[0];
+    if(coeffs_.c == 0) // c == 0 -> prox_zero -> return argument
+      res[0] = arg[0];
     else {
       // compute step-size
-      tau = invert_tau ? (1. / (tau * d_tau[0])) : (tau * d_tau[0]);
+      tau = invert_tau ? (1. / (tau_scal * tau_diag[0])) : (tau_scal * tau_diag[0]);
 
       // compute scaled prox argument and step 
-      const T arg = ((coeffs.a * (d_arg[0] - coeffs.d * tau)) /
-        (1. + tau * coeffs.e)) - coeffs.b;
+      const T arg = ((coeffs_.a * (arg[0] - coeffs_.d * tau)) /
+        (1. + tau * coeffs_.e)) - coeffs_.b;
     
-      const T step = (coeffs.c * coeffs.a * coeffs.a * tau) /
-        (1. + tau * coeffs.e);
+      const T step = (coeffs_.c * coeffs_.a * coeffs_.a * tau) /
+        (1. + tau * coeffs_.e);
 
       // compute scaled prox and store result
-      d_res[0] = 
-        (FUN_1D(arg, step, coeffs.alpha, coeffs.beta) + coeffs.b)
-        / coeffs.a;
+      FUN_1D fun;
+      res[0] = 
+        (fun(arg, step, coeffs_.alpha, coeffs_.beta) + coeffs_.b)
+        / coeffs_.a;
     }
- }
+  }
+  
+private:
+  Coefficients& coeffs_;
 };
 }
 }

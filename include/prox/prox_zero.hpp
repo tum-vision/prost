@@ -10,13 +10,13 @@
 template<typename T>
 class ProxZero : public Prox<T> {
  public:
-  ProxZero(size_t index, size_t count);
+  ProxZero(size_t index, size_t size);
   virtual ~ProxZero();
 
  protected:
-  virtual void EvalLocal(T *d_arg,
-                         T *d_res,
-                         T *d_tau,
+  virtual void EvalLocal(device_vector<T> d_arg,
+                         device_vector<T> d_res,
+                         device_vector<T> d_tau,
                          T tau,
                          bool invert_tau);
 };
