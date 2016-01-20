@@ -4,6 +4,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <functional>
 
 using namespace std;
 
@@ -21,12 +22,12 @@ class Factory {
 public:
     /// \brief Destructor. Clears the internal data structures.
     ~Factory() {
-        contructors_.clear();
+        create_funs_.clear();
     }
     
     /// \brief Returns the unique instance of Factory<T>.
     /// \details This is the only way to obtain the Factory object for type T.
-    static Factory<T, Args...>* getInstance() {
+    static Factory<T, Args...>* GetInstance() {
         static Factory<T, Args...> instance;
         return &instance;
     }
@@ -36,10 +37,8 @@ public:
     /// @param const string& identifier. A unique string that is used as a key to obtain an instance via create() afterwards.
     /// @param const string& label. A label that can for example serve as menu path in case of CustomContextMenuItem
     template<class C>
-    void Register(const string& identifier) {
-        // inserts a pair consisting of the identifier and a c++11 lambda expression calling the constructor of class C into the map constructors
-        function<T*(Args...)> constructor([](Args... args)->T* { return new C(args...); });
-        contructors_.insert(pair<string, function<T*(Args...)>>(identifier, constructor));
+    void Register(const string& identifier, const function<T*(Args...)>& create_fun) {
+        create_funs_.insert(pair<string, function<T*(Args...)>>(identifier, create_fun));
     }
     
     /// \brief Obtain a new instance of a class derived from T using the unique identifier of the class and a std::tuple of arguments required to instantiate the class. Throws an exception of type std::out_of_range if identifier is not present.
@@ -47,7 +46,7 @@ public:
     /// @param std::tuple. Sequence of of arguments for the create function.
     T* Create(const string& identifier, Args... args) {
         // execute create function pointer given the arguments in tuple args.
-        return contructors_.at(identifier)(args...);
+        return create_funs_.at(identifier)(args...);
     }
 private:
     /// \brief Private constructor.
@@ -67,7 +66,7 @@ private:
     }
     
     /// \brief Map containing all identifier plus create function pointer pairs.
-    unordered_map<string, function<T*(Args...)>> contructors_;
+    unordered_map<string, function<T*(Args...)>> create_funs_;
 };
 
 #endif

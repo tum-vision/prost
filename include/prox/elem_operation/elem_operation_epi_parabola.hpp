@@ -2,7 +2,6 @@
 #define PROX_EPI_PARABOLA_HPP_
 
 #include <vector>
-
 #include "prox.hpp"
 
 /**
@@ -120,3 +119,5 @@ ProjectParabolaShiftedNd(
 
 #endif
 #endif
+
+
