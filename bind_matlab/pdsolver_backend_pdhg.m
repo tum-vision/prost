@@ -1,4 +1,4 @@
-function [opts] = pdsolver_opts()
+function [backend] = pdsolver_backend_pdhg(varargin)
 
     % opts = struct('backend', 'pdhg', 'max_iters', 5000, 'cb_iters', 10, ...
     %               'tol_primal', 1.0, 'tol_dual', 1.0, 'adapt_type', 'none', 'ads_gamma', 0, ...
@@ -7,5 +7,15 @@ function [opts] = pdsolver_opts()
     %               dummy_cb, 'bt_enabled', 0, 'bt_beta', 0.95, ...
     %               'bt_gamma', 0.75, 'adc_delta', 1.05, 'adc_tau', ...
     %               0.8, 'sigma0', 1, 'tau0', 1);
+    
+    p = inputParser;
+    addOptional(p, 'tau0', 1);
+    addOptional(p, 'sigma0', 1);
+    
+    pdhg_opts = struct(...
+        'tau0', p.Results.tau0, ...
+        'sigma0', p.Results.sigma0);
+    
+    backend = { 'pdhg', pdhg_opts };
 
 end

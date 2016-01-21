@@ -33,7 +33,7 @@ protected:
     const thrust::device_ptr<const T>& arg,
     const thrust::device_ptr<const T>& tau_diag,
     T tau_scal,
-    bool invert_tau) = 0;
+    bool invert_tau);
 };
 
 #endif
