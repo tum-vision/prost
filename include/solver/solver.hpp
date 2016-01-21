@@ -1,3 +1,4 @@
+/**
 #ifndef SOLVER_HPP_
 #define SOLVER_HPP_
 
@@ -160,3 +161,4 @@ protected:
 };
 
 #endif
+*/

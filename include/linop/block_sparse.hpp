@@ -1,3 +1,4 @@
+/**
 #ifndef BLOCK_SPARSE_HPP_
 #define BLOCK_SPARSE_HPP_
 
@@ -35,3 +36,4 @@ class BlockSparse : public LinOp<T> {
 };
 }
 #endif
+*/

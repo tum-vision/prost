@@ -3,8 +3,6 @@
 
 #include "prox.hpp"
 
-using namespace thrust;
-using namespace std;
 
 /**
  * @brief Virtual base class for all proximal operators. Implements prox
@@ -21,57 +19,26 @@ using namespace std;
  *        chunks of count_ many elements.
  *
  */
+namespace prox {
 template<typename T>
 class ProxSeparableSum : public Prox<T> {
 public:
-  ProxSeparableSum(size_t index, size_t count, size_t dim, bool interleaved, bool diagsteps) : Prox(index, count*dim, diagsteps),
+  ProxSeparableSum(size_t index, size_t count, size_t dim, bool interleaved, bool diagsteps) : Prox<T>(index, count*dim, diagsteps),
     count_(count),
     dim_(dim),
     interleaved_(interleaved) {}
 
-  
-  virtual ~ProxSeparableSum() {}
-
-  /**
-   * @brief Initializes the prox Operator, copies data to the GPU.
-   *
-   */
-  virtual bool Init() { return true; }
-
-  /**
-   * @brief Cleans up GPU data.
-   *
-   */
-  virtual void Release() {}
 
   // set/get methods
-  virtual size_t gpu_mem_amount() = 0;
   size_t dim() const { return dim_; }
   size_t count() const { return count_; }
   bool interleaved() const { return interleaved_; }
 
 protected:
-  /**
-   * @brief Evaluates the prox operator on the GPU, local meaning that
-   *        d_arg, d_res and d_tau point to the place in memory where the
-   *        prox begins.
-   *
-   * @param Proximal operator argument.
-   * @param Result of prox.
-   * @param Scalar step size.
-   * @param Diagonal step sizes.
-   * @param Perform the prox with inverted step sizes?
-   *
-   */
-  virtual void EvalLocal(device_vector<T> d_arg,
-                         device_vector<T> d_res,
-                         device_vector<T> d_tau,
-                         T tau,
-                         bool invert_tau);
   
   size_t count_; 
   size_t dim_;
   bool interleaved_; // ordering of elements if dim > 1
 };
-
+}
 #endif

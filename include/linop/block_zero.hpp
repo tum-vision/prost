@@ -1,3 +1,4 @@
+/**
 #ifndef BLOCK_ZERO_HPP_
 #define BLOCK_ZERO_HPP_
 
@@ -45,3 +46,4 @@ class BlockZero : public Block<T> {
 };
 }
 #endif
+*/

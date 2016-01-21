@@ -2,6 +2,7 @@
 #define ELEM_OPERATION_SIMPLEX_HPP_
 
 #include "elem_operation.hpp"
+#include "../../util/cuwrap.hpp"
 
 
 /**
@@ -19,8 +20,6 @@
  *        because there's not enough shared mem. Sorting in global mem
  *        would be much too slow.
  */
-namespace prox {
-namespace elemOperation {
 template<typename T, size_t DIM>
 struct ElemOperationSimplex : public ElemOperation<DIM> {
   static const size_t shared_mem_count = DIM;
@@ -30,36 +29,37 @@ struct ElemOperationSimplex : public ElemOperation<DIM> {
     T a[DIM];
   };
   
-  ElemOperationSimplex(Coefficients& coeffs) : coeffs_(coeffs) {} 
+  __device__ ElemOperationSimplex(Coefficients& coeffs) : coeffs_(coeffs) {} 
   
-  inline __device__ void operator()(Vector<T, ElemOperationSimplex>& arg, Vector<T, ElemOperationSimplex>& res, Vector<T, ElemOperationSimplex>& tau_diag, T tau_scal, bool invert_tau, SharedMem<ElemOperation1D>& shared_mem) {
+  inline __device__ void operator()(Vector<T, ElemOperationSimplex<T, DIM>>& arg, Vector<T, ElemOperationSimplex<T, DIM>>& res, Vector<T, ElemOperationSimplex<T, DIM>>& tau_diag, T tau_scal, bool invert_tau, SharedMem<ElemOperationSimplex<T, DIM>>& shared_mem) {
 
       // 1) read dim-dimensional vector into shared memory
-      for(size_t i = 0; i < dim; i++) {
+      for(size_t i = 0; i < DIM; i++) {
         // handle inner product by completing the squaring and
         // pulling it into the squared term of the prox. while
         // scaling it correctly, taking are of the step size.
-        T arg = d_arg[i];
-        if(d_coeffs != NULL) {
-          T tau_scaled = tau * d_tau[i];
+        T val = arg[i];
+
+
+          T tau = tau_scal * tau_diag[i];
 
           if(invert_tau)
-            tau_scaled = 1. / tau_scaled;
+            tau = 1. / tau;
 
-          arg -= tau_scaled * coeffs_.a[i];
-        }
+          val -= tau * coeffs_.a[i];
 
-        shared_mem[i] = arg;
+
+        shared_mem[i] = val;
       }
       __syncthreads();
 
       // 2) sort inside shared memory
-      shellsort<T>(&shared_mem[0], dim);
+      shellsort(&shared_mem[0], DIM);
 
       bool bget = false;
       T tmpsum = 0;
       T tmax;
-      for(int ii=1;ii<=dim-1;ii++) {
+      for(int ii=1;ii<=DIM-1;ii++) {
         tmpsum += shared_mem[ii - 1];
         tmax = (tmpsum - 1.) / (T)ii;
         if(tmax >= shared_mem[ii]){
@@ -69,25 +69,24 @@ struct ElemOperationSimplex : public ElemOperation<DIM> {
       }
 
       if(!bget)
-        tmax = (tmpsum + shared_mem[dim - 1] - 1.0) / (T)dim;
+        tmax = (tmpsum + shared_mem[DIM - 1] - 1.0) / (T)DIM;
 
       // 3) return result
-      for(i = 0; i < dim; i++) {
-        T arg = d_arg[i];
-        if(d_coeffs != NULL) {
-          T tau_scaled = tau * d_tau[i];
+      for(int i = 0; i < DIM; i++) {
+        T val = arg[i];
+
+          T tau = tau_scal * tau_diag[i];
 
           if(invert_tau)
-            tau_scaled = 1. / tau_scaled;
+            tau = 1. / tau;
 
-          arg -= tau_scaled * coeffs_[i];
-        }
+          val -= tau * coeffs_.a[i];
 
-        d_res[i] = cuwrap::max<T>(arg - tmax, 0);
+
+        res[i] = cuwrap::max<T>(val - tmax, 0);
       }  
   }
   
-  template<typename T>
   __device__ void shellsort(T *a, int N) {
       const int gaps[6] = { 132, 57, 23, 10, 4, 1 };
 
@@ -97,14 +96,16 @@ struct ElemOperationSimplex : public ElemOperation<DIM> {
         for(int i = gap; i < N; i++) {
           const T temp = a[i];
 
-          for(int j = i; (j >= gap) && (a[j - gap] <= temp); j -= gap) 
+          int j = i;
+          for(; (j >= gap) && (a[j - gap] <= temp); j -= gap) 
             a[j] = a[j - gap];
 
           a[j] = temp;
         }
       }
-  }  
+  }
+    
+private:
+  Coefficients& coeffs_;
 };
-}
-}
 #endif

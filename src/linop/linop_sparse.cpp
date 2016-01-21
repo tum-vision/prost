@@ -1,3 +1,4 @@
+/**
 #include "linop/linop_sparse.hpp"
 
 template<typename T>
@@ -54,3 +55,4 @@ T LinOpSparse<T>::col_sum(size_t col, T alpha) const {
 
 template class LinOpSparse<float>;
 template class LinOpSparse<double>;
+*/

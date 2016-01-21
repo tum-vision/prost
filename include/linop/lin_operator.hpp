@@ -1,3 +1,4 @@
+/**
 #ifndef LIN_OPERATOR_HPP_
 #define LIN_OPERATOR_HPP_
 
@@ -44,3 +45,4 @@ class LinOperator {
 };
 }
 #endif
+*/

@@ -4,11 +4,12 @@
 #include <stddef.h>
 
 #include "prox_separable_sum.hpp"
-#include "shared_mem.hpp"
-
-
-using namespace thrust;
-using namespace std;
+#include "elemop/vector.hpp"
+#include "elemop/elem_operation_1d.hpp"
+#include "elemop/elem_operation_norm2.hpp"
+#include "elemop/elem_operation_simplex.hpp"
+#include "elemop/function_1d.hpp"
+#include "../pdsolver_exception.hpp"
 
 /**
  * @brief Virtual base class for all proximal operators. Implements prox
@@ -25,25 +26,20 @@ using namespace std;
  *        chunks of count_ many elements.
  *
  */
+namespace prox {
 template<typename T, class ELEM_OPERATION>
 class ProxElemOperation : public ProxSeparableSum<T> {
 public:    
-  ProxElemOperation(size_t index, size_t count, interleaved, diagsteps, const vector<ELEM_OPERATION::Coefficients>& coeffs);
-  
-  virtual ~Prox() {}
+  ProxElemOperation(size_t index, size_t count, bool interleaved, bool diagsteps, const std::vector<typename ELEM_OPERATION::Coefficients>& coeffs);
 
   /**
    * @brief Initializes the prox Operator, copies data to the GPU.
    *
    */
-  virtual bool Init();
+  virtual void Init();
 
-  /**
-   * @brief Cleans up GPU data.
-   *
-   */
-  virtual void Release() {}
-
+  virtual void Release();
+  
   // set/get methods
   virtual size_t gpu_mem_amount(); 
   
@@ -60,15 +56,18 @@ protected:
    * @param Perform the prox with inverted step sizes?
    *
    */
-  virtual void EvalLocal(device_vector<T> d_arg,
-                         device_vector<T> d_res,
-                         device_vector<T> d_tau,
+  virtual void EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
+                         typename thrust::device_vector<T>::iterator d_arg_end,
+                         typename thrust::device_vector<T>::iterator d_res_begin,
+                         typename thrust::device_vector<T>::iterator d_res_end,
+                         typename thrust::device_vector<T>::iterator d_tau_begin,
+                         typename thrust::device_vector<T>::iterator d_tau_end,
                          T tau,
                          bool invert_tau);
   
 private:
-  vector<ELEM_OPERATION::Coefficients> coeffs_;
-  device_vector<ELEM_OPERATION::Coefficients> d_coeffs_;
+  std::vector<typename ELEM_OPERATION::Coefficients> coeffs_;
+  thrust::device_vector<typename ELEM_OPERATION::Coefficients> d_coeffs_;
 };
-
+}
 #endif

@@ -7,9 +7,6 @@
 // implementation of 1D prox operators
 #ifdef __CUDACC__ 
 
-namespace prox {
-namespace elemOperation {
-
 template<typename T>
 struct Coefficients1D {
     T a, b, c, d, e, alpha, beta;

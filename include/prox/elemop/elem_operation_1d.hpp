@@ -12,13 +12,12 @@
  *        e.g. the power for f(x) = |x|^{alpha}.
  *
  */
-namespace prox {
-namespace elemOperation {
+
 template<typename T, class FUN_1D>
 struct ElemOperation1D : public ElemOperation<1> {
   struct Coefficients : public Coefficients1D<T> {};
 
-  ElemOperation1D(Coefficients& coeffs) : coeffs_(coeffs) {} 
+  __device__ ElemOperation1D(Coefficients& coeffs) : coeffs_(coeffs) {} 
   
   inline __device__ void operator()(Vector<T, ElemOperation1D>& arg, Vector<T, ElemOperation1D>& res, Vector<T, ElemOperation1D>& tau_diag, T tau_scal, bool invert_tau, SharedMem<ElemOperation1D>& shared_mem) {
 
@@ -28,10 +27,10 @@ struct ElemOperation1D : public ElemOperation<1> {
       res[0] = arg[0];
     else {
       // compute step-size
-      tau = invert_tau ? (1. / (tau_scal * tau_diag[0])) : (tau_scal * tau_diag[0]);
+      const T tau = invert_tau ? (1. / (tau_scal * tau_diag[0])) : (tau_scal * tau_diag[0]);
 
       // compute scaled prox argument and step 
-      const T arg = ((coeffs_.a * (arg[0] - coeffs_.d * tau)) /
+      const T prox_arg = ((coeffs_.a * (arg[0] - coeffs_.d * tau)) /
         (1. + tau * coeffs_.e)) - coeffs_.b;
     
       const T step = (coeffs_.c * coeffs_.a * coeffs_.a * tau) /
@@ -40,7 +39,7 @@ struct ElemOperation1D : public ElemOperation<1> {
       // compute scaled prox and store result
       FUN_1D fun;
       res[0] = 
-        (fun(arg, step, coeffs_.alpha, coeffs_.beta) + coeffs_.b)
+        (fun(prox_arg, step, coeffs_.alpha, coeffs_.beta) + coeffs_.b)
         / coeffs_.a;
     }
   }
@@ -48,7 +47,6 @@ struct ElemOperation1D : public ElemOperation<1> {
 private:
   Coefficients& coeffs_;
 };
-}
-}
+
 
 #endif
