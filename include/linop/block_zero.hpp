@@ -4,44 +4,29 @@
 #include <cstdlib>
 #include <vector>
 
+#include "linop/block.hpp"
+
 /*
- * @brief Abstract base class for linear operator blocks.
+ * @brief Zero linear operator
  *
  */
-namespace linop {
-
 template<typename T>
 class BlockZero : public Block<T> {
- public:
+public:
   BlockZero(size_t row, size_t col, size_t nrows, size_t ncols);
-  virtual ~Block();
+  virtual ~BlockZero();
 
-  virtual bool Init();
-  virtual void Release();
-  
-  void EvalAdd(T *d_res, T *d_rhs);
-  void EvalAdjointAdd(T *d_res, T *d_rhs);
-
-  // required for preconditioners
-  // row and col are "local" for the operator, which means they start at 0
   virtual T row_sum(size_t row, T alpha) const { return 0; }
   virtual T col_sum(size_t col, T alpha) const { return 0; }
 
-  size_t row() const { return row_; }
-  size_t col() const { return col_; }
-  size_t nrows() const { return nrows_; }
-  size_t ncols() const { return ncols_; }
+protected:
+  virtual void EvalLocalAdd(
+    const thrust::device_ptr<T>& result, 
+    const thrust::device_ptr<T>& rhs) = 0;
 
-  virtual size_t gpu_mem_amount() const { return 0; }
-  
- protected:
-  virtual void EvalLocalAdd(T *d_res, T *d_rhs);
-  virtual void EvalAdjointLocalAdd(T *d_res, T *d_rhs);
-  
-  size_t row_;
-  size_t col_;
-  size_t nrows_;
-  size_t ncols_;
+  virtual void EvalAdjointLocalAdd(
+    const thrust::device_ptr<T>& result, 
+    const thrust::device_ptr<T>& rhs) = 0;
 };
-}
+
 #endif

@@ -5,41 +5,24 @@
 #include <thrust/device_vector.h>
 
 template<typename T> class ProxMoreau;
-template<typename T> class ProxPlusLinterm;
-
-using namespace thrust;
-using namespace std;
 
 /**
- * @brief Virtual base class for all proximal operators. Implements prox
- *        for sum of separable functions:
- *
- *        sum_{i=index_}^{index_+count_} f_i(x_i),
- *
- *        where the f_i and x_i are dim_ dimensional.
- *
- *        interleaved_ describes the ordering of the elements if dim_ > 1.
- *        If it is set to true, then successive elements in x correspond
- *        to one of count_ many dim_-dimensional vectors.
- *        If interleaved_ is set of false, then there are dim_ contigiuous
- *        chunks of count_ many elements.
- *
+ * @brief Virtual base class for all proximal operators. 
  */
 template<typename T>
 class Prox {
   friend class ProxMoreau<T>;
-  friend class ProxPlusLinterm<T>;
   
 public:
   Prox(size_t index, size_t size, bool diagsteps) :
     index_(index),
     size_(size),
-    diagsteps_(diagsteps) { }
+    diagsteps_(diagsteps) {}
 
   Prox(const Prox<T>& other) :
     index_(other.index_),
     size_(other.size_),
-    diagsteps_(other_.diagsteps) { }
+    diagsteps_(other.diagsteps_) {}
   
   virtual ~Prox() {}
 
@@ -47,7 +30,7 @@ public:
    * @brief Initializes the prox Operator, copies data to the GPU.
    *
    */
-  virtual bool Init() { return true; }
+  virtual void Init() {}
 
   /**
    * @brief Cleans up GPU data.
@@ -56,18 +39,21 @@ public:
   virtual void Release() {}
 
   /**
-   * @brief Evaluates the prox operator on the GPU. d_arg, d_result and
-   *        d_tau are all pointers pointing to the whole vector in memory.
+   * @brief Evaluates the prox operator on the GPU. 
    *
    * @param Proximal operator argument.
    * @param Result of prox.
-   * @param Scalar step size.
    * @param Diagonal step sizes.
+   * @param Scalar step size.
    */
-  void Eval(device_vector<T> d_arg, device_vector<T> d_res, device_vector<T> d_tau, T tau);
+  void Eval(
+    thrust::device_vector<T>& result, 
+    const thrust::device_vector<T>& arg, 
+    const thrust::device_vector<T>& tau_diag, 
+    T tau_scal);
 
   // set/get methods
-  virtual size_t gpu_mem_amount() { return 0; }  
+  virtual size_t gpu_mem_amount() const = 0;
   size_t index() const { return index_; }
   size_t size() const { return size_; }
   size_t end() const { return index_ + size_ - 1; }
@@ -76,7 +62,7 @@ public:
 protected:
   /**
    * @brief Evaluates the prox operator on the GPU, local meaning that
-   *        d_arg, d_res and d_tau point to the place in memory where the
+   *        arg, res and tau point to the place in memory where the
    *        prox begins.
    *
    * @param Proximal operator argument.
@@ -86,11 +72,12 @@ protected:
    * @param Perform the prox with inverted step sizes?
    *
    */
-  virtual void EvalLocal(device_vector<T> d_arg,
-                         device_vector<T> d_res,
-                         device_vector<T> d_tau,
-                         T tau,
-                         bool invert_tau);
+  virtual void EvalLocal(
+    const thrust::device_ptr<T>& result,
+    const thrust::device_ptr<const T>& arg,
+    const thrust::device_ptr<const T>& tau_diag,
+    T tau_scal,
+    bool invert_tau) = 0;
   
   size_t index_; 
   size_t size_;

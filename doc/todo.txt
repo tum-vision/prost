@@ -3,7 +3,8 @@ TODOs:
  o epi_huber -> epi_conj_huber (TM)
  o Create doxygen
  o Add folder for unit-tests
-
+ o epi_piecewise_lin -> epi_maxlin1d (EL)
+ o add math_utils.hpp to util for Halfspace projection etc
  o Brain-stormed folder structre:
    pdsolver
      bind_matlab
