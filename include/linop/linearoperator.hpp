@@ -1,35 +1,41 @@
-#ifndef LIN_OPERATOR_HPP_
-#define LIN_OPERATOR_HPP_
+#ifndef LINEAROPERATOR_HPP_
+#define LINEAROPERATOR_HPP_
 
 #include <cstdlib>
+#include <memory>
 #include <vector>
+
+#include <thrust/device_vector.h>
 
 #include "block.hpp"
 
 /*
- * @brief Block matrix built out of linops.
+ * @brief Linear operator built out of blocks.
  *
  */
-
-namespace linop {
-
 template<typename T>
-class LinOperator {
+class LinearOperator {
  public:
-  LinOperator();
-  virtual ~LinOperator();
+  LinearOperator();
+  virtual ~LinearOperator();
 
-  // careful: transfers ownership to LinearOperator
-  void AddBlock(shared_ptr<Block<T>> op);
+  void AddBlock(std::shared_ptr<Block<T> > block);
   
-  bool Init();
+  void Init();
   void Release();
 
-  void Eval(T *d_res, T *d_rhs);
-  void EvalAdjoint(T *d_res, T *d_rhs);
+  void Eval(
+    thrust::device_vector<T>& result, 
+    const thrust::device_vector<T>& rhs);
 
-  // required for preconditioners
+  void EvalAdjoint(
+    thrust::device_vector<T>& result, 
+    const thrust::device_vector<T>& rhs);
+
+  // returns \sum_{col=1}^{ncols} |K_{row,col}|^{\alpha}
   T row_sum(size_t row, T alpha) const;
+
+  // returns \sum_{row=1}^{nrows} |K_{row,col}|^{\alpha}
   T col_sum(size_t col, T alpha) const;
 
   size_t nrows() const { return nrows_; }
@@ -38,9 +44,9 @@ class LinOperator {
   size_t gpu_mem_amount() const;
   
  protected:
-  std::vector<shared_ptr<Block<T>>> blocks_;
+  std::vector<std::shared_ptr<Block<T> > > blocks_;
   size_t nrows_;
   size_t ncols_;
 };
-}
+
 #endif

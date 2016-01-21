@@ -3,12 +3,11 @@
 
 #include "prox.hpp"
 
+#include <memory>
+
 #include <thrust/for_each.h>
 #include <thrust/device_vector.h>
 #include <thrust/iterator/zip_iterator.h>
-
-using namespace thrust;
-using namespace std;
 
 /**
  * @brief Evaluates the conjugate prox using Moreau's identity.
@@ -17,24 +16,24 @@ using namespace std;
 template<typename T>
 class ProxMoreau : public Prox<T> {
 public:
-  ProxMoreau(unique_ptr<Prox<T>> conjugate);
+  ProxMoreau(std::unique_ptr<Prox<T> > conjugate);
   virtual ~ProxMoreau();
 
-  virtual bool Init();
+  virtual void Init();
   virtual void Release();
 
-  virtual size_t gpu_mem_amount();
+  virtual size_t gpu_mem_amount() const;
 
 protected:
-  unique_ptr<Prox<T>> conjugate_;
-  device_vector<T> d_scaled_arg_;
+  std::unique_ptr<Prox<T> > conjugate_;
+  thrust::device_vector<T> scaled_arg_;
 
-  virtual void EvalLocal(device_vector<T> d_arg,
-                         device_vector<T> d_res,
-                         device_vector<T> d_tau,
-                         T tau,
-                         bool invert_tau);
-
+  virtual void EvalLocal(
+    const thrust::device_ptr<T>& result,
+    const thrust::device_ptr<const T>& arg,
+    const thrust::device_ptr<const T>& tau_diag,
+    T tau_scal,
+    bool invert_tau) = 0;
 };
 
 #endif

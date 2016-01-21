@@ -1,20 +1,23 @@
-#include "linop/linop.hpp"
+#include "linop/linearoperator.hpp"
+#include "exception.hpp"
 
 #include <iostream>
-#include <cuda_runtime.h>
+#include <thrust/device_vector.h>
+#include <thrust/fill.h>
 
-bool RectangleOverlap(size_t x1, size_t y1,
-                      size_t x2, size_t y2,
-                      size_t a1, size_t b1,
-                      size_t a2, size_t b2) 
+bool RectangleOverlap(
+  size_t x1, size_t y1,
+  size_t x2, size_t y2,
+  size_t a1, size_t b1,
+  size_t a2, size_t b2) 
 { 
   return (x1 <= a2) && (x2 >= a1) && (y1 <= b2) && (y2 >= b1);
 }
 
-// used for sorting linear operators
+// used for sorting blocks
 template<typename T>
-struct LinOpCompareRow {
-  bool operator()(LinOp<T>* const& left, LinOp<T>* const& right) {
+struct BlockCompareRow {
+  bool operator()(Block<T>* const& left, Block<T>* const& right) {
     if(left->row() < right->row())
       return true;
 
@@ -23,8 +26,10 @@ struct LinOpCompareRow {
 };
 
 template<typename T>
-struct LinOpCompareCol {
-  bool operator()(LinOp<T>* const& left, LinOp<T>* const& right) {
+struct BlockCompareCol 
+{
+  bool operator()(Block<T>* const& left, Block<T>* const& right) 
+  {
     if(left->col() < right->col())
       return true;
 
@@ -33,63 +38,28 @@ struct LinOpCompareCol {
 };
 
 template<typename T>
-LinOp<T>::LinOp(size_t row, size_t col, size_t nrows, size_t ncols)
-    : row_(row), col_(col), nrows_(nrows), ncols_(ncols)
+LinearOperator<T>::LinearOperator() 
 {
-}
-
-template<typename T>
-LinOp<T>::~LinOp() {
-}
-
-template<typename T>
-void LinOp<T>::EvalAdd(T *d_res, T *d_rhs) {
-  EvalLocalAdd(&d_res[row_], &d_rhs[col_]);
-}
-
-template<typename T>
-void LinOp<T>::EvalAdjointAdd(T *d_res, T *d_rhs) {
-  EvalAdjointLocalAdd(&d_res[col_], &d_rhs[row_]);
-}
-
-template<typename T>
-void LinOp<T>::EvalLocalAdd(T *d_res, T *d_rhs) {
-  // do nothing for zero operator
-}
-
-template<typename T>
-void LinOp<T>::EvalAdjointLocalAdd(T *d_res, T *d_rhs) {
-  // do nothing for zero operator
-}
-
-template<typename T>
-bool LinOp<T>::Init() {
-  return true;
-}
-
-template<typename T>
-void LinOp<T>::Release() {
-}
-
-template<typename T>
-LinearOperator<T>::LinearOperator() {
   nrows_ = 0;
   ncols_ = 0;
 }
 
 template<typename T>
-LinearOperator<T>::~LinearOperator() {
+LinearOperator<T>::~LinearOperator() 
+{
   Release();
 }
 
 // careful: transfers ownership to LinearOperator
 template<typename T>
-void LinearOperator<T>::AddOperator(LinOp<T> *op) {
-  operators_.push_back(op);
+void LinearOperator<T>::AddBlock(std::shared_ptr<Block<T> > block) 
+{
+  blocks_.push_back(block);
 }
 
 template<typename T>
-bool LinearOperator<T>::Init() {
+void LinearOperator<T>::Init() 
+{
   // check if any two linear operators overlap
   nrows_ = 0;
   ncols_ = 0;
@@ -97,93 +67,94 @@ bool LinearOperator<T>::Init() {
   size_t area = 0;
   
   bool overlap = false;
-  for(size_t i = 0; i < operators_.size(); i++) {
-    LinOp<T>* op_i = operators_[i];
+  for(size_t i = 0; i < blocks_.size(); i++) 
+  {
+    std::shared_ptr<Block<T> > block_i = blocks_[i];
 
-    nrows_ = std::max(op_i->row() + op_i->nrows(), nrows_);
-    ncols_ = std::max(op_i->col() + op_i->ncols(), ncols_);
+    nrows_ = std::max(block_i->row() + block_i->nrows(), nrows_);
+    ncols_ = std::max(block_i->col() + block_i->ncols(), ncols_);
 
-    area += op_i->nrows() * op_i->ncols();
+    area += block_i->nrows() * block_i->ncols();
     
-    for(size_t j = i + 1; j < operators_.size(); j++) {
-      LinOp<T>* op_j = operators_[j];
+    for(size_t j = i + 1; j < blocks_.size(); j++) 
+    {
+      std::shared_ptr<Block<T> > block_j = blocks_[j];
 
-      overlap |= RectangleOverlap(op_i->col(), op_i->row(),
-                                  op_i->col() + op_i->ncols() - 1,
-                                  op_i->row() + op_i->nrows() - 1,
-                                  op_j->col(), op_j->row(),
-                                  op_j->col() + op_j->ncols() - 1,
-                                  op_j->row() + op_j->nrows() - 1);      
+      overlap |= RectangleOverlap(block_i->col(), block_i->row(),
+                                  block_i->col() + block_i->ncols() - 1,
+                                  block_i->row() + block_i->nrows() - 1,
+                                  block_j->col(), block_j->row(),
+                                  block_j->col() + block_j->ncols() - 1,
+                                  block_j->row() + block_j->nrows() - 1);      
     }
   }
 
-  if(overlap) {
-    std::cout << "ERROR: LinearOperators are overlapping!" << std::endl;
-    return false;
-  }
+  if(overlap) 
+    throw new Exception("Blocks are overlapping inside the linear operator. Recheck the indices.");
 
-  // this should even work with overflows due to modular arithmetic :-)
-  if(area != nrows_ * ncols_)  {
-    std::cout << "ERROR: There's empty space between the LinearOperators!" << std::endl;
-    return false;
-  }
+  if(area != nrows_ * ncols_)  
+    throw new Exception("There's empty space between the blocks inside the linear operator. Recheck the indicies.");
 
-  for(size_t i = 0; i < operators_.size(); i++)
-    if(!operators_[i]->Init())
-      return false;
-
-  return true;
+  for(auto block : blocks_)
+    block->Init();
 }
 
 template<typename T>
-void LinearOperator<T>::Release() {
-  for(size_t i = 0; i < operators_.size(); i++)
-    delete operators_[i];
-
-  operators_.clear();
+void LinearOperator<T>::Release()
+{
+  for(auto block : blocks_)
+    block->Release();
 }
 
 template<typename T>
-void LinearOperator<T>::Eval(T *d_res, T *d_rhs) {
-  cudaMemset(d_res, 0, sizeof(T) * nrows_);
-  
-  for(size_t i = 0; i < operators_.size(); i++)
-    operators_[i]->EvalAdd(d_res, d_rhs);
+void LinearOperator<T>::Eval(
+  thrust::device_vector<T>& result, 
+  const thrust::device_vector<T>& rhs)
+{
+  thrust::fill(result.begin(), result.end(), 0);
+
+  for(auto block : blocks_)
+    block->EvalAdd(result, rhs);
 }
 
 template<typename T>
-void LinearOperator<T>::EvalAdjoint(T *d_res, T *d_rhs) {
-  cudaMemset(d_res, 0, sizeof(T) * ncols_);
-  
-  for(size_t i = 0; i < operators_.size(); i++)
-    operators_[i]->EvalAdjointAdd(d_res, d_rhs);
+void LinearOperator<T>::EvalAdjoint(
+  thrust::device_vector<T>& result, 
+  const thrust::device_vector<T>& rhs)
+{
+  thrust::fill(result.begin(), result.end(), 0);
+
+  for(auto block : blocks_)
+    block->EvalAdjointAdd(result, rhs);
 }
 
 template<typename T>
-T LinearOperator<T>::row_sum(size_t row, T alpha) const {
+T LinearOperator<T>::row_sum(size_t row, T alpha) const 
+{
   T sum = 0;
   
-  for(size_t i = 0; i < operators_.size(); i++) {
-    if(row < operators_[i]->row() ||
-       row >= (operators_[i]->row() + operators_[i]->nrows()))
+  for(auto block : blocks_)
+  {
+    if(row < block->row() ||
+       row >= (block->row() + block->nrows()))
       continue;
     
-    sum += operators_[i]->row_sum(row - operators_[i]->row(), alpha);
+    sum += block->row_sum(row - block->row(), alpha);
   }
 
   return sum;
 }
 
 template<typename T>
-T LinearOperator<T>::col_sum(size_t col, T alpha) const {
+T LinearOperator<T>::col_sum(size_t col, T alpha) const 
+{
   T sum = 0;
-  
-  for(size_t i = 0; i < operators_.size(); i++) {
-    if(col < operators_[i]->col() ||
-       col >= (operators_[i]->col() + operators_[i]->ncols()))
+  for(auto block : blocks_) {
+    if(col < block->col() ||
+       col >= (block->col() + block->ncols()))
       continue;
     
-    sum += operators_[i]->col_sum(col - operators_[i]->col(), alpha);
+    sum += block->col_sum(col - block->col(), alpha);
   }
 
   return sum;
@@ -193,14 +164,12 @@ template<typename T>
 size_t LinearOperator<T>::gpu_mem_amount() const {
   size_t mem = 0;
 
-  for(size_t i = 0; i < operators_.size(); i++) 
-    mem += operators_[i]->gpu_mem_amount();
+  for(auto block : blocks_)
+    mem += block->gpu_mem_amount();
 
   return mem;
 }
 
 // Explicit template instantiation
-template class LinOp<float>;
-template class LinOp<double>;
 template class LinearOperator<float>;
 template class LinearOperator<double>;

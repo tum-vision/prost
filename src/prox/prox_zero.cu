@@ -11,13 +11,14 @@ ProxZero<T>::~ProxZero() {
 }
 
 template<typename T>
-void ProxZero<T>::EvalLocal(device_vector<T> d_arg,
-                            device_vector<T> d_res,
-                            device_vector<T> d_tau,
-                            T tau,
-                            bool invert_tau) {
-  copy(d_arg.begin(), d_arg.end(),
-             d_res.begin());
+void ProxZero<T>::EvalLocal(
+  const thrust::device_ptr<T>& result,
+  const thrust::device_ptr<const T>& arg,
+  const thrust::device_ptr<const T>& tau_diag,
+  T tau_scal,
+  bool invert_tau)
+{
+//  thrust::copy(arg, arg + this->size_, result);
 }
 
 // Explicit template instantiation
