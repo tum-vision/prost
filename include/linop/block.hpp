@@ -1,3 +1,4 @@
+/**
 #ifndef BLOCK_HPP_
 #define BLOCK_HPP_
 
@@ -44,3 +45,4 @@ class Block {
 };
 }
 #endif
+*/

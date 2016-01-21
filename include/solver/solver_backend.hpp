@@ -1,3 +1,4 @@
+/**
 #ifndef SOLVER_BACKEND_HPP_
 #define SOLVER_BACKEND_HPP_
 
@@ -36,3 +37,4 @@ protected:
 };
 
 #endif
+*/

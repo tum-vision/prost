@@ -1,3 +1,4 @@
+/**
 #include "solver/solver.hpp"
 
 #include <algorithm>
@@ -298,3 +299,4 @@ std::string SolverOptions::get_string() const {
   
   return ss.str();
 }
+*/

@@ -4,11 +4,8 @@
 #include <stddef.h>
 #include <thrust/device_vector.h>
 
-template<typename T> class ProxMoreau;
-template<typename T> class ProxPlusLinterm;
 
-using namespace thrust;
-using namespace std;
+template<typename T> class ProxMoreau;
 
 /**
  * @brief Virtual base class for all proximal operators. Implements prox
@@ -25,10 +22,10 @@ using namespace std;
  *        chunks of count_ many elements.
  *
  */
+namespace prox {
 template<typename T>
 class Prox {
   friend class ProxMoreau<T>;
-  friend class ProxPlusLinterm<T>;
   
 public:
   Prox(size_t index, size_t size, bool diagsteps) :
@@ -39,15 +36,15 @@ public:
   Prox(const Prox<T>& other) :
     index_(other.index_),
     size_(other.size_),
-    diagsteps_(other_.diagsteps) { }
+    diagsteps_(other.diagsteps_) { }
   
-  virtual ~Prox() {}
+  virtual ~Prox();
 
   /**
    * @brief Initializes the prox Operator, copies data to the GPU.
    *
    */
-  virtual bool Init() { return true; }
+  virtual void Init() { }
 
   /**
    * @brief Cleans up GPU data.
@@ -64,10 +61,10 @@ public:
    * @param Scalar step size.
    * @param Diagonal step sizes.
    */
-  void Eval(device_vector<T> d_arg, device_vector<T> d_res, device_vector<T> d_tau, T tau);
+  void Eval(thrust::device_vector<T> d_arg, thrust::device_vector<T> d_res, thrust::device_vector<T> d_tau, T tau);
 
   // set/get methods
-  virtual size_t gpu_mem_amount() { return 0; }  
+  virtual size_t gpu_mem_amount() = 0;  
   size_t index() const { return index_; }
   size_t size() const { return size_; }
   size_t end() const { return index_ + size_ - 1; }
@@ -86,15 +83,18 @@ protected:
    * @param Perform the prox with inverted step sizes?
    *
    */
-  virtual void EvalLocal(device_vector<T> d_arg,
-                         device_vector<T> d_res,
-                         device_vector<T> d_tau,
+  virtual void EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
+                         typename thrust::device_vector<T>::iterator d_arg_end,
+                         typename thrust::device_vector<T>::iterator d_res_begin,
+                         typename thrust::device_vector<T>::iterator d_res_end,
+                         typename thrust::device_vector<T>::iterator d_tau_begin,
+                         typename thrust::device_vector<T>::iterator d_tau_end,
                          T tau,
-                         bool invert_tau);
+                         bool invert_tau) = 0;
   
   size_t index_; 
   size_t size_;
   bool diagsteps_; // able to handle diagonal matrices as step size?
 };
-
+}
 #endif

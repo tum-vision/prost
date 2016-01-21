@@ -1,10 +1,12 @@
 #ifndef VECTOR_HPP_
 #define VECTOR_HPP_
 
+
+
 template<typename T, class ELEM_OPERATION>
 class Vector {
 public:
-  Vector(size_t count, bool interleaved, size_t tx, T* data) : 
+  __device__ Vector(size_t count, bool interleaved, size_t tx, T* data) : 
     count_(count),
     interleaved_(interleaved),
     tx_(tx),
@@ -12,14 +14,14 @@ public:
 
   inline __device__ T operator[](size_t i) const {
     // Out of bounds check?
-    size_t index = parent_.interleaved_ ? (tx * ELEM_OPERATION::dim + i) : (tx + count_ * i);
-    return data[index];
+    size_t index = interleaved_ ? (tx_ * ELEM_OPERATION::dim + i) : (tx_ + count_ * i);
+    return data_[index];
   }
 
   inline __device__ T& operator[](size_t i) {
     // Out of bounds check?
-    size_t index = parent_.interleaved_ ? (tx * ELEM_OPERATION::dim + i) : (tx + count_ * i);
-    return data[index];
+    size_t index = interleaved_ ? (tx_ * ELEM_OPERATION::dim + i) : (tx_ + count_ * i);
+    return data_[index];
   }
 
 private:

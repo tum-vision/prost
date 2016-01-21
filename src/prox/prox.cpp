@@ -1,10 +1,20 @@
 #include "prox/prox.hpp"
 
+using namespace prox;
+
 template<typename T>
-void Prox<T>::Eval(T *d_arg, T *d_result, T* d_tau, T tau) {
-  EvalLocal(&d_arg[index_],
-            &d_result[index_],
-            &d_tau[index_],
+Prox<T>::~Prox() {
+    Release();
+}
+
+template<typename T>
+void Prox<T>::Eval(thrust::device_vector<T> d_arg, thrust::device_vector<T> d_res, thrust::device_vector<T> d_tau, T tau) {
+  EvalLocal(d_arg.begin() + index_,
+            d_arg.begin() + index_ + size_,
+            d_res.begin() + index_,
+            d_res.begin() + index_ + size_,
+            d_tau.begin() + index_,
+            d_tau.begin() + index_ + size_,
             tau,
             false);
 }

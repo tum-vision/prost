@@ -1,3 +1,4 @@
+/**
 #include "linop/linop_diags.hpp"
 
 #include <cuda_runtime.h>
@@ -188,3 +189,4 @@ T LinOpDiags<T>::col_sum(size_t col, T alpha) const {
 // Explicit template instantiation
 template class LinOpDiags<float>;
 template class LinOpDiags<double>;
+*/

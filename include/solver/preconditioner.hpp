@@ -1,3 +1,4 @@
+/**
 #ifndef PRECONDITIONER_HPP_
 #define PRECONDITIONER_HPP_
 
@@ -44,3 +45,4 @@ private:
 };
 
 #endif
+*/

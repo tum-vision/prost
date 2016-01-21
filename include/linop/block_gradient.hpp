@@ -1,3 +1,4 @@
+/**
 #ifndef BLOCK_GRADIENT_HPP_
 #define BLOCK_GRADIENT_HPP_
 
@@ -98,3 +99,4 @@ class BlockGradient3D : public Block<T> {
 };
 }
 #endif
+*/

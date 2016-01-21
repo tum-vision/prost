@@ -7,7 +7,7 @@
 #include "solver/solver.hpp"
 #include "util/sparse_matrix.hpp"
 
-typedef Factory<Prox, int, int, bool, const mxArray> ProxFactory;
+typedef Factory<Prox, int, int, bool, const mxArray*> ProxFactory;
 typedef Factory<LinOperator, int, int, const mxArray> LinOperatorFactory;
 
 

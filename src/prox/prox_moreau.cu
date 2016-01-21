@@ -4,6 +4,8 @@
 #include <cuda_runtime.h>
 #include "config.hpp"
 
+using namespace prox;
+
 template<typename T>
 struct MoreauPrescale {
     const bool invert_tau_;
@@ -28,7 +30,7 @@ struct MoreauPostscale {
 
     template<typename Tuple>
     __host__ __device__ void operator()(Tuple t) const { 
-        if(invert_tau)
+        if(invert_tau_)
             get<2>(t) = get<0>(t) - get<2>(t) / (tau_scal_ * get<1>(t));
         else
             get<2>(t) = get<0>(t) - tau_scal_ * get<1>(t) * get<2>(t);
@@ -36,48 +38,50 @@ struct MoreauPostscale {
 };
 
 template<typename T>
-ProxMoreau<T>::ProxMoreau(unique_ptr<Prox<T>> conjugate)
+ProxMoreau<T>::ProxMoreau(std::unique_ptr<Prox<T>> conjugate)
     : Prox<T>(*conjugate), conjugate_(std::move(conjugate)) {} {
 }
 
 template<typename T>
-ProxMoreau<T>::~ProxMoreau() {
-  Release();
+void ProxMoreau<T>::Init() {
+  try {
+    d_scaled_arg_.resize(this->size_);
+  } catch(std::bad_alloc &e) {
+    throw PDSolverException();
+  } catch(thrust::system_error &e) {
+    throw PDSolverException();
+  }
+
+  conjugate_->Init();
 }
 
 template<typename T>
-bool ProxMoreau<T>::Init() {
-  return conjugate_->Init();
-}
-
-template<typename T>
-void ProxMoreau<T>::Release() {
-}
-
-template<typename T>
-void ProxMoreau<T>::EvalLocal(device_vector<T> d_arg,
-                              device_vector<T> d_res,
-                              device_vector<T> d_tau,
-                              T tau,
-                              bool invert_tau)
+void ProxMoreau<T>::EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
+                         typename thrust::device_vector<T>::iterator d_arg_end,
+                         typename thrust::device_vector<T>::iterator d_res_begin,
+                         typename thrust::device_vector<T>::iterator d_res_end,
+                         typename thrust::device_vector<T>::iterator d_tau_begin,
+                         typename thrust::device_vector<T>::iterator d_tau_end,
+                         T tau,
+                         bool invert_tau)
 {
 
   // prescale argument
-  transform(d_arg.begin(), d_arg.end(), d_tau.begin(), d_scaled_arg_.begin(), MoreauPrescale(invert_tau, tau));
+  thrust::transform(d_arg_begin, d_arg_end, d_tau_begin, d_scaled_arg_.begin(), MoreauPrescale<T>(invert_tau, tau));
 
   // compute prox with scaled argument
-  conjugate_->EvalLocal(d_scaled_arg_, d_res, d_tau, tau, !invert_tau);
+  conjugate_->EvalLocal(d_scaled_arg_.begin(), d_scaled_arg_.end(), d_res_begin, d_res_end, d_tau_begin, d_tau_end, tau, !invert_tau);
 
   // postscale argument
   // combine back to get result of conjugate prox
-  for_each(make_zip_iterator(make_tuple(d_arg.begin(), d_tau.begin(), d_res.begin())),
-           make_zip_iterator(make_tuple(d_arg.end(), d_tau.end(), d_res.end())),
-           MoreauPostscale(invert_tau, tau));
+  thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(d_arg_begin, d_tau_begin, d_res_begin)),
+           thrust::make_zip_iterator(thrust::make_tuple(d_arg_end, d_tau_end, d_res_end)),
+           MoreauPostscale<T>(invert_tau, tau));
 }
 
 template<typename T>
 size_t ProxMoreau<T>::gpu_mem_amount() {
-  return this->size_ * sizeof(T);
+  return this->size_ * sizeof(T) + conjugate_->gpu_mem_amount();
 }
 
 // Explicit template instantiation

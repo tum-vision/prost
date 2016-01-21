@@ -1,3 +1,4 @@
+/**
 #include "linop/linop_gradient.hpp"
 
 #include <iostream>
@@ -538,3 +539,4 @@ template class LinOpGradient2D<float>;
 template class LinOpGradient2D<double>;
 template class LinOpGradient3D<float>;
 template class LinOpGradient3D<double>;
+*/

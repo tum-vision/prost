@@ -1,3 +1,4 @@
+/**
 #ifndef BLOCK_DIAGS_HPP_
 #define BLOCK_DIAGS_HPP_
 
@@ -47,3 +48,4 @@ class BlockDiags : public Block<T> {
 };
 }
 #endif
+*/
