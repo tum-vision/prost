@@ -8,6 +8,7 @@
 class Problem;
 class Backend;
 
+template<typename T>
 struct SolverOptions {
   // stopping tolerances
   T tol_rel_primal, tol_rel_dual;
@@ -38,7 +39,7 @@ public:
   Solver();
   virtual ~Solver();
 
-  void Initialize(Problem *problem, Backend *backend);
+  void Initialize(Problem* problem, Backend* backend);
   SolverResult Solve();
   void Release();
 
@@ -47,9 +48,9 @@ public:
   void SetIntermSolCallback(const IntermSolCallback& cb);
   
 protected:
-  SolverOptions opts;
-  std::unique_ptr<Problem> problem_;
-  std::unique_ptr<Backend> backend_;
+  SolverOptions<T> opts;
+  std::shared_ptr<Problem<T> > problem_;
+  std::shared_ptr<Backend<T> > backend_;
 
   IntermSolCallback interm_sol_cback_;
   StoppingCallback stopping_cback_; // callback which allows for user input to stop the solver
