@@ -30,8 +30,8 @@ set(SOURCES
   "src/prox/prox_moreau.cu"
   "src/prox/prox_zero.cu"
 
-#  "src/solver/backend_pdhg.cu"
-#  "src/solver/problem.cu"
+  "src/solver/backend_pdhg.cu"
+  "src/solver/problem.cu"
 #  "src/solver/solver.cu"
 
   "include/exception.hpp"
@@ -45,9 +45,9 @@ set(SOURCES
   "include/prox/prox_zero.hpp"
 
 #  "include/solver/solver.hpp"
-#  "include/solver/problem.hpp"
-#  "include/solver/backend.hpp"
-#  "include/solver/backend_pdhg.hpp"
+  "include/solver/problem.hpp"
+  "include/solver/backend.hpp"
+  "include/solver/backend_pdhg.hpp"
   )
   
 cuda_add_library(pdsolver STATIC ${SOURCES})

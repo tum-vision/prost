@@ -1,23 +1,30 @@
 #ifndef BACKEND_HPP_
 #define BACKEND_HPP_
 
-class Problem;
+#include <memory>
+
+template<typename T> class Problem;
 
 /**
- * @brief Algorithm implementation for solving graph form problems.
+ * @brief Abstract base class for primal-dual algorithms 
+ *        solving graph form problems.
  *
  */
 template<typename T>
 class Backend {
 public:
-  Backend(std::unique_ptr<Problem<T> > problem);
-  virtual ~Backend();
+  Backend(std::shared_ptr<Problem<T> > problem)
+    : problem_(problem)
+  {
+  }
+
+  virtual ~Backend() { }
 
   virtual void Initialize() = 0;
   virtual void PerformIteration() = 0;
   virtual void Release() = 0;
 
-  virtual void current_solution(std::vector<T>& primal, std::vector<T>& dual) const = 0;
+  virtual void current_solution(std::vector<T>& primal_sol, std::vector<T>& dual_sol) const = 0;
   virtual T primal_residual() const = 0;
   virtual T dual_residual() const = 0;
 

@@ -5,8 +5,7 @@
 
 struct BackendPDHGOptions {
   double tau0, sigma0; // initial step sizes
-  bool solve_dual_problem; // overrelaxation on dual variables
-  
+  bool solve_dual_problem; // overrelaxation on dual variables?
 };
 
 // callback function for updating adaptive stepsizes, has the following signature

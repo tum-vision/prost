@@ -23,9 +23,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     // read options etc
 
     // instantiate solver class
-
+    // run solver
+    // return result to matlab
   }
   catch(const Exception& e)
   {
+    mexErrMsgTxt(e.what());
   }
 }
