@@ -26,23 +26,76 @@
  *        chunks of count_ many elements.
  *
  */
-namespace prox {
-template<typename T, class ELEM_OPERATION>
+namespace prox {    
+template<typename T, class ELEM_OPERATION, class ENABLE = void>
 class ProxElemOperation : public ProxSeparableSum<T> {
 public:    
-  ProxElemOperation(size_t index, size_t count, bool interleaved, bool diagsteps, const std::vector<typename ELEM_OPERATION::Coefficients>& coeffs);
+  ProxElemOperation(size_t index, size_t count, bool interleaved, bool diagsteps) : ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim, interleaved, diagsteps) {}
 
   /**
    * @brief Initializes the prox Operator, copies data to the GPU.
    *
    */
-  virtual void Init();
+  virtual void Init() {
+  }
 
   virtual void Release();
   
   // set/get methods
-  virtual size_t gpu_mem_amount(); 
+  virtual size_t gpu_mem_amount() {
+    return 0;
+  }
+protected:
+  /**
+   * @brief Evaluates the prox operator on the GPU, local meaning that
+   *        d_arg, d_res and d_tau point to the place in memory where the
+   *        prox begins.
+   *
+   * @param Proximal operator argument.
+   * @param Result of prox.
+   * @param Scalar step size.
+   * @param Diagonal step sizes.
+   * @param Perform the prox with inverted step sizes?
+   *
+   */
+  virtual void EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
+                         typename thrust::device_vector<T>::iterator d_arg_end,
+                         typename thrust::device_vector<T>::iterator d_res_begin,
+                         typename thrust::device_vector<T>::iterator d_res_end,
+                         typename thrust::device_vector<T>::iterator d_tau_begin,
+                         typename thrust::device_vector<T>::iterator d_tau_end,
+                         T tau,
+                         bool invert_tau);
+};
+
+
+template<typename T, class ELEM_OPERATION>
+class ProxElemOperation<T, ELEM_OPERATION, typename ELEM_OPERATION::Coefficients> : public ProxSeparableSum<T> {
+public:    
+  ProxElemOperation(size_t index, size_t count, bool interleaved, bool diagsteps, const std::vector<typename ELEM_OPERATION::Coefficients>& coeffs) : ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim, interleaved, diagsteps), coeffs_(coeffs){}
+
+  /**
+   * @brief Initializes the prox Operator, copies data to the GPU.
+   *
+   */
+  virtual void Init() {
+    try {
+        thrust::copy(coeffs_.begin(), coeffs_.end(), d_coeffs_.begin());
+    } catch(std::bad_alloc &e) {
+        throw PDSolverException();
+    } catch(thrust::system_error &e) {
+        throw PDSolverException();
+    }
+  }
+
+  virtual void Release();
   
+  // set/get methods
+  virtual size_t gpu_mem_amount() {
+    return this->count_ * sizeof(typename ELEM_OPERATION::Coefficients);
+  }
+
+   
 protected:
   /**
    * @brief Evaluates the prox operator on the GPU, local meaning that
@@ -67,7 +120,7 @@ protected:
   
 private:
   std::vector<typename ELEM_OPERATION::Coefficients> coeffs_;
-  thrust::device_vector<typename ELEM_OPERATION::Coefficients> d_coeffs_;
+  thrust::device_vector<typename ELEM_OPERATION::Coefficients> d_coeffs_;  
 };
 }
 #endif
