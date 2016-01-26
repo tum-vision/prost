@@ -14,6 +14,7 @@
  * @brief Evaluates the conjugate prox using Moreau's identity.
  *
  */
+namespace prox {
 template<typename T>
 class ProxMoreau : public prox::Prox<T> {
 public:
@@ -38,4 +39,5 @@ protected:
                          bool invert_tau);
 
 };
+}
 #endif

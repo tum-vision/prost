@@ -2,7 +2,8 @@
 #define VECTOR_HPP_
 
 
-
+namespace prox {
+namespace elemop {
 template<typename T, class ELEM_OPERATION>
 class Vector {
 public:
@@ -30,7 +31,8 @@ private:
   size_t tx_;
   T* data_;
 };
-
+}
+}
 #endif
 
 

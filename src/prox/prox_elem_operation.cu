@@ -8,9 +8,9 @@
 using namespace std;
 using namespace thrust;
 using namespace prox;
+using namespace elemop;
 
-
-template<typename T, class ELEM_OPERATION>
+template<typename T, class ELEM_OPERATION, class ENABLE = typename std::enable_if<!has_coeffs<ELEM_OPERATION>::value>::type>
 __global__
 void ProxElemOperationKernel(
     T *d_arg,
@@ -37,8 +37,7 @@ void ProxElemOperationKernel(
 }
 
 
-
-template<typename T, class ELEM_OPERATION, class ENABLE = typename ELEM_OPERATION::Coefficients>
+template<typename T, class ELEM_OPERATION, class ENABLE = typename std::enable_if<has_coeffs<ELEM_OPERATION>::value>::type>
 __global__
 void ProxElemOperationKernel(
     T *d_arg,
@@ -62,13 +61,13 @@ void ProxElemOperationKernel(
 
     SharedMem<ELEM_OPERATION> sh_mem(threadIdx.x);
 
-    ELEM_OPERATION op(&coeffs);
+    ELEM_OPERATION op(coeffs);
     op(arg, res, tau_diag, tau, invert_tau, sh_mem);
   }
 }
 
-template<typename T, class ELEM_OPERATION, class ENABLE>
-void ProxElemOperation<T, ELEM_OPERATION, ENABLE>::EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
+template<typename T, class ELEM_OPERATION>
+void ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<!has_coeffs<ELEM_OPERATION>::value>::type>::EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
                          typename thrust::device_vector<T>::iterator d_arg_end,
                          typename thrust::device_vector<T>::iterator d_res_begin,
                          typename thrust::device_vector<T>::iterator d_res_end,
@@ -80,7 +79,7 @@ void ProxElemOperation<T, ELEM_OPERATION, ENABLE>::EvalLocal(typename thrust::de
 	  dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
 	  size_t shmem_bytes = ELEM_OPERATION::shared_mem_count * block.x * sizeof(typename ELEM_OPERATION::shared_mem_type);
-	  ProxElemOperationKernel<T, ELEM_OPERATION>
+      ProxElemOperationKernel<T, ELEM_OPERATION>
             <<<grid, block, shmem_bytes>>>(
              thrust::raw_pointer_cast(&(*d_arg_begin)),
              thrust::raw_pointer_cast(&(*d_res_begin)),
@@ -92,7 +91,7 @@ void ProxElemOperation<T, ELEM_OPERATION, ENABLE>::EvalLocal(typename thrust::de
   }
 
 template<typename T, class ELEM_OPERATION>
-void ProxElemOperation<T, ELEM_OPERATION, typename ELEM_OPERATION::Coefficients>::EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
+void ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<has_coeffs<ELEM_OPERATION>::value>::type>::EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
                          typename thrust::device_vector<T>::iterator d_arg_end,
                          typename thrust::device_vector<T>::iterator d_res_begin,
                          typename thrust::device_vector<T>::iterator d_res_end,
@@ -100,7 +99,7 @@ void ProxElemOperation<T, ELEM_OPERATION, typename ELEM_OPERATION::Coefficients>
                          typename thrust::device_vector<T>::iterator d_tau_end,
                          T tau,
                          bool invert_tau) {
-          dim3 block(kBlockSizeCUDA, 1, 1);
+      dim3 block(kBlockSizeCUDA, 1, 1);
 	  dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
 	  size_t shmem_bytes = ELEM_OPERATION::shared_mem_count * block.x * sizeof(typename ELEM_OPERATION::shared_mem_type);
