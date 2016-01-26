@@ -116,16 +116,16 @@ void Problem<T>::Init()
     throw new Exception("prox_f* does not cover the whole domain!");
 
   // Init Proxs
-  for(auto prox : prox_f_) 
+  for(auto& prox : prox_f_) 
     prox->Init();
 
-  for(auto prox : prox_fstar_) 
+  for(auto& prox : prox_fstar_) 
     prox->Init();
 
-  for(auto prox : prox_g_) 
+  for(auto& prox : prox_g_) 
     prox->Init();
 
-  for(auto prox : prox_gstar_) 
+  for(auto& prox : prox_gstar_) 
     prox->Init(); 
 }
 
@@ -134,16 +134,16 @@ void Problem<T>::Release()
 {
   linop_->Release();
 
-  for(auto prox : prox_f_) 
+  for(auto& prox : prox_f_) 
     prox->Release();
 
-  for(auto prox : prox_fstar_) 
+  for(auto& prox : prox_fstar_) 
     prox->Release();
 
-  for(auto prox : prox_g_) 
+  for(auto& prox : prox_g_) 
     prox->Release();
 
-  for(auto prox : prox_gstar_) 
+  for(auto& prox : prox_gstar_) 
     prox->Release();
 }
 
