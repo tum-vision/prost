@@ -1,4 +1,3 @@
-/**
 #include "linop/linop.hpp"
 
 #include <iostream>
@@ -205,4 +204,4 @@ template class LinOp<float>;
 template class LinOp<double>;
 template class LinearOperator<float>;
 template class LinearOperator<double>;
- */
+

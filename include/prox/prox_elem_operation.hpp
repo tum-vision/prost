@@ -26,9 +26,21 @@
  *        chunks of count_ many elements.
  *
  */
-namespace prox {    
+namespace prox {
+template<typename T>
+struct has_coeffs {
+private:
+    template<typename V> static void probe(decltype(typename V::Coefficients(), int()));
+    template<typename V> static bool probe(char);
+public:
+    static const bool value = std::is_same<void, decltype(probe<T>(0))>::value;
+};  
+
 template<typename T, class ELEM_OPERATION, class ENABLE = void>
-class ProxElemOperation : public ProxSeparableSum<T> {
+class ProxElemOperation {};
+
+template<typename T, class ELEM_OPERATION>
+class ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<!has_coeffs<ELEM_OPERATION>::value>::type> : public ProxSeparableSum<T> {
 public:    
   ProxElemOperation(size_t index, size_t count, bool interleaved, bool diagsteps) : ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim, interleaved, diagsteps) {}
 
@@ -68,9 +80,8 @@ protected:
                          bool invert_tau);
 };
 
-
 template<typename T, class ELEM_OPERATION>
-class ProxElemOperation<T, ELEM_OPERATION, typename ELEM_OPERATION::Coefficients> : public ProxSeparableSum<T> {
+class ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<has_coeffs<ELEM_OPERATION>::value>::type> : public ProxSeparableSum<T> {
 public:    
   ProxElemOperation(size_t index, size_t count, bool interleaved, bool diagsteps, const std::vector<typename ELEM_OPERATION::Coefficients>& coeffs) : ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim, interleaved, diagsteps), coeffs_(coeffs){}
 

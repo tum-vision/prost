@@ -4,6 +4,8 @@
 #include "vector.hpp"
 #include "shared_mem.hpp"
 
+namespace prox {
+namespace elemop {
 template<size_t DIM>
 struct ElemOperation {
 public:
@@ -12,6 +14,7 @@ public:
    typedef char shared_mem_type;
 
 };
-
+}
+}
 
 #endif

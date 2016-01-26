@@ -1,6 +1,8 @@
 #ifndef SHARED_MEM_HPP_
 #define SHARED_MEM_HPP_
 
+namespace prox {
+namespace elemop {
 template<class ELEM_OPERATION>
 class SharedMem {
 public:
@@ -25,6 +27,8 @@ private:
   size_t threadIdx_x_;
   typename ELEM_OPERATION::shared_mem_type* sh_arg_;
 };
+}
+}
 #endif
 
 

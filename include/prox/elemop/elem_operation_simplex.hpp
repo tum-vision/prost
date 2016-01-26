@@ -5,6 +5,8 @@
 #include "../../util/cuwrap.hpp"
 
 
+namespace prox {
+namespace elemop {
 /**
  * @brief Computes prox for sum of simplex indicator functions
  *        plus a linear term:
@@ -109,4 +111,6 @@ struct ElemOperationSimplex : public ElemOperation<DIM> {
 private:
   //Coefficients& coeffs_;
 };
+}
+}
 #endif

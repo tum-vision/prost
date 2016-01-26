@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+namespace prox {
+namespace elemop {
 // implementation of 1D prox operators
 #ifdef __CUDACC__ 
 
@@ -110,5 +112,6 @@ struct Function1DHuber {
 };
 
 #endif
-
+}
+}
 #endif

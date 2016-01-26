@@ -5,8 +5,6 @@
 #include <thrust/device_vector.h>
 
 
-template<typename T> class ProxMoreau;
-
 /**
  * @brief Virtual base class for all proximal operators. Implements prox
  *        for sum of separable functions:
@@ -23,6 +21,8 @@ template<typename T> class ProxMoreau;
  *
  */
 namespace prox {
+template<typename T> class ProxMoreau;
+    
 template<typename T>
 class Prox {
   friend class ProxMoreau<T>;
