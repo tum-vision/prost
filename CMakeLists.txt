@@ -16,7 +16,7 @@ else()
   message( FATAL_ERROR "Operating system not supported." )
 endif()
 
-# build fat binary for several common architectures
+# TODO: build fat binary for several common architectures
 set(CUDA_NVCC_FLAGS "-O3 -std=c++11 -gencode=arch=compute_52,code=compute_52")
 
 include_directories("include")
@@ -30,11 +30,10 @@ set(SOURCES
   "src/prox/prox_moreau.cu"
   "src/prox/prox_zero.cu"
 
-  "src/solver/backend_pdhg.cu"
-  "src/solver/problem.cu"
-#  "src/solver/solver.cu"
+  "src/backend/backend_pdhg.cu"
 
-  "include/exception.hpp"
+  "src/problem.cu"
+  "src/solver.cu"
 
   "include/linop/block.hpp"
   "include/linop/block_zero.hpp"
@@ -44,10 +43,13 @@ set(SOURCES
   "include/prox/prox_moreau.hpp"
   "include/prox/prox_zero.hpp"
 
-#  "include/solver/solver.hpp"
-  "include/solver/problem.hpp"
-  "include/solver/backend.hpp"
-  "include/solver/backend_pdhg.hpp"
-  )
+  "include/backend/backend.hpp"
+  "include/backend/backend_pdhg.hpp"
+
+  "include/exception.hpp"
+  "include/factory.hpp"
+  "include/solver.hpp"
+  "include/problem.hpp"
+)
   
 cuda_add_library(pdsolver STATIC ${SOURCES})

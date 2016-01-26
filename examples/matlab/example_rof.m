@@ -15,4 +15,3 @@ opts.max_iters = 1000;
 
 % solve problem
 sol = pdsolver(prob, backend, opts);
-
