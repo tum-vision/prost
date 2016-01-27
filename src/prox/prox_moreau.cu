@@ -45,7 +45,7 @@ ProxMoreau<T>::ProxMoreau(std::unique_ptr<Prox<T>> conjugate)
 template<typename T>
 void ProxMoreau<T>::Init() {
   try {
-    d_scaled_arg_.resize(this->size_);
+    scaled_arg_.resize(this->size_);
   } catch(std::bad_alloc &e) {
     throw PDSolverException();
   } catch(thrust::system_error &e) {
@@ -56,26 +56,26 @@ void ProxMoreau<T>::Init() {
 }
 
 template<typename T>
-void ProxMoreau<T>::EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
-                         typename thrust::device_vector<T>::iterator d_arg_end,
-                         typename thrust::device_vector<T>::iterator d_res_begin,
-                         typename thrust::device_vector<T>::iterator d_res_end,
-                         typename thrust::device_vector<T>::iterator d_tau_begin,
-                         typename thrust::device_vector<T>::iterator d_tau_end,
+void ProxMoreau<T>::EvalLocal(const typename thrust::device_vector<T>::iterator& arg_begin,
+                              const typename thrust::device_vector<T>::iterator& arg_end,
+                              const typename thrust::device_vector<T>::iterator& res_begin,
+                              const typename thrust::device_vector<T>::iterator& res_end,
+                              const typename thrust::device_vector<T>::iterator& tau_begin,
+                              const typename thrust::device_vector<T>::iterator& tau_end,
                          T tau,
                          bool invert_tau)
 {
 
   // prescale argument
-  thrust::transform(d_arg_begin, d_arg_end, d_tau_begin, d_scaled_arg_.begin(), MoreauPrescale<T>(invert_tau, tau));
+  thrust::transform(arg_begin, arg_end, tau_begin, scaled_arg_.begin(), MoreauPrescale<T>(invert_tau, tau));
 
   // compute prox with scaled argument
-  conjugate_->EvalLocal(d_scaled_arg_.begin(), d_scaled_arg_.end(), d_res_begin, d_res_end, d_tau_begin, d_tau_end, tau, !invert_tau);
+  conjugate_->EvalLocal(scaled_arg_.begin(), scaled_arg_.end(), res_begin, res_end, tau_begin, tau_end, tau, !invert_tau);
 
   // postscale argument
   // combine back to get result of conjugate prox
-  thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(d_arg_begin, d_tau_begin, d_res_begin)),
-           thrust::make_zip_iterator(thrust::make_tuple(d_arg_end, d_tau_end, d_res_end)),
+  thrust::for_each(thrust::make_zip_iterator(thrust::make_tuple(arg_begin, tau_begin, res_begin)),
+           thrust::make_zip_iterator(thrust::make_tuple(arg_end, tau_end, res_end)),
            MoreauPostscale<T>(invert_tau, tau));
 }
 

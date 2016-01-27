@@ -35,7 +35,6 @@ public:
   bool interleaved() const { return interleaved_; }
 
 protected:
-  
   size_t count_; 
   size_t dim_;
   bool interleaved_; // ordering of elements if dim > 1
