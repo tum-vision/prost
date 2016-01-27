@@ -58,7 +58,7 @@ void LinearOperator<T>::AddBlock(std::shared_ptr<Block<T> > block)
 }
 
 template<typename T>
-void LinearOperator<T>::Init() 
+void LinearOperator<T>::Initialize() 
 {
   // check if any two linear operators overlap
   nrows_ = 0;

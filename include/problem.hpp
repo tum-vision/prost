@@ -22,6 +22,13 @@ template<typename T>
 class Problem 
 {
 public:
+  enum Scaling
+  {
+    kScalingIdentity,
+    kScalingAlpha,
+    kScalingCustom,
+  };
+
   typedef std::vector<std::shared_ptr<Prox<T> > > ProxList;
 
   Problem();
@@ -35,17 +42,17 @@ public:
 
   // builds the linear operator and checks if prox cover the 
   // whole domain
-  void Init();
+  void Initialize();
   void Release();
 
   // sets a predefined problem scaling, has to be called after Init
-  void SetScalingPredefined(
+  void SetScalingCustom(
     const std::vector<T>& left, 
     const std::vector<T>& right);
 
   // computes a scaling using the Diagonal Preconditioners
   // proposed in Pock, Chambolle ICCV '11. Has to be called after Init.
-  void SetScalingAlphaPrecond(T alpha);
+  void SetScalingAlpha(T alpha);
 
   //
   void SetScalingIdentity();
@@ -68,8 +75,10 @@ protected:
   std::shared_ptr<LinearOperator<T> > linop_;
 
   // left/right preconditioners (D and E)
+  typename Problem<T>::Scaling scaling_type_;
   thrust::device_vector<T> scaling_left_; 
   thrust::device_vector<T> scaling_right_; 
+  T scaling_alpha_;
 
   // proximal operators (overcomplete)
   ProxList prox_f_;

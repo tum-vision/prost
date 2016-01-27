@@ -1,17 +1,20 @@
-% problem description
+nx = 256;
+ny = 256;
+nc = 3;
+N = nx * ny * nc;
+
+% create problem description
 prob = pdsolver_problem();
-prob.prox_g = {};
-prob.prox_fstar = {};
-prob.linop = {};
+prob.linop = { linop_zero(0, 0, 2 * N, N) };
+prob.prox_g = { prox_zero(0, N) };
+prob.prox_fstar = { prox_zero(0, 2 * N) };
 
-% backend options
-backend = pdsolver_backend_pdhg(... 
-    'tau0', 1, ...
-    'sigma0', 1);
+% create backend
+backend = pdsolver_backend_pdhg();
 
-% general solver options
+% specify solver options
 opts = pdsolver_options();
-opts.max_iters = 1000;
 
 % solve problem
-sol = pdsolver(prob, backend, opts);
+solution = pdsolver(prob, backend, opts);
+

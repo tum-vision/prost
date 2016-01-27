@@ -2,8 +2,10 @@
 
 #include <algorithm>
 #include <iostream>
+#include <list>
 #include <sstream>
 #include "backend/backend.hpp"
+#include "problem.hpp"
 
 using std::cout;
 using std::endl;
@@ -27,7 +29,7 @@ linspace(T start_in, T end_in, int num_in)
 }
 
 template<typename T>
-Solver<T>::Solver(std::shared_ptr<Problem> problem, std::shared_ptr<Backend> backend) 
+Solver<T>::Solver(std::shared_ptr<Problem<T> > problem, std::shared_ptr<Backend<T> > backend) 
   : problem_(problem), backend_(backend)
 {
 }
@@ -51,18 +53,28 @@ Solver<T>::SetOptions(const typename Solver<T>::Options& opts)
 
 template<typename T>
 void 
-Solver<T>::SetStoppingCallback(const StoppingCallback& cb)
+Solver<T>::SetStoppingCallback(const typename Solver<T>::StoppingCallback& cb)
 {
-  stopping_callback_ = cb;
+  stopping_cb_ = cb;
 }
 
 template<typename T>
-bool 
-Solver<T>::Initialize(
-) 
+void 
+Solver<T>::SetIntermCallback(const typename Solver<T>::IntermCallback& cb)
 {
-  problem_->Init();
-  backend_->Init();
+  interm_cb_ = cb;
+}
+
+
+template<typename T>
+void
+Solver<T>::Initialize() 
+{
+  problem_->Initialize();
+  backend_->Initialize();
+
+  cur_primal_sol_.resize( problem_->ncols() );
+  cur_dual_sol_.resize( problem_->nrows() );
 
   if(opts_.verbose) 
   {
@@ -119,7 +131,7 @@ Solver<T>::Solve()
       if(opts_.verbose)
         std::cout << "Reached convergence tolerance." << std::endl;
 
-      return Solver<T>::ConvergenceResult::CONVERGED;
+      return Solver<T>::ConvergenceResult::kConverged;
     }
 
     if(stopping_cb_())
@@ -127,14 +139,14 @@ Solver<T>::Solve()
       if(opts_.verbose)
         std::cout << "Terminated by user-input." << std::endl;
 
-      return Solver<T>::ConvergenceResult::STOPPED_USER;
+      return Solver<T>::ConvergenceResult::kStoppedUser;
     }
   }
 
   if(opts_.verbose)
     std::cout << "Reached maximum number of iterations." << std::endl;
 
-  return Solver<T>::ConvergenceResult::STOPPED_MAX_ITERS;
+  return Solver<T>::ConvergenceResult::kStoppedMaxIters;
 }
 
 template<typename T>
@@ -144,3 +156,7 @@ Solver<T>::Release()
   problem_->Release();
   backend_->Release();
 }
+
+// Explicit template instantiation
+template class Solver<float>;
+template class Solver<double>;
