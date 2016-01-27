@@ -121,9 +121,81 @@ void ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<has_coeffs<ELE
              this->interleaved_);
   }
 
+
+
 // Explicit template instantiation
 template class ProxElemOperation<float, ElemOperation1D<float, Function1DZero<float>>>;
-template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DZero<float>>>;
 template class ProxElemOperation<float, ElemOperation1D<float, Function1DAbs<float>>>;
+template class ProxElemOperation<float, ElemOperation1D<float, Function1DSquare<float>>>;
+template class ProxElemOperation<float, ElemOperation1D<float, Function1DIndLeq0<float>>>;
+template class ProxElemOperation<float, ElemOperation1D<float, Function1DIndGeq0<float>>>;
+template class ProxElemOperation<float, ElemOperation1D<float, Function1DIndEq0<float>>>;
+template class ProxElemOperation<float, ElemOperation1D<float, Function1DIndBox01<float>>>;
+template class ProxElemOperation<float, ElemOperation1D<float, Function1DMaxPos0<float>>>;
+template class ProxElemOperation<float, ElemOperation1D<float, Function1DL0<float>>>;
+template class ProxElemOperation<float, ElemOperation1D<float, Function1DHuber<float>>>;
+
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DZero<float>>>;
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DAbs<float>>>;
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DSquare<float>>>;
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DIndLeq0<float>>>;
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DIndGeq0<float>>>;
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DIndEq0<float>>>;
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DIndBox01<float>>>;
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DMaxPos0<float>>>;
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DL0<float>>>;
 template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DHuber<float>>>;
+
+template class ProxElemOperation<float, ElemOperationSimplex<float, 2>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 3>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 4>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 5>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 6>>;
 template class ProxElemOperation<float, ElemOperationSimplex<float, 7>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 8>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 9>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 10>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 11>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 12>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 13>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 14>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 15>>;
+template class ProxElemOperation<float, ElemOperationSimplex<float, 16>>;
+
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DZero<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DAbs<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DSquare<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DIndLeq0<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DIndGeq0<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DIndEq0<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DIndBox01<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DMaxPos0<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DL0<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DHuber<double>>>;
+
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DZero<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DAbs<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DSquare<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DIndLeq0<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DIndGeq0<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DIndEq0<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DIndBox01<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DMaxPos0<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DL0<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DHuber<double>>>;
+
+template class ProxElemOperation<double, ElemOperationSimplex<double, 2>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 3>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 4>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 5>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 6>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 7>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 8>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 9>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 10>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 11>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 12>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 13>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 14>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 15>>;
+template class ProxElemOperation<double, ElemOperationSimplex<double, 16>>;

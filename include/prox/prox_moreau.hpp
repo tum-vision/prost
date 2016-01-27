@@ -19,7 +19,6 @@ template<typename T>
 class ProxMoreau : public prox::Prox<T> {
 public:
   ProxMoreau(std::unique_ptr<prox::Prox<T>> conjugate);
-  virtual ~ProxMoreau();
 
   virtual void Init();
 

@@ -27,14 +27,20 @@ struct ElemOperationSimplex : public ElemOperation<DIM> {
   static const size_t shared_mem_count = DIM;
   typedef T shared_mem_type;
     
-//  struct Coefficients {
-//    T a[DIM];
-//  };
+  struct Coefficients {
+    T a[DIM];
+  };
   
-// __device__ ElemOperationSimplex(Coefficients& coeffs) : coeffs_(coeffs) {} 
-   __device__ ElemOperationSimplex(size_t dim, SharedMem<ElemOperationSimplex<T, DIM>>& shared_mem) : shared_mem_(shared_mem) {} 
+#ifdef __CUDACC__
+__device__
+ #endif
+  ElemOperationSimplex(Coefficients& coeffs, size_t dim, SharedMem<ElemOperationSimplex<T, DIM>>& shared_mem) : coeffs_(coeffs), shared_mem_(shared_mem) {} 
   
-  inline __device__ void operator()(Vector<T, ElemOperationSimplex<T, DIM>>& arg, Vector<T, ElemOperationSimplex<T, DIM>>& res, Vector<T, ElemOperationSimplex<T, DIM>>& tau_diag, T tau_scal, bool invert_tau) {
+  inline 
+#ifdef __CUDACC__
+__device__
+ #endif
+  void operator()(Vector<T, ElemOperationSimplex<T, DIM>>& arg, Vector<T, ElemOperationSimplex<T, DIM>>& res, Vector<T, ElemOperationSimplex<T, DIM>>& tau_diag, T tau_scal, bool invert_tau) {
 
       // 1) read dim-dimensional vector into shared memory
       for(size_t i = 0; i < DIM; i++) {
@@ -44,17 +50,20 @@ struct ElemOperationSimplex : public ElemOperation<DIM> {
         T val = arg[i];
 
 
-//          T tau = tau_scal * tau_diag[i];
+        T tau = tau_scal * tau_diag[i];
 
- //         if(invert_tau)
-   //         tau = 1. / tau;
+        if(invert_tau)
+            tau = 1. / tau;
 
-     //     val -= tau * coeffs_.a[i];
+        val -= tau * coeffs_.a[i];
 
 
         shared_mem_[i] = val;
       }
+      #ifdef __CUDACC__
       __syncthreads();
+      #endif 
+      
 
       // 2) sort inside shared memory
       shellsort(&shared_mem_[0], DIM);
@@ -78,19 +87,22 @@ struct ElemOperationSimplex : public ElemOperation<DIM> {
       for(int i = 0; i < DIM; i++) {
         T val = arg[i];
 
-       //   T tau = tau_scal * tau_diag[i];
+        T tau = tau_scal * tau_diag[i];
 
-       //   if(invert_tau)
-       //     tau = 1. / tau;
+        if(invert_tau)
+            tau = 1. / tau;
 
-        //  val -= tau * coeffs_.a[i];
+        val -= tau * coeffs_.a[i];
 
 
         res[i] = cuwrap::max<T>(val - tmax, 0);
       }  
   }
   
-  __device__ void shellsort(T *a, int N) {
+    #ifdef __CUDACC__
+    __device__
+    #endif
+    void shellsort(T *a, int N) {
       const int gaps[6] = { 132, 57, 23, 10, 4, 1 };
 
       for(int k = 0; k < 6; k++) {
@@ -109,7 +121,7 @@ struct ElemOperationSimplex : public ElemOperation<DIM> {
   }
     
 private:
-  //Coefficients& coeffs_;
+  Coefficients& coeffs_;
   SharedMem<ElemOperationSimplex<T, DIM>>& shared_mem_;
 };
 }

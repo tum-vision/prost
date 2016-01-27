@@ -19,6 +19,8 @@ void Prox<T>::Eval(thrust::device_vector<T>& arg, thrust::device_vector<T>& res,
             false);
 }
 
+
+
 // Explicit template instantiation
 template class Prox<float>;
 template class Prox<double>;
