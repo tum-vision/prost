@@ -8,16 +8,16 @@ ProxZero<T>::ProxZero(size_t index, size_t size) :
 }
 
 template<typename T>
-void ProxZero<T>::EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
-                         typename thrust::device_vector<T>::iterator d_arg_end,
-                         typename thrust::device_vector<T>::iterator d_res_begin,
-                         typename thrust::device_vector<T>::iterator d_res_end,
-                         typename thrust::device_vector<T>::iterator d_tau_begin,
-                         typename thrust::device_vector<T>::iterator d_tau_end,
+void ProxZero<T>::EvalLocal(const typename thrust::device_vector<T>::iterator& arg_begin,
+                         const typename thrust::device_vector<T>::iterator& arg_end,
+                         const typename thrust::device_vector<T>::iterator& res_begin,
+                         const typename thrust::device_vector<T>::iterator& res_end,
+                         const typename thrust::device_vector<T>::iterator& tau_begin,
+                         const typename thrust::device_vector<T>::iterator& tau_end,
                          T tau,
                          bool invert_tau) {
-  thrust::copy(d_arg_begin, d_arg_end,
-             d_res_begin);
+  thrust::copy(arg_begin, arg_end,
+             res_begin);
 }
 
 template<typename T>

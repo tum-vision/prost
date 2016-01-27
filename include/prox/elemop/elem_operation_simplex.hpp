@@ -31,10 +31,10 @@ struct ElemOperationSimplex : public ElemOperation<DIM> {
 //    T a[DIM];
 //  };
   
-//  __device__ ElemOperationSimplex(Coefficients& coeffs) : coeffs_(coeffs) {} 
-   __device__ ElemOperationSimplex() {} 
+// __device__ ElemOperationSimplex(Coefficients& coeffs) : coeffs_(coeffs) {} 
+   __device__ ElemOperationSimplex(size_t dim, SharedMem<ElemOperationSimplex<T, DIM>>& shared_mem) : shared_mem_(shared_mem) {} 
   
-  inline __device__ void operator()(Vector<T, ElemOperationSimplex<T, DIM>>& arg, Vector<T, ElemOperationSimplex<T, DIM>>& res, Vector<T, ElemOperationSimplex<T, DIM>>& tau_diag, T tau_scal, bool invert_tau, SharedMem<ElemOperationSimplex<T, DIM>>& shared_mem) {
+  inline __device__ void operator()(Vector<T, ElemOperationSimplex<T, DIM>>& arg, Vector<T, ElemOperationSimplex<T, DIM>>& res, Vector<T, ElemOperationSimplex<T, DIM>>& tau_diag, T tau_scal, bool invert_tau) {
 
       // 1) read dim-dimensional vector into shared memory
       for(size_t i = 0; i < DIM; i++) {
@@ -52,27 +52,27 @@ struct ElemOperationSimplex : public ElemOperation<DIM> {
      //     val -= tau * coeffs_.a[i];
 
 
-        shared_mem[i] = val;
+        shared_mem_[i] = val;
       }
       __syncthreads();
 
       // 2) sort inside shared memory
-      shellsort(&shared_mem[0], DIM);
+      shellsort(&shared_mem_[0], DIM);
 
       bool bget = false;
       T tmpsum = 0;
       T tmax;
       for(int ii=1;ii<=DIM-1;ii++) {
-        tmpsum += shared_mem[ii - 1];
+        tmpsum += shared_mem_[ii - 1];
         tmax = (tmpsum - 1.) / (T)ii;
-        if(tmax >= shared_mem[ii]){
+        if(tmax >= shared_mem_[ii]){
           bget=true;
           break;
         }
       }
 
       if(!bget)
-        tmax = (tmpsum + shared_mem[DIM - 1] - 1.0) / (T)DIM;
+        tmax = (tmpsum + shared_mem_[DIM - 1] - 1.0) / (T)DIM;
 
       // 3) return result
       for(int i = 0; i < DIM; i++) {
@@ -110,6 +110,7 @@ struct ElemOperationSimplex : public ElemOperation<DIM> {
     
 private:
   //Coefficients& coeffs_;
+  SharedMem<ElemOperationSimplex<T, DIM>>& shared_mem_;
 };
 }
 }

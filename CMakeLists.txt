@@ -27,9 +27,12 @@ file(GLOB SOURCES
   "src/prox/*.cu"
   "src/prox/elemop/*.cpp"
   "src/prox/elemop/*.cu"
+  "src/linop/*.cpp"
+  "src/linop/*.cu"
   "include/*.hpp"
   "include/prox/*.hpp"
   "include/prox/elemop/*.hpp"
+  "include/linop/*.hpp"
   "include/util/*.hpp"
   )
   

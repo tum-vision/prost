@@ -42,7 +42,7 @@ class ProxElemOperation {};
 template<typename T, class ELEM_OPERATION>
 class ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<!has_coeffs<ELEM_OPERATION>::value>::type> : public ProxSeparableSum<T> {
 public:    
-  ProxElemOperation(size_t index, size_t count, bool interleaved, bool diagsteps) : ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim, interleaved, diagsteps) {}
+  ProxElemOperation(size_t index, size_t count, size_t dim, bool interleaved, bool diagsteps) : ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim <= 0 ? dim : ELEM_OPERATION::dim, interleaved, diagsteps) {}
 
   /**
    * @brief Initializes the prox Operator, copies data to the GPU.
@@ -60,7 +60,7 @@ public:
 protected:
   /**
    * @brief Evaluates the prox operator on the GPU, local meaning that
-   *        d_arg, d_res and d_tau point to the place in memory where the
+   *        arg, res and tau point to the place in memory where the
    *        prox begins.
    *
    * @param Proximal operator argument.
@@ -70,12 +70,12 @@ protected:
    * @param Perform the prox with inverted step sizes?
    *
    */
-  virtual void EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
-                         typename thrust::device_vector<T>::iterator d_arg_end,
-                         typename thrust::device_vector<T>::iterator d_res_begin,
-                         typename thrust::device_vector<T>::iterator d_res_end,
-                         typename thrust::device_vector<T>::iterator d_tau_begin,
-                         typename thrust::device_vector<T>::iterator d_tau_end,
+  virtual void EvalLocal(const typename thrust::device_vector<T>::iterator& arg_begin,
+                         const typename thrust::device_vector<T>::iterator& arg_end,
+                         const typename thrust::device_vector<T>::iterator& res_begin,
+                         const typename thrust::device_vector<T>::iterator& res_end,
+                         const typename thrust::device_vector<T>::iterator& tau_begin,
+                         const typename thrust::device_vector<T>::iterator& tau_end,
                          T tau,
                          bool invert_tau);
 };
@@ -83,7 +83,7 @@ protected:
 template<typename T, class ELEM_OPERATION>
 class ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<has_coeffs<ELEM_OPERATION>::value>::type> : public ProxSeparableSum<T> {
 public:    
-  ProxElemOperation(size_t index, size_t count, bool interleaved, bool diagsteps, const std::vector<typename ELEM_OPERATION::Coefficients>& coeffs) : ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim, interleaved, diagsteps), coeffs_(coeffs){}
+  ProxElemOperation(size_t index, size_t count, size_t dim, bool interleaved, bool diagsteps, const std::vector<typename ELEM_OPERATION::Coefficients>& coeffs) : ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim == 0 ? dim : ELEM_OPERATION::dim, interleaved, diagsteps), coeffs_(coeffs) {}
 
   /**
    * @brief Initializes the prox Operator, copies data to the GPU.
@@ -120,12 +120,12 @@ protected:
    * @param Perform the prox with inverted step sizes?
    *
    */
-  virtual void EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
-                         typename thrust::device_vector<T>::iterator d_arg_end,
-                         typename thrust::device_vector<T>::iterator d_res_begin,
-                         typename thrust::device_vector<T>::iterator d_res_end,
-                         typename thrust::device_vector<T>::iterator d_tau_begin,
-                         typename thrust::device_vector<T>::iterator d_tau_end,
+  virtual void EvalLocal(const typename thrust::device_vector<T>::iterator& arg_begin,
+                         const typename thrust::device_vector<T>::iterator& arg_end,
+                         const typename thrust::device_vector<T>::iterator& res_begin,
+                         const typename thrust::device_vector<T>::iterator& res_end,
+                         const typename thrust::device_vector<T>::iterator& tau_begin,
+                         const typename thrust::device_vector<T>::iterator& tau_end,
                          T tau,
                          bool invert_tau);
   

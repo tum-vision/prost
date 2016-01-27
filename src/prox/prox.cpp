@@ -8,13 +8,13 @@ Prox<T>::~Prox() {
 }
 
 template<typename T>
-void Prox<T>::Eval(thrust::device_vector<T> d_arg, thrust::device_vector<T> d_res, thrust::device_vector<T> d_tau, T tau) {
-  EvalLocal(d_arg.begin() + index_,
-            d_arg.begin() + index_ + size_,
-            d_res.begin() + index_,
-            d_res.begin() + index_ + size_,
-            d_tau.begin() + index_,
-            d_tau.begin() + index_ + size_,
+void Prox<T>::Eval(thrust::device_vector<T>& arg, thrust::device_vector<T>& res, thrust::device_vector<T>& tau_diag, T tau) {
+  EvalLocal(arg.begin() + index_,
+            arg.begin() + index_ + size_,
+            res.begin() + index_,
+            res.begin() + index_ + size_,
+            tau_diag.begin() + index_,
+            tau_diag.begin() + index_ + size_,
             tau,
             false);
 }

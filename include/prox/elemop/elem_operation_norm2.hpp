@@ -12,19 +12,19 @@
  */
 namespace prox {
 namespace elemop {
-template<typename T, size_t DIM, class FUN_1D>
-struct ElemOperationNorm2 : public ElemOperation<DIM> {
+template<typename T, class FUN_1D>
+struct ElemOperationNorm2 : public ElemOperation<0> {
 
  struct Coefficients : public Coefficients1D<T> {};
 
- __device__ ElemOperationNorm2(Coefficients& coeffs) : coeffs_(coeffs) {} 
+ __device__ ElemOperationNorm2(Coefficients& coeffs, size_t dim, SharedMem<ElemOperationNorm2<T, FUN_1D>>& shared_mem) : coeffs_(coeffs), dim_(dim) {} 
  
  
- inline __device__ void operator()(Vector<T, ElemOperationNorm2<T, DIM, FUN_1D>>& arg, Vector<T, ElemOperationNorm2<T, DIM, FUN_1D>>& res, Vector<T,ElemOperationNorm2<T, DIM, FUN_1D>>& tau_diag, T tau_scal, bool invert_tau, SharedMem<ElemOperationNorm2<T, DIM, FUN_1D>>& shared_mem) {
+ inline __device__ void operator()(Vector<T, ElemOperationNorm2<T, FUN_1D>>& arg, Vector<T, ElemOperationNorm2<T, FUN_1D>>& res, Vector<T,ElemOperationNorm2<T, FUN_1D>>& tau_diag, T tau_scal, bool invert_tau) {
     // compute dim-dimensional 2-norm at each point
     T norm = 0;
 
-    for(size_t i = 0; i < DIM; i++) {
+    for(size_t i = 0; i < dim_; i++) {
       const T val = arg[i];
       norm += val * val;
     }
@@ -50,11 +50,11 @@ struct ElemOperationNorm2 : public ElemOperation<DIM> {
                              coeffs_.b) / coeffs_.a;
 
       // combine together for result
-      for(size_t i = 0; i < DIM; i++) {
+      for(size_t i = 0; i < dim_; i++) {
         res[i] = prox_result * arg[i] / norm;
       }
     } else { // in that case, the result is zero. 
-      for(size_t i = 0; i < DIM; i++) {
+      for(size_t i = 0; i < dim_; i++) {
         res[i] = 0;
       }
     }
@@ -62,6 +62,7 @@ struct ElemOperationNorm2 : public ElemOperation<DIM> {
    
 private:
   Coefficients& coeffs_;
+  size_t dim_;
 };
 }
 }

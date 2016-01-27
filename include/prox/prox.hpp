@@ -5,6 +5,9 @@
 #include <thrust/device_vector.h>
 
 
+namespace prox {
+template<typename T> class ProxMoreau;
+
 /**
  * @brief Virtual base class for all proximal operators. Implements prox
  *        for sum of separable functions:
@@ -20,9 +23,6 @@
  *        chunks of count_ many elements.
  *
  */
-namespace prox {
-template<typename T> class ProxMoreau;
-    
 template<typename T>
 class Prox {
   friend class ProxMoreau<T>;
@@ -53,15 +53,15 @@ public:
   virtual void Release() {}
 
   /**
-   * @brief Evaluates the prox operator on the GPU. d_arg, d_result and
-   *        d_tau are all pointers pointing to the whole vector in memory.
+   * @brief Evaluates the prox operator on the GPU. arg, result and
+   *        tau are all pointers pointing to the whole vector in memory.
    *
    * @param Proximal operator argument.
    * @param Result of prox.
    * @param Scalar step size.
    * @param Diagonal step sizes.
    */
-  void Eval(thrust::device_vector<T> d_arg, thrust::device_vector<T> d_res, thrust::device_vector<T> d_tau, T tau);
+  void Eval(thrust::device_vector<T>& arg, thrust::device_vector<T>& res, thrust::device_vector<T>& tau_diag, T tau);
 
   // set/get methods
   virtual size_t gpu_mem_amount() = 0;  
@@ -73,7 +73,7 @@ public:
 protected:
   /**
    * @brief Evaluates the prox operator on the GPU, local meaning that
-   *        d_arg, d_res and d_tau point to the place in memory where the
+   *        arg, res and tau point to the place in memory where the
    *        prox begins.
    *
    * @param Proximal operator argument.
@@ -83,12 +83,12 @@ protected:
    * @param Perform the prox with inverted step sizes?
    *
    */
-  virtual void EvalLocal(typename thrust::device_vector<T>::iterator d_arg_begin,
-                         typename thrust::device_vector<T>::iterator d_arg_end,
-                         typename thrust::device_vector<T>::iterator d_res_begin,
-                         typename thrust::device_vector<T>::iterator d_res_end,
-                         typename thrust::device_vector<T>::iterator d_tau_begin,
-                         typename thrust::device_vector<T>::iterator d_tau_end,
+  virtual void EvalLocal(const typename thrust::device_vector<T>::iterator& arg_begin,
+                         const typename thrust::device_vector<T>::iterator& arg_end,
+                         const typename thrust::device_vector<T>::iterator& res_begin,
+                         const typename thrust::device_vector<T>::iterator& res_end,
+                         const typename thrust::device_vector<T>::iterator& tau_begin,
+                         const typename thrust::device_vector<T>::iterator& tau_end,
                          T tau,
                          bool invert_tau) = 0;
   
