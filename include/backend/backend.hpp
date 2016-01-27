@@ -12,12 +12,10 @@ template<typename T> class Problem;
 template<typename T>
 class Backend {
 public:
-  Backend(std::shared_ptr<Problem<T> > problem)
-    : problem_(problem)
-  {
-  }
-
+  Backend() {}
   virtual ~Backend() { }
+
+  void SetProblem(std::shared_ptr<Problem<T> > problem) { problem_ = problem; }
 
   virtual void Initialize() = 0;
   virtual void PerformIteration() = 0;

@@ -21,7 +21,7 @@ class LinearOperator {
 
   void AddBlock(std::shared_ptr<Block<T> > block);
   
-  void Init();
+  void Initialize();
   void Release();
 
   void Eval(

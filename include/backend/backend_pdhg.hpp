@@ -2,6 +2,7 @@
 #define BACKEND_PDHG_HPP_
 
 #include <thrust/device_vector.h>
+#include "backend/backend.hpp"
 
 ///
 /// \brief Implementation of the primal-dual hybrid-gradient method.
@@ -20,10 +21,10 @@ public:
     kPDHGStepsAlg2,
 
     /// \brief Residual balancing scheme from "Goldstein, Esser" paper.
-    kPDHGStepsResidualBalance,
+    kPDHGStepsResidualGoldstein,
 
     /// \brief Residual converging scheme from "Fougner, Boyd" paper
-    kPDHGStepsResidualConverge,
+    kPDHGStepsResidualBoyd,
 
     /// \brief User-defined step size scheme via callback function.
     kPDHGStepsCallback,
@@ -55,17 +56,19 @@ public:
     T alg2_gamma;
 
     /// \brief Parameters for residual balancing step size scheme.
-    T arb_alpha0, arb_nu, arb_delta;
+    T arg_alpha0, arg_nu, arg_delta;
 
     /// \brief Parameters for residual converging step size scheme.
-    T arc_delta, arc_tau;
+    T arb_delta, arb_tau;
+
+    /// \brief Type of step-size scheme.
+    typename BackendPDHG<T>::StepsizeVariant stepsize_variant;
   };
 
-  BackendPDHG(std::shared_ptr<Problem<T> > problem);
+  BackendPDHG(const typename BackendPDHG<T>::Options& opts);
   virtual ~BackendPDHG();
 
-  void SetOptions(typename const BackendPDHG<T>::Options& opts);
-  void SetStepsizeCallback(typename const BackendPDHG<T>::StepsizeCallback& cb);
+  void SetStepsizeCallback(const typename BackendPDHG<T>::StepsizeCallback& cb);
 
   virtual void Initialize();
   virtual void PerformIteration();

@@ -5,8 +5,8 @@
 #include <vector>
 #include <string>
 
-class Problem;
-class Backend;
+template<typename T> class Problem;
+template<typename T> class Backend;
 
 /// 
 /// \brief Solver for graph-form problems.
@@ -41,28 +41,31 @@ public:
   };
 
   enum ConvergenceResult {
-    CONVERGED, 
-    STOPPED_MAX_ITERS,
-    STOPPED_USER,
+    kConverged,
+    kStoppedMaxIters,
+    kStoppedUser
   };
 
   /// \brief Intermediate solution callback. Arguments: (iteration, primal_solution, dual_solution). 
-  typedef std::function<void(int, const std::vector<double>&, const std::vector<double>&)> IntermCallback;
+  typedef std::function<void(int, const std::vector<T>&, const std::vector<T>&)> IntermCallback;
 
-  /// \brief Stopping callback. Returns true if the solver should be terminated 
+  /// \brief Stopping callback. Used to terminate the solver
   ///        prematurely (i.e. by user input from Matlab).
   typedef std::function<bool()> StoppingCallback;
   
-  Solver(std::shared_ptr<Problem> problem, std::shared_ptr<Backend> backend);
+  Solver(std::shared_ptr<Problem<T> > problem, std::shared_ptr<Backend<T> > backend);
   virtual ~Solver();
 
   void Initialize();
   typename Solver<T>::ConvergenceResult Solve();
   void Release();
 
-  void SetOptions(const SolverOptions &opts);
-  void SetStoppingCallback(const StoppingCallback& cb);
-  void SetIntermCallback(const IntermCallback& cb);
+  void SetOptions(const typename Solver<T>::Options &opts);
+  void SetStoppingCallback(const typename Solver<T>::StoppingCallback& cb);
+  void SetIntermCallback(const typename Solver<T>::IntermCallback& cb);
+
+  const std::vector<T>& cur_primal_sol() const { return cur_primal_sol_; }
+  const std::vector<T>& cur_dual_sol() const { return cur_dual_sol_; }
   
 protected:
   Solver<T>::Options opts_;
@@ -72,8 +75,8 @@ protected:
   std::vector<T> cur_primal_sol_;
   std::vector<T> cur_dual_sol_;
 
-  IntermSolCallback interm_cb_;
-  StoppingCallback stopping_cb_; // callback which allows for user input to stop the solver
+  typename Solver<T>::IntermCallback interm_cb_;
+  typename Solver<T>::StoppingCallback stopping_cb_;
 };
 
 #endif

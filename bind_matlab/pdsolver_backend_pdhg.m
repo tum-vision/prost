@@ -1,21 +1,24 @@
 function [backend] = pdsolver_backend_pdhg(varargin)
 
-    % opts = struct('backend', 'pdhg', 'max_iters', 5000, 'cb_iters', 10, ...
-    %               'tol_primal', 1.0, 'tol_dual', 1.0, 'adapt_type', 'none', 'ads_gamma', 0, ...
-    %               'adb_alpha0', 0.5, 'adb_nu', 0.95, 'adb_delta', 1.5, 'adb_s', 1, 'precond', 'off', ...
-    %               'precond_alpha', 1, 'verbose', false, 'callback', ...
-    %               dummy_cb, 'bt_enabled', 0, 'bt_beta', 0.95, ...
-    %               'bt_gamma', 0.75, 'adc_delta', 1.05, 'adc_tau', ...
-    %               0.8, 'sigma0', 1, 'tau0', 1);
+    dummy_cb = @(it, res_primal, res_dual, tau, sigma) [tau, sigma];
     
     p = inputParser;
     addOptional(p, 'tau0', 1);
     addOptional(p, 'sigma0', 1);
-    
-    pdhg_opts = struct(...
-        'tau0', p.Results.tau0, ...
-        'sigma0', p.Results.sigma0);
-    
-    backend = { 'pdhg', pdhg_opts };
+    addOptional(p, 'solve_dual', false);
+    addOptional(p, 'residual_iter', 25);
+    addOptional(p, 'scale_steps_operator', true);
+    addOptional(p, 'alg2_gamma', 0);
+    addOptional(p, 'arg_alpha0', 0.5);
+    addOptional(p, 'arg_nu', 0.95);
+    addOptional(p, 'arg_delta', 1.5);
+    addOptional(p, 'arb_delta', 1.05);
+    addOptional(p, 'arb_tau', 0.8);
+    addOptional(p, 'stepsize', 'boyd');
+    addOptional(p, 'stepsize_callback', dummy_cb);
+   
+    p.parse(varargin{:});
+   
+    backend = { 'pdhg', p.Results };
 
 end

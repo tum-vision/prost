@@ -1,4 +1,4 @@
-#include "solver/problem.hpp"
+#include "problem.hpp"
 
 #include <algorithm>
 
@@ -90,9 +90,9 @@ void Problem<T>::AddProx_fstar(Prox<T> *prox)
 // builds the linear operator and checks if prox cover the 
 // whole domain
 template<typename T>
-void Problem<T>::Init()
+void Problem<T>::Initialize()
 {
-  linop_->Init();
+  linop_->Initialize();
   nrows_ = linop_->nrows();
   ncols_ = linop_->ncols();
 
@@ -149,10 +149,12 @@ void Problem<T>::Release()
 
 // sets a predefined problem scaling
 template<typename T>
-void Problem<T>::SetScalingPredefined(
+void Problem<T>::SetScalingCustom(
   const std::vector<T>& left, 
   const std::vector<T>& right)
 {
+  scaling_type_ = Problem<T>::Scaling::kScalingCustom;
+
   scaling_left_ = thrust::device_vector<T>(left.begin(), left.end());
   scaling_right_ = thrust::device_vector<T>(right.begin(), right.end());
 
@@ -163,17 +165,16 @@ void Problem<T>::SetScalingPredefined(
 // computes a scaling using the Diagonal Preconditioners
 // proposed in Pock, Chambolle ICCV '11.
 template<typename T>
-void Problem<T>::SetScalingAlphaPrecond(T alpha)
+void Problem<T>::SetScalingAlpha(T alpha)
 {
-  // TODO
-  throw new Exception("alpha-Preconditioners not implemented yet.");
+  scaling_type_ = Problem<T>::Scaling::kScalingAlpha;
+  scaling_alpha_ = alpha;
 }
 
 template<typename T>
 void Problem<T>::SetScalingIdentity()
 {
-  scaling_left_ = thrust::device_vector<T>(nrows_, static_cast<T>(1));
-  scaling_right_ = thrust::device_vector<T>(ncols_, static_cast<T>(1));
+  scaling_type_ = Problem<T>::Scaling::kScalingIdentity;
 }
 
 // Explicit template instantiation

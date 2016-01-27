@@ -11,7 +11,8 @@
  *
  */
 template<typename T>
-class BlockZero : public Block<T> {
+class BlockZero : public Block<T> 
+{
 public:
   BlockZero(size_t row, size_t col, size_t nrows, size_t ncols);
   virtual ~BlockZero();
@@ -19,14 +20,16 @@ public:
   virtual T row_sum(size_t row, T alpha) const { return 0; }
   virtual T col_sum(size_t col, T alpha) const { return 0; }
 
+  virtual size_t gpu_mem_amount() const { return 0; }
+
 protected:
   virtual void EvalLocalAdd(
     const thrust::device_ptr<T>& result, 
-    const thrust::device_ptr<T>& rhs) = 0;
+    const thrust::device_ptr<T>& rhs);
 
   virtual void EvalAdjointLocalAdd(
     const thrust::device_ptr<T>& result, 
-    const thrust::device_ptr<T>& rhs) = 0;
+    const thrust::device_ptr<T>& rhs);
 };
 
 #endif
