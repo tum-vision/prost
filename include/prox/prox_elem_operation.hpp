@@ -4,11 +4,11 @@
 #include <stddef.h>
 
 #include "prox_separable_sum.hpp"
+#include "prox/elemop/elem_operation_1d.hpp"
+#include "prox/elemop/elem_operation_norm2.hpp"
+#include "prox/elemop/elem_operation_simplex.hpp"
+#include "prox/elemop/function_1d.hpp"
 #include "elemop/vector.hpp"
-#include "elemop/elem_operation_1d.hpp"
-#include "elemop/elem_operation_norm2.hpp"
-#include "elemop/elem_operation_simplex.hpp"
-#include "elemop/function_1d.hpp"
 #include "../pdsolver_exception.hpp"
 
 /**
@@ -44,14 +44,6 @@ class ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<!has_coeffs<E
 public:    
   ProxElemOperation(size_t index, size_t count, size_t dim, bool interleaved, bool diagsteps) : ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim <= 0 ? dim : ELEM_OPERATION::dim, interleaved, diagsteps) {}
 
-  /**
-   * @brief Initializes the prox Operator, copies data to the GPU.
-   *
-   */
-  virtual void Init() {
-  }
-
-  virtual void Release();
   
   // set/get methods
   virtual size_t gpu_mem_amount() {
@@ -83,7 +75,14 @@ protected:
 template<typename T, class ELEM_OPERATION>
 class ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<has_coeffs<ELEM_OPERATION>::value>::type> : public ProxSeparableSum<T> {
 public:    
-  ProxElemOperation(size_t index, size_t count, size_t dim, bool interleaved, bool diagsteps, const std::vector<typename ELEM_OPERATION::Coefficients>& coeffs) : ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim == 0 ? dim : ELEM_OPERATION::dim, interleaved, diagsteps), coeffs_(coeffs) {}
+  ProxElemOperation(size_t index, 
+          size_t count, 
+          size_t dim, 
+          bool interleaved, 
+          bool diagsteps, 
+          const std::vector<typename ELEM_OPERATION::Coefficients>& coeffs) :
+      ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim <= 0 ? dim : ELEM_OPERATION::dim, interleaved, diagsteps), 
+              coeffs_(coeffs) {}
 
   /**
    * @brief Initializes the prox Operator, copies data to the GPU.
@@ -98,8 +97,6 @@ public:
         throw PDSolverException();
     }
   }
-
-  virtual void Release();
   
   // set/get methods
   virtual size_t gpu_mem_amount() {

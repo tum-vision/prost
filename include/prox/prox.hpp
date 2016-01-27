@@ -62,7 +62,8 @@ public:
    * @param Diagonal step sizes.
    */
   void Eval(thrust::device_vector<T>& arg, thrust::device_vector<T>& res, thrust::device_vector<T>& tau_diag, T tau);
-
+  
+  void Eval(std::vector<T>& arg, std::vector<T>& res, std::vector<T>& tau_diag, T tau);
   // set/get methods
   virtual size_t gpu_mem_amount() = 0;  
   size_t index() const { return index_; }
