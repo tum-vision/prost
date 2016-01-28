@@ -57,9 +57,9 @@ public:
   //
   void SetScalingIdentity();
 
-  std::weak_ptr<LinearOperator<T> > linop() const { return std::weak_ptr<LinearOperator<T> >(linop_); }
-  thrust::device_ptr<const T> scaling_left() const { return &scaling_left_[0]; }
-  thrust::device_ptr<const T> scaling_right() const { return &scaling_right_[0]; }
+  std::shared_ptr<LinearOperator<T> > linop() const { return linop_; }
+  thrust::device_vector<T>& scaling_left() { return scaling_left_; }
+  thrust::device_vector<T>& scaling_right() { return scaling_right_; }
   const ProxList& prox_f() const { return prox_f_; }
   const ProxList& prox_g() const { return prox_g_; }
   const ProxList& prox_fstar() const { return prox_fstar_; }
@@ -77,7 +77,9 @@ protected:
   // left/right preconditioners (D and E)
   typename Problem<T>::Scaling scaling_type_;
   thrust::device_vector<T> scaling_left_; 
-  thrust::device_vector<T> scaling_right_; 
+  thrust::device_vector<T> scaling_right_;
+  std::vector<T> scaling_left_custom_;
+  std::vector<T> scaling_right_custom_;
   T scaling_alpha_;
 
   // proximal operators (overcomplete)

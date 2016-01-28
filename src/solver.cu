@@ -1,6 +1,7 @@
 #include "solver.hpp"
 
 #include <algorithm>
+#include <iomanip>
 #include <iostream>
 #include <list>
 #include <sstream>
@@ -71,6 +72,9 @@ void
 Solver<T>::Initialize() 
 {
   problem_->Initialize();
+
+  backend_->SetProblem(problem_);
+  backend_->SetOptions(opts_);
   backend_->Initialize();
 
   cur_primal_sol_.resize( problem_->ncols() );
@@ -105,6 +109,7 @@ Solver<T>::Solve()
     T dv_norm = backend_->dual_var_norm();
 
     bool is_converged = false;
+    bool is_stopped = stopping_cb_();
 
     if((primal_res < (opts_.tol_abs_primal + opts_.tol_rel_primal * pv_norm)) &&
       (dual_res < (opts_.tol_abs_dual + opts_.tol_rel_dual * dv_norm)))
@@ -113,17 +118,29 @@ Solver<T>::Solve()
     }
 
     // check if we should run the intermediate solution callback this iteration
-    if(i >= cb_iters.front() || is_converged) 
+    if(i >= cb_iters.front() || is_converged || is_stopped) 
     {
       backend_->current_solution(cur_primal_sol_, cur_dual_sol_);
       interm_cb_(i + 1, cur_primal_sol_, cur_dual_sol_);
 
       if(opts_.verbose) 
       {
-        std::cout << "TODO: output some residuals here" << std::endl;
+        int digits = std::floor(std::log10( (double) opts_.max_iters )) + 1;
+        cout << "It " << std::setw(digits) << (i + 1) << ": " << std::scientific;
+        cout.precision(2);
+        cout << "Feas_p=" << primal_res;
+        cout << ", Feas_d=" << dual_res << endl;
       }
       
       cb_iters.pop_front();
+    }
+
+    if(is_stopped)
+    {
+      if(opts_.verbose)
+        std::cout << "Stopped by user." << std::endl;
+
+      return Solver<T>::ConvergenceResult::kStoppedUser;
     }
 
     if(is_converged)
@@ -133,18 +150,10 @@ Solver<T>::Solve()
 
       return Solver<T>::ConvergenceResult::kConverged;
     }
-
-    if(stopping_cb_())
-    {
-      if(opts_.verbose)
-        std::cout << "Terminated by user-input." << std::endl;
-
-      return Solver<T>::ConvergenceResult::kStoppedUser;
-    }
   }
 
   if(opts_.verbose)
-    std::cout << "Reached maximum number of iterations." << std::endl;
+    std::cout << "Reached maximum iterations." << std::endl;
 
   return Solver<T>::ConvergenceResult::kStoppedMaxIters;
 }

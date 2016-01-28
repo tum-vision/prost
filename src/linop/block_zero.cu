@@ -14,7 +14,7 @@ BlockZero<T>::~BlockZero()
 template<typename T>
 void BlockZero<T>::EvalLocalAdd(
   const thrust::device_ptr<T>& result, 
-  const thrust::device_ptr<T>& rhs)
+  const thrust::device_ptr<const T>& rhs)
 {
   // do nothing for zero operator
 }
@@ -22,7 +22,7 @@ void BlockZero<T>::EvalLocalAdd(
 template<typename T>
 void BlockZero<T>::EvalAdjointLocalAdd(
   const thrust::device_ptr<T>& result, 
-  const thrust::device_ptr<T>& rhs) 
+  const thrust::device_ptr<const T>& rhs) 
 {
   // do nothing for zero operator
 }

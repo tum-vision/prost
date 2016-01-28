@@ -25,11 +25,11 @@ public:
 protected:
   virtual void EvalLocalAdd(
     const thrust::device_ptr<T>& result, 
-    const thrust::device_ptr<T>& rhs);
+    const thrust::device_ptr<const T>& rhs);
 
   virtual void EvalAdjointLocalAdd(
     const thrust::device_ptr<T>& result, 
-    const thrust::device_ptr<T>& rhs);
+    const thrust::device_ptr<const T>& rhs);
 };
 
 #endif

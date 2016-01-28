@@ -27,10 +27,10 @@ bool MexStoppingCallback()
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
 {
+  cudaDeviceReset();
+
   if(nrhs != 3)
-  {
-    mexErrMsgTxt("Three inputs required.\nUsage: result = pdsolver(problem, backend, [opts]);");
-  }
+    mexErrMsgTxt("Three inputs required. Usage: result = pdsolver(problem, backend, opts);");
 
   try 
   {
@@ -71,7 +71,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     double *primal_sol = mxGetPr(mx_primal_sol);
     double *dual_sol = mxGetPr(mx_dual_sol);
 
-    // TODO: fill primal/dual solution
     for(size_t i = 0; i < problem->nrows(); i++)
       dual_sol[i] = static_cast<double>(solver->cur_dual_sol()[i]);
 

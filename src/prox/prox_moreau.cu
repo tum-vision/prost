@@ -34,8 +34,8 @@ struct MoreauPostscale {
 };
 
 template<typename T>
-ProxMoreau<T>::ProxMoreau(std::unique_ptr<Prox<T>> conjugate)
-    : Prox<T>(*conjugate), conjugate_(std::move(conjugate)) {} {
+ProxMoreau<T>::ProxMoreau(std::shared_ptr<Prox<T> > conjugate)
+    : Prox<T>(*conjugate), conjugate_(conjugate) {} {
 }
 
 template<typename T>
