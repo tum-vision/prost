@@ -117,16 +117,16 @@ void Problem<T>::Initialize()
 
   // Init Proxs
   for(auto& prox : prox_f_) 
-    prox->Init();
+    prox->Initialize();
 
   for(auto& prox : prox_fstar_) 
-    prox->Init();
+    prox->Initialize();
 
   for(auto& prox : prox_g_) 
-    prox->Init();
+    prox->Initialize();
 
   for(auto& prox : prox_gstar_) 
-    prox->Init(); 
+    prox->Initialize(); 
 
   // Init Scaling
   if(scaling_type_ == Problem<T>::Scaling::kScalingAlpha)

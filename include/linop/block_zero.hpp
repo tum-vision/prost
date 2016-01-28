@@ -6,10 +6,7 @@
 
 #include "linop/block.hpp"
 
-/*
- * @brief Zero linear operator
- *
- */
+/// \brief Zero operator.
 template<typename T>
 class BlockZero : public Block<T> 
 {
@@ -24,12 +21,16 @@ public:
 
 protected:
   virtual void EvalLocalAdd(
-    const thrust::device_ptr<T>& result, 
-    const thrust::device_ptr<const T>& rhs);
+    const typename thrust::device_vector<T>::iterator& res_begin,
+    const typename thrust::device_vector<T>::iterator& res_end,
+    const typename thrust::device_vector<T>::const_iterator& rhs_begin,
+    const typename thrust::device_vector<T>::const_iterator& rhs_end);
 
   virtual void EvalAdjointLocalAdd(
-    const thrust::device_ptr<T>& result, 
-    const thrust::device_ptr<const T>& rhs);
+    const typename thrust::device_vector<T>::iterator& res_begin,
+    const typename thrust::device_vector<T>::iterator& res_end,
+    const typename thrust::device_vector<T>::const_iterator& rhs_begin,
+    const typename thrust::device_vector<T>::const_iterator& rhs_end);
 };
 
 #endif

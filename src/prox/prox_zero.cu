@@ -7,19 +7,24 @@ ProxZero<T>::ProxZero(size_t index, size_t size) :
 }
 
 template<typename T>
-ProxZero<T>::~ProxZero() {
+ProxZero<T>::~ProxZero() 
+{
 }
 
 template<typename T>
 void ProxZero<T>::EvalLocal(
-  const thrust::device_ptr<T>& result,
-  const thrust::device_ptr<const T>& arg,
-  const thrust::device_ptr<const T>& tau_diag,
-  T tau_scal,
+  const typename thrust::device_vector<T>::iterator& result_beg,
+  const typename thrust::device_vector<T>::iterator& result_end,
+  const typename thrust::device_vector<T>::const_iterator& arg_beg,
+  const typename thrust::device_vector<T>::const_iterator& arg_end,
+  const typename thrust::device_vector<T>::const_iterator& tau_beg,
+  const typename thrust::device_vector<T>::const_iterator& tau_end,
+  T tau,
   bool invert_tau)
 {
-//  thrust::copy(arg, arg + this->size_, result);
+  thrust::copy(arg_beg, arg_end, result_beg);
 }
+
 
 // Explicit template instantiation
 template class ProxZero<float>;

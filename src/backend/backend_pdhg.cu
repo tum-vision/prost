@@ -135,15 +135,22 @@ BackendPDHG<T>::Initialize()
   size_t l = std::max(m, n);
 
   // allocate variables
-  x_.resize(n, 0);
-  x_prev_.resize(n, 0);
-  kty_prev_.resize(n, 0);
-  kty_.resize(n, 0);
-  y_.resize(m, 0);
-  y_prev_.resize(m, 0);
-  kx_.resize(m, 0);
-  kx_prev_.resize(m, 0);
-  temp_.resize(l, 0);
+  try
+  {
+    x_.resize(n, 0);
+    x_prev_.resize(n, 0);
+    kty_prev_.resize(n, 0);
+    kty_.resize(n, 0);
+    y_.resize(m, 0);
+    y_prev_.resize(m, 0);
+    kx_.resize(m, 0);
+    kx_prev_.resize(m, 0);
+    temp_.resize(l, 0);
+  }
+  catch(std::bad_alloc& e)
+  {
+    throw new Exception("Out of memory.");
+  }
 
   iteration_ = 0;
   tau_ = opts_.tau0;
