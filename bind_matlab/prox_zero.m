@@ -1,6 +1,3 @@
-function [prox] = prox_zero(idx, count)
-    
-    data = {};
-    prox = { 'zero', idx, count, 1, false, true, data };
-    
+function [prox] = prox_zero(idx, size)
+    prox = { 'zero', idx, size, false, {} };
 end

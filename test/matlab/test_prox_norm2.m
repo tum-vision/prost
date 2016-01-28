@@ -9,8 +9,12 @@ P = P(:);
 tau = 1;
 Tau = ones(N * d, 1);
 
+% h(x) = c f(ax - b) + dx + 0.5ex^2
+
 tic;
-Q = pdsolver_eval_prox( prox_simplex(0, N, d, false), P, tau, Tau);
+idx, count, dim, interleaved, fun, a, ...
+                             b, c, d, e, alpha, beta
+Q = pdsolver_eval_prox( prox_norm2(0, N, d, false, 'abs', ), P, tau, Tau);
 toc;
 
 tic;

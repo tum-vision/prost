@@ -20,17 +20,10 @@ struct ElemOperation1D : public ElemOperation<1> {
 
   struct Coefficients : public Coefficients1D<T> {};
   
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif 
-  ElemOperation1D(Coefficients& coeffs, size_t dim, SharedMem<ElemOperation1D>& shared_mem) : coeffs_(coeffs) {} 
+  #ifdef __CUDACC__
+  inline __device__ ElemOperation1D(Coefficients& coeffs, size_t dim, SharedMem<ElemOperation1D>& shared_mem) : coeffs_(coeffs) {} 
   
-  inline
-#ifdef __CUDACC__
-__device__
- #endif
-  void operator()(Vector<T, ElemOperation1D>& arg, Vector<T, ElemOperation1D>& res, Vector<T, ElemOperation1D>& tau_diag, T tau_scal, bool invert_tau) {
+  inline __device__ void operator()(Vector<T, ElemOperation1D>& arg, Vector<T, ElemOperation1D>& res, Vector<T, ElemOperation1D>& tau_diag, T tau_scal, bool invert_tau) {
 
     //TODO check coeffs_.val[i] == NULL
 
@@ -54,7 +47,7 @@ __device__
         / coeffs_.a;
     }
   }
-  
+  #endif
 private:
   Coefficients& coeffs_;
 };

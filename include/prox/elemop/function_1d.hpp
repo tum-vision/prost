@@ -15,22 +15,17 @@ struct Coefficients1D {
 // implementation of 1D prox operators
 template<typename T>
 struct Function1DZero {
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif 
-  T operator()(T x0, T tau, T alpha, T beta) const {
+  #ifdef __CUDACC__
+  inline __device__ T operator()(T x0, T tau, T alpha, T beta) const {
     return x0;
   }
+  #endif 
 };
 
 template<typename T> 
 struct Function1DAbs {
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif 
-  T  operator()(T x0, T tau, T alpha, T beta) const {
+  #ifdef __CUDACC__  
+  inline __device__ T  operator()(T x0, T tau, T alpha, T beta) const {
     if(x0 >= tau)
       return x0 - tau;
     else if(x0 <= -tau)
@@ -38,65 +33,55 @@ __device__
 
     return 0;
   }
+  #endif 
 };
 
 template<typename T>
 struct Function1DSquare {
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif 
-  T  operator()(T x0, T tau, T alpha, T beta) const {
+  #ifdef __CUDACC__
+  inline __device__ T  operator()(T x0, T tau, T alpha, T beta) const {
     return x0 / (1. + tau);
   }
+  #endif
 };
 
 template<typename T>
 struct Function1DIndLeq0 {
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif 
-  T  operator()(T x0, T tau, T alpha, T beta) const {
+  #ifdef __CUDACC__
+  inline __device__ T  operator()(T x0, T tau, T alpha, T beta) const {
     if(x0 > 0.)
       return 0.;
 
     return x0;
   }
+  #endif
 };
 
 template<typename T>
 struct Function1DIndGeq0 {
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif 
-  T  operator()(T x0, T tau, T alpha, T beta) const {
+  #ifdef __CUDACC__
+  inline __device__ T  operator()(T x0, T tau, T alpha, T beta) const {
     if(x0 < 0.)
       return 0.;
 
     return x0;
   }
+  #endif
 };
 
 template<typename T>
 struct Function1DIndEq0 {
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif 
-  T  operator()(T x0, T tau, T alpha, T beta) const {
+  #ifdef __CUDACC__
+  inline __device__ T  operator()(T x0, T tau, T alpha, T beta) const {
     return 0.;
   }
+  #endif
 };
 
 template<typename T>
 struct Function1DIndBox01 {
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif 
-  T  operator()(T x0, T tau, T alpha, T beta) const {
+  #ifdef __CUDACC__
+  inline __device__ T  operator()(T x0, T tau, T alpha, T beta) const {
     if(x0 > 1.)
       return 1.;
     else if(x0 < 0.)
@@ -104,15 +89,13 @@ __device__
 
     return x0;
   }
+  #endif
 };
 
 template<typename T>
 struct Function1DMaxPos0 {
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif 
-  T  operator()(T x0, T tau, T alpha, T beta) const {
+  #ifdef __CUDACC__
+  inline __device__ T  operator()(T x0, T tau, T alpha, T beta) const {
     if(x0 > tau)
       return x0 - tau;
     else if(x0 < 0.)
@@ -120,34 +103,31 @@ __device__
 
     return 0.;
   }
+  #endif
 };
 
 template<typename T>
 struct Function1DL0 {
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif 
-  T  operator()(T x0, T tau, T alpha, T beta) const {
+  #ifdef __CUDACC__
+  inline __device__ T  operator()(T x0, T tau, T alpha, T beta) const {
     if(x0*x0 > 2 * tau)
       return x0;
 
     return 0;
   }
+  #endif
 };
 
 template<typename T>
 struct Function1DHuber {
   // min_x huber_alpha(x) + (1/2tau) (x-x0)^2
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif 
-  T  operator()(T x0, T tau, T alpha, T beta) const {
+  #ifdef __CUDACC__
+  inline __device__ T  operator()(T x0, T tau, T alpha, T beta) const {
     T result = (x0 / tau) / (static_cast<T>(1) + alpha / tau);
     result /= max(static_cast<T>(1), abs(result));  
     return x0 - tau * result;
   }
+  #endif
 };
 
 }
