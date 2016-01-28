@@ -92,9 +92,9 @@ public:
     try {
         thrust::copy(coeffs_.begin(), coeffs_.end(), d_coeffs_.begin());
     } catch(std::bad_alloc &e) {
-        throw PDSolverException();
+        throw PDSolverException("Failed to copy coefficients to device");
     } catch(thrust::system_error &e) {
-        throw PDSolverException();
+        throw PDSolverException("Failed to copy coefficients to device");
     }
   }
   

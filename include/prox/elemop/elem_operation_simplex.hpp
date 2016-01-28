@@ -26,23 +26,13 @@ template<typename T>
 struct ElemOperationSimplex : public ElemOperation<0> {
 
   typedef T shared_mem_type;
-  inline 
-#ifdef __CUDACC__
-__host__ __device__
- #endif
-  static size_t shared_mem_count(size_t dim) { return dim; }
   
-#ifdef __CUDACC__
-__device__
- #endif
-  ElemOperationSimplex(size_t dim, SharedMem<ElemOperationSimplex<T>>& shared_mem) : dim_(dim), shared_mem_(shared_mem) {} 
-  
-  inline 
-#ifdef __CUDACC__
-__device__
- #endif
-  void operator()(Vector<T, ElemOperationSimplex<T>>& arg, Vector<T, ElemOperationSimplex<T>>& res, Vector<T, ElemOperationSimplex<T>>& tau_diag, T tau_scal, bool invert_tau) {
+  #ifdef __CUDACC__
+  inline __host__ __device__ static size_t shared_mem_count(size_t dim) { return dim; }
 
+  __device__ ElemOperationSimplex(size_t dim, SharedMem<ElemOperationSimplex<T>>& shared_mem) : dim_(dim), shared_mem_(shared_mem) {} 
+  
+  inline __device__ void operator()(Vector<T, ElemOperationSimplex<T>>& arg, Vector<T, ElemOperationSimplex<T>>& res, Vector<T, ElemOperationSimplex<T>>& tau_diag, T tau_scal, bool invert_tau) {
       // 1) read dim-dimensional vector into shared memory
       for(size_t i = 0; i < dim_; i++) {
         // handle inner product by completing the squaring and
@@ -52,9 +42,8 @@ __device__
 
         shared_mem_[i] = val;
       }
-      #ifdef __CUDACC__
+      
       __syncthreads();
-      #endif 
       
 
       // 2) sort inside shared memory
@@ -83,10 +72,7 @@ __device__
       }  
   }
   
-    #ifdef __CUDACC__
-    __device__
-    #endif
-    void shellsort() {
+  __device__ void shellsort() {
       const int gaps[6] = { 132, 57, 23, 10, 4, 1 };
 
       for(int k = 0; k < 6; k++) {
@@ -103,6 +89,7 @@ __device__
         }
       }
   }
+  #endif
     
 private:
   SharedMem<ElemOperationSimplex<T>>& shared_mem_;

@@ -5,11 +5,33 @@ using namespace elemop;
 using namespace std;
 
 void MexFactory::Init() {
-    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DZero<real>>>>("elem_operation:1D:zero", CreateProxElemOperation1D<Function1DZero<real>>);
-    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DAbs<real>>>>("elem_operation:1D:abs", CreateProxElemOperation1D<Function1DAbs<real>>);
-    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationSimplex<real>>>("elem_operation:simplex", CreateProxElemOperationSimplex);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DZero<real>>>>("elem_operation:1d:zero", CreateProxElemOperation1D<Function1DZero<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DAbs<real>>>>("elem_operation:1d:abs", CreateProxElemOperation1D<Function1DAbs<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DSquare<real>>>>("elem_operation:1d:square", CreateProxElemOperation1D<Function1DSquare<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DIndLeq0<real>>>>("elem_operation:1d:ind_leq0", CreateProxElemOperation1D<Function1DIndLeq0<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DIndGeq0<real>>>>("elem_operation:1d:ind_geq0", CreateProxElemOperation1D<Function1DIndGeq0<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DIndEq0<real>>>>("elem_operation:1d:ind_eq0", CreateProxElemOperation1D<Function1DIndEq0<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DIndBox01<real>>>>("elem_operation:1d:ind_box01", CreateProxElemOperation1D<Function1DIndBox01<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DMaxPos0<real>>>>("elem_operation:1d:max_pos0", CreateProxElemOperation1D<Function1DMaxPos0<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DL0<real>>>>("elem_operation:1d:l0", CreateProxElemOperation1D<Function1DL0<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DHuber<real>>>>("elem_operation:1d:huber", CreateProxElemOperation1D<Function1DHuber<real>>);
+                                                                                                                                    
+                                                                                                                           
+                                                                                                                                    
     ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DZero<real>>>>("elem_operation:norm2:zero", CreateProxElemOperationNorm2<Function1DZero<real>>);
     ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DAbs<real>>>>("elem_operation:norm2:abs", CreateProxElemOperationNorm2<Function1DAbs<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DSquare<real>>>>("elem_operation:norm2:square", CreateProxElemOperationNorm2<Function1DSquare<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DIndLeq0<real>>>>("elem_operation:norm2:ind_leq0", CreateProxElemOperationNorm2<Function1DIndLeq0<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DIndGeq0<real>>>>("elem_operation:norm2:ind_geq0", CreateProxElemOperationNorm2<Function1DIndGeq0<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DIndEq0<real>>>>("elem_operation:norm2:ind_eq0", CreateProxElemOperationNorm2<Function1DIndEq0<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DIndBox01<real>>>>("elem_operation:norm2:ind_box01", CreateProxElemOperationNorm2<Function1DIndBox01<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DMaxPos0<real>>>>("elem_operation:norm2:max_pos0", CreateProxElemOperationNorm2<Function1DMaxPos0<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DL0<real>>>>("elem_operation:norm2:l0", CreateProxElemOperationNorm2<Function1DL0<real>>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DHuber<real>>>>("elem_operation:norm2:huber", CreateProxElemOperationNorm2<Function1DHuber<real>>);
+    
+    
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationSimplex<real>>>("elem_operation:simplex", CreateProxElemOperationSimplex);
+    
     ProxFactory::GetInstance()->Register<ProxMoreau<real>>("moreau", CreateProxMoreau);
     ProxFactory::GetInstance()->Register<ProxZero<real>>("zero", CreateProxZero);
 }
@@ -66,14 +88,13 @@ void MexFactory::GetCoefficients1D(vector<COEFFS_1D>& coeffs, const mxArray *coe
 template<class FUN_1D>
 ProxElemOperation<real, ElemOperation1D<real, FUN_1D>>* MexFactory::CreateProxElemOperation1D(int idx, int size, bool diagsteps, const mxArray *data) {
   size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
-  size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
-  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 1));
 
   vector<typename ElemOperation1D<real, FUN_1D>::Coefficients> coeffs;
-  mxArray *coeffs_mx = mxGetCell(data, 3);
+  mxArray *coeffs_mx = mxGetCell(data, 2);
   GetCoefficients1D<typename ElemOperation1D<real, FUN_1D>::Coefficients>(coeffs, coeffs_mx);
 
-  return new ProxElemOperation<real, ElemOperation1D<real, FUN_1D>>(idx, count, dim, interleaved, diagsteps, coeffs);   
+  return new ProxElemOperation<real, ElemOperation1D<real, FUN_1D>>(idx, count, 1, interleaved, diagsteps, coeffs);   
 }
 
 template<class FUN_1D>
@@ -91,9 +112,10 @@ ProxElemOperation<real, ElemOperationNorm2<real, FUN_1D>>* MexFactory::CreatePro
 }
 
 ProxElemOperation<real, ElemOperationSimplex<real>>* MexFactory::CreateProxElemOperationSimplex(int idx, int size, bool diagsteps, const mxArray *data) {
-  size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
+    size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
   size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
   bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+
 
 
   return new ProxElemOperation<real, ElemOperationSimplex<real>>(idx, count, dim, interleaved, diagsteps);   
@@ -119,5 +141,14 @@ unique_ptr<Prox<real>> MexFactory::CreateProx(const mxArray *pm) {
     mexPrintf("Attempting to create prox<'%s', idx=%d, size=%d, diagsteps=%d>...",
     name.c_str(), idx, size, diagsteps);
 
-    return move(unique_ptr<Prox<real>>(ProxFactory::GetInstance()->Create(name, idx, size, diagsteps, data)));
+    Prox<real>* prox = nullptr;
+    try {
+      prox = ProxFactory::GetInstance()->Create(name, idx, size, diagsteps, data);
+    } catch (const std::out_of_range& oor) {
+      mexPrintf(" Failed.\nWarning: Prox with ID '%s' not registered in ProxFactory\n", name.c_str());
+      return nullptr;
+    }
+    mexPrintf(" success.\n");
+  
+    return move(unique_ptr<Prox<real>>(prox));
 }

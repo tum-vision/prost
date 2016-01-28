@@ -26,8 +26,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   if(nlhs != 1)
     mexErrMsgTxt("One outputs required.");
 
+  MexFactory::Init();
+  
   // read input arguments
   unique_ptr<prox::Prox<real>> prox = move(MexFactory::CreateProx(prhs[0]));
+
   double *arg = mxGetPr(prhs[1]);
   real tau = (real) mxGetScalar(prhs[2]);
   double *tau_diag = mxGetPr(prhs[3]);
@@ -43,7 +46,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   } catch(exception& e) {
     mexErrMsgTxt("Failed to init prox!");
   }
-
+  
   // convert double -> float if necessary
   std::vector<real> h_arg(n);
   std::vector<real> h_result(n);
@@ -57,7 +60,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   Timer t;
   t.start();
   prox->Eval(h_arg, h_result, h_tau, tau);
-  mexPrintf("prox took %f seconds.\n", t.get());
+  mexPrintf("Evaluation of prox took %f seconds.\n", t.get());
 
 
   // convert result back to MATLAB matrix and float -> double

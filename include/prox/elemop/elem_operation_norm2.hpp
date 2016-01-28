@@ -18,17 +18,11 @@ struct ElemOperationNorm2 : public ElemOperation<0> {
 
  struct Coefficients : public Coefficients1D<T> {};
 
- #ifdef __CUDACC__
-__device__
- #endif
- ElemOperationNorm2(Coefficients& coeffs, size_t dim, SharedMem<ElemOperationNorm2<T, FUN_1D>>& shared_mem) : coeffs_(coeffs), dim_(dim) {} 
+  #ifdef __CUDACC__
+  __device__ ElemOperationNorm2(Coefficients& coeffs, size_t dim, SharedMem<ElemOperationNorm2<T, FUN_1D>>& shared_mem) : coeffs_(coeffs), dim_(dim) {} 
  
  
- inline
-#ifdef __CUDACC__
-__device__
- #endif 
-  void operator()(Vector<T, ElemOperationNorm2<T, FUN_1D>>& arg, Vector<T, ElemOperationNorm2<T, FUN_1D>>& res, Vector<T,ElemOperationNorm2<T, FUN_1D>>& tau_diag, T tau_scal, bool invert_tau) {
+ inline __device__ void operator()(Vector<T, ElemOperationNorm2<T, FUN_1D>>& arg, Vector<T, ElemOperationNorm2<T, FUN_1D>>& res, Vector<T,ElemOperationNorm2<T, FUN_1D>>& tau_diag, T tau_scal, bool invert_tau) {
     // compute dim-dimensional 2-norm at each point
     T norm = 0;
 
@@ -67,7 +61,8 @@ __device__
       }
     }
  }
-   
+ #endif
+ 
 private:
   Coefficients& coeffs_;
   size_t dim_;
