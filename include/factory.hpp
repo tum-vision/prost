@@ -15,8 +15,6 @@ using namespace std;
 /// @tparam class T. Abstract class for which the factory should be defined (e.g. ContextMenuItem)
 /// @tparam typename... Args. Argument signature of the contructors of type T.
 ///
-/// \author Thomas Möllenhoff and Emanuel Laude
-///
 template<class T, class... Args>
 class Factory {
 public:

@@ -17,42 +17,50 @@ public:
   Prox(size_t index, size_t size, bool diagsteps) :
     index_(index),
     size_(size),
-    diagsteps_(diagsteps) {}
+    diagsteps_(diagsteps) { }
 
   Prox(const Prox<T>& other) :
     index_(other.index_),
     size_(other.size_),
-    diagsteps_(other.diagsteps_) {}
+    diagsteps_(other.diagsteps_) { }
   
-  virtual ~Prox() {}
+  virtual ~Prox() { }
 
-  /**
-   * @brief Initializes the prox Operator, copies data to the GPU.
-   *
-   */
-  virtual void Init() {}
+  /// \brief Initializes the prox Operator.
+  virtual void Initialize() { }
 
-  /**
-   * @brief Cleans up GPU data.
-   *
-   */
-  virtual void Release() {}
+  /// \brief Cleans up any data.
+  virtual void Release() { }
 
-  /**
-   * @brief Evaluates the prox operator on the GPU. 
-   *
-   * @param Proximal operator argument.
-   * @param Result of prox.
-   * @param Diagonal step sizes.
-   * @param Scalar step size.
-   */
+  /// 
+  /// \brief Evaluates the prox operator on the GPU.
+  /// 
+  /// \param Result of prox.
+  /// \param Proximal operator argument.
+  /// \param Diagonal step sizes.
+  /// \param Scalar step size.
+  ///
   void Eval(
     thrust::device_vector<T>& result, 
     const thrust::device_vector<T>& arg, 
     const thrust::device_vector<T>& tau_diag, 
-    T tau_scal);
+    T tau);
 
-  // set/get methods
+  /// 
+  /// \brief Evaluates the prox operator on the GPU, using CPU data. Mainly 
+  ///        for debugging purposes.
+  /// 
+  /// \param Result of prox.
+  /// \param Proximal operator argument.
+  /// \param Diagonal step sizes.
+  /// \param Scalar step size.
+  ///
+  void Eval(
+    std::vector<T>& result, 
+    std::vector<T>& arg, 
+    std::vector<T>& tau_diag, 
+    T tau); 
+
   virtual size_t gpu_mem_amount() const = 0;
   size_t index() const { return index_; }
   size_t size() const { return size_; }
@@ -60,28 +68,35 @@ public:
   bool diagsteps() const { return diagsteps_; }
   
 protected:
-  /**
-   * @brief Evaluates the prox operator on the GPU, local meaning that
-   *        arg, res and tau point to the place in memory where the
-   *        prox begins.
-   *
-   * @param Proximal operator argument.
-   * @param Result of prox.
-   * @param Scalar step size.
-   * @param Diagonal step sizes.
-   * @param Perform the prox with inverted step sizes?
-   *
-   */
+  /// 
+  /// \brief Evaluates the prox operator on the GPU, local meaning that
+  ///        arg, res and tau point to the place in memory where the
+  ///        prox begins.
+  /// 
+  /// \param Result of prox.
+  /// \param Proximal operator argument.
+  /// \param Diagonal step sizes.
+  /// \param Scalar step size.
+  /// \param Perform the prox with inverted step sizes?
+  /// 
   virtual void EvalLocal(
-    const thrust::device_ptr<T>& result,
-    const thrust::device_ptr<const T>& arg,
-    const thrust::device_ptr<const T>& tau_diag,
-    T tau_scal,
+    const typename thrust::device_vector<T>::iterator& result_beg,
+    const typename thrust::device_vector<T>::iterator& result_end,
+    const typename thrust::device_vector<T>::const_iterator& arg_beg,
+    const typename thrust::device_vector<T>::const_iterator& arg_end,
+    const typename thrust::device_vector<T>::const_iterator& tau_beg,
+    const typename thrust::device_vector<T>::const_iterator& tau_end,
+    T tau,
     bool invert_tau) = 0;
   
+  /// \brief Index where prox-Operator starts.
   size_t index_; 
+
+  /// \brief Dimension of the function domain. 
   size_t size_;
-  bool diagsteps_; // able to handle diagonal matrices as step size?
+
+  /// \brief Able to handle diagonal matrices as step size?
+  bool diagsteps_; 
 };
 
 #endif

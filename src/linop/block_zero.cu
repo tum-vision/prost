@@ -13,16 +13,20 @@ BlockZero<T>::~BlockZero()
 
 template<typename T>
 void BlockZero<T>::EvalLocalAdd(
-  const thrust::device_ptr<T>& result, 
-  const thrust::device_ptr<const T>& rhs)
+  const typename thrust::device_vector<T>::iterator& res_begin,
+  const typename thrust::device_vector<T>::iterator& res_end,
+  const typename thrust::device_vector<T>::const_iterator& rhs_begin,
+  const typename thrust::device_vector<T>::const_iterator& rhs_end)
 {
   // do nothing for zero operator
 }
 
 template<typename T>
 void BlockZero<T>::EvalAdjointLocalAdd(
-  const thrust::device_ptr<T>& result, 
-  const thrust::device_ptr<const T>& rhs) 
+  const typename thrust::device_vector<T>::iterator& res_begin,
+  const typename thrust::device_vector<T>::iterator& res_end,
+  const typename thrust::device_vector<T>::const_iterator& rhs_begin,
+  const typename thrust::device_vector<T>::const_iterator& rhs_end)
 {
   // do nothing for zero operator
 }

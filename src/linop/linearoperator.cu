@@ -5,7 +5,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/fill.h>
 
-bool RectangleOverlap(
+bool LinearOperator::RectangleOverlap(
   size_t x1, size_t y1,
   size_t x2, size_t y2,
   size_t a1, size_t b1,
@@ -160,7 +160,8 @@ T LinearOperator<T>::col_sum(size_t col, T alpha) const
 }
 
 template<typename T>
-size_t LinearOperator<T>::gpu_mem_amount() const {
+size_t LinearOperator<T>::gpu_mem_amount() const 
+{
   size_t mem = 0;
 
   for(auto block : blocks_)
@@ -168,6 +169,12 @@ size_t LinearOperator<T>::gpu_mem_amount() const {
 
   return mem;
 }
+
+template<typename T>
+T LinearOperator<T>::normest(T tol, int max_iters)
+{
+}
+
 
 // Explicit template instantiation
 template class LinearOperator<float>;
