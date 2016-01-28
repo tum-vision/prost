@@ -22,41 +22,33 @@ namespace elemop {
  *        because there's not enough shared mem. Sorting in global mem
  *        would be much too slow.
  */
-template<typename T, size_t DIM>
-struct ElemOperationSimplex : public ElemOperation<DIM> {
-  static const size_t shared_mem_count = DIM;
+template<typename T>
+struct ElemOperationSimplex : public ElemOperation<0> {
+
   typedef T shared_mem_type;
-    
-  struct Coefficients {
-    T a[DIM];
-  };
+  inline 
+#ifdef __CUDACC__
+__host__ __device__
+ #endif
+  static size_t shared_mem_count(size_t dim) { return dim; }
   
 #ifdef __CUDACC__
 __device__
  #endif
-  ElemOperationSimplex(Coefficients& coeffs, size_t dim, SharedMem<ElemOperationSimplex<T, DIM>>& shared_mem) : coeffs_(coeffs), shared_mem_(shared_mem) {} 
+  ElemOperationSimplex(size_t dim, SharedMem<ElemOperationSimplex<T>>& shared_mem) : dim_(dim), shared_mem_(shared_mem) {} 
   
   inline 
 #ifdef __CUDACC__
 __device__
  #endif
-  void operator()(Vector<T, ElemOperationSimplex<T, DIM>>& arg, Vector<T, ElemOperationSimplex<T, DIM>>& res, Vector<T, ElemOperationSimplex<T, DIM>>& tau_diag, T tau_scal, bool invert_tau) {
+  void operator()(Vector<T, ElemOperationSimplex<T>>& arg, Vector<T, ElemOperationSimplex<T>>& res, Vector<T, ElemOperationSimplex<T>>& tau_diag, T tau_scal, bool invert_tau) {
 
       // 1) read dim-dimensional vector into shared memory
-      for(size_t i = 0; i < DIM; i++) {
+      for(size_t i = 0; i < dim_; i++) {
         // handle inner product by completing the squaring and
         // pulling it into the squared term of the prox. while
         // scaling it correctly, taking are of the step size.
         T val = arg[i];
-
-
-        T tau = tau_scal * tau_diag[i];
-
-        if(invert_tau)
-            tau = 1. / tau;
-
-        val -= tau * coeffs_.a[i];
-
 
         shared_mem_[i] = val;
       }
@@ -66,12 +58,12 @@ __device__
       
 
       // 2) sort inside shared memory
-      shellsort(&shared_mem_[0], DIM);
+      shellsort();
 
       bool bget = false;
       T tmpsum = 0;
       T tmax;
-      for(int ii=1;ii<=DIM-1;ii++) {
+      for(int ii=1; ii <= dim_ - 1; ii++) {
         tmpsum += shared_mem_[ii - 1];
         tmax = (tmpsum - 1.) / (T)ii;
         if(tmax >= shared_mem_[ii]){
@@ -81,19 +73,11 @@ __device__
       }
 
       if(!bget)
-        tmax = (tmpsum + shared_mem_[DIM - 1] - 1.0) / (T)DIM;
+        tmax = (tmpsum + shared_mem_[dim_ - 1] - 1.0) / (T)dim_;
 
       // 3) return result
-      for(int i = 0; i < DIM; i++) {
+      for(int i = 0; i < dim_; i++) {
         T val = arg[i];
-
-        T tau = tau_scal * tau_diag[i];
-
-        if(invert_tau)
-            tau = 1. / tau;
-
-        val -= tau * coeffs_.a[i];
-
 
         res[i] = cuwrap::max<T>(val - tmax, 0);
       }  
@@ -102,27 +86,27 @@ __device__
     #ifdef __CUDACC__
     __device__
     #endif
-    void shellsort(T *a, int N) {
+    void shellsort() {
       const int gaps[6] = { 132, 57, 23, 10, 4, 1 };
 
       for(int k = 0; k < 6; k++) {
         int gap = gaps[k];
 
-        for(int i = gap; i < N; i++) {
-          const T temp = a[i];
+        for(int i = gap; i < dim_; i++) {
+          const T temp = shared_mem_[i];
 
           int j = i;
-          for(; (j >= gap) && (a[j - gap] <= temp); j -= gap) 
-            a[j] = a[j - gap];
+          for(; (j >= gap) && (shared_mem_[j - gap] <= temp); j -= gap) 
+            shared_mem_[j] = shared_mem_[j - gap];
 
-          a[j] = temp;
+          shared_mem_[j] = temp;
         }
       }
   }
     
 private:
-  Coefficients& coeffs_;
-  SharedMem<ElemOperationSimplex<T, DIM>>& shared_mem_;
+  SharedMem<ElemOperationSimplex<T>>& shared_mem_;
+  size_t dim_;
 };
 }
 }

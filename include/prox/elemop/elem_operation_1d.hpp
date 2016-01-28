@@ -17,7 +17,6 @@ namespace prox {
 namespace elemop {
 template<typename T, class FUN_1D>
 struct ElemOperation1D : public ElemOperation<1> {
-    
 
   struct Coefficients : public Coefficients1D<T> {};
   

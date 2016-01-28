@@ -34,12 +34,12 @@ public:
     template<class FUN_1D>
     static prox::ProxElemOperation<real, prox::elemop::ElemOperation1D<real, FUN_1D>>* CreateProxElemOperation1D(int idx, int size, bool diagsteps, const mxArray *data);
   
-    template<size_t DIM>
-    static prox::ProxElemOperation<real, prox::elemop::ElemOperationSimplex<real, DIM>>* CreateProxElemOperationSimplex(int idx, int size, bool diagsteps, const mxArray *data);
-    
     template<class FUN_1D>
     static prox::ProxElemOperation<real, prox::elemop::ElemOperationNorm2<real, FUN_1D>>* CreateProxElemOperationNorm2(int idx, int size, bool diagsteps, const mxArray *data);
     
+    static prox::ProxElemOperation<real, prox::elemop::ElemOperationSimplex<real>>* CreateProxElemOperationSimplex(int idx, int size, bool diagsteps, const mxArray *data);
+    
+
     static prox::ProxMoreau<real>* CreateProxMoreau(int idx, int size, bool diagsteps, const mxArray *data);
     
     static prox::ProxZero<real>* CreateProxZero(int idx, int size, bool diagsteps, const mxArray *data);

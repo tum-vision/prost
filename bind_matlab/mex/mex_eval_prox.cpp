@@ -43,33 +43,22 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   } catch(exception& e) {
     mexErrMsgTxt("Failed to init prox!");
   }
-  
-  std::cout << sizeof(real)<<std::endl;;
-  // allocate gpu arrays
-  thrust::device_vector<real> d_arg(n);
-  thrust::device_vector<real> d_result(n);
-  thrust::device_vector<real> d_tau(n);
 
   // convert double -> float if necessary
-  thrust::host_vector<real> h_arg(n);
-  thrust::host_vector<real> h_result(n);
-  thrust::host_vector<real> h_tau(n);
+  std::vector<real> h_arg(n);
+  std::vector<real> h_result(n);
+  std::vector<real> h_tau(n);
   for(int i = 0; i < n; i++) {
     h_arg[i] = (real)arg[i];
     h_tau[i] = (real)tau_diag[i];
   }
 
-  d_arg = h_arg;
-  d_tau = h_tau;
-
   // evaluate prox
   Timer t;
   t.start();
-  prox->Eval(d_arg, d_result, d_tau, tau);
+  prox->Eval(h_arg, h_result, h_tau, tau);
   mexPrintf("prox took %f seconds.\n", t.get());
 
-  // copy back result
-  h_result = d_result;
 
   // convert result back to MATLAB matrix and float -> double
   plhs[0] = mxCreateDoubleMatrix(n, 1, mxREAL);
