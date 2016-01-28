@@ -10,7 +10,7 @@ tau = 1;
 Tau = ones(N * d, 1);
 
 tic;
-Q = eval_prox( prox_simplex(0, N, d, false, []), P, tau, Tau );
+Q = pdsolver_eval_prox( prox_simplex(0, N, d, false), P, tau, Tau );
 toc;
 
 tic;

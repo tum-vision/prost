@@ -7,8 +7,7 @@ using namespace std;
 void MexFactory::Init() {
     ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DZero<real>>>>("elem_operation:1D:zero", CreateProxElemOperation1D<Function1DZero<real>>);
     ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperation1D<real, Function1DAbs<real>>>>("elem_operation:1D:abs", CreateProxElemOperation1D<Function1DAbs<real>>);
-    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationSimplex<real, 2>>>("elem_operation:simplex:2", CreateProxElemOperationSimplex<2>);
-    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationSimplex<real, 3>>>("elem_operation:simplex:3", CreateProxElemOperationSimplex<3>);
+    ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationSimplex<real>>>("elem_operation:simplex", CreateProxElemOperationSimplex);
     ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DZero<real>>>>("elem_operation:norm2:zero", CreateProxElemOperationNorm2<Function1DZero<real>>);
     ProxFactory::GetInstance()->Register<ProxElemOperation<real, ElemOperationNorm2<real, Function1DAbs<real>>>>("elem_operation:norm2:abs", CreateProxElemOperationNorm2<Function1DAbs<real>>);
     ProxFactory::GetInstance()->Register<ProxMoreau<real>>("moreau", CreateProxMoreau);
@@ -77,28 +76,6 @@ ProxElemOperation<real, ElemOperation1D<real, FUN_1D>>* MexFactory::CreateProxEl
   return new ProxElemOperation<real, ElemOperation1D<real, FUN_1D>>(idx, count, dim, interleaved, diagsteps, coeffs);   
 }
 
-template<size_t DIM>
-ProxElemOperation<real, ElemOperationSimplex<real, DIM>>* MexFactory::CreateProxElemOperationSimplex(int idx, int size, bool diagsteps, const mxArray *data) {
-  size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
-  size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
-  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
-
-  vector<typename ElemOperationSimplex<real, DIM>::Coefficients> coeffs;
-
-  double *val;
-
-  const mwSize *dims = mxGetDimensions(mxGetCell(data, 3));
-  coeffs.resize((size_t) (dims[0] / DIM));
-
-  // coeffs.a
-  val = mxGetPr(mxGetCell(data, 3));
-  for(size_t i = 0; i < dims[0] / DIM; i++)
-      for(size_t j = 0; j < DIM; j++)
-        coeffs[i].a[j] = (real)val[i * DIM + j];
-
-  return new ProxElemOperation<real, ElemOperationSimplex<real, DIM>>(idx, count, dim, interleaved, diagsteps, coeffs);   
-}
-
 template<class FUN_1D>
 ProxElemOperation<real, ElemOperationNorm2<real, FUN_1D>>* MexFactory::CreateProxElemOperationNorm2(int idx, int size, bool diagsteps, const mxArray *data) {
   size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
@@ -111,6 +88,15 @@ ProxElemOperation<real, ElemOperationNorm2<real, FUN_1D>>* MexFactory::CreatePro
   GetCoefficients1D<typename ElemOperationNorm2<real, FUN_1D>::Coefficients>(coeffs, coeffs_mx);
 
   return new ProxElemOperation<real, ElemOperationNorm2<real, FUN_1D>>(idx, count, dim, interleaved, diagsteps, coeffs);   
+}
+
+ProxElemOperation<real, ElemOperationSimplex<real>>* MexFactory::CreateProxElemOperationSimplex(int idx, int size, bool diagsteps, const mxArray *data) {
+  size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
+  size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
+  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+
+
+  return new ProxElemOperation<real, ElemOperationSimplex<real>>(idx, count, dim, interleaved, diagsteps);   
 }
 
 ProxMoreau<real>* MexFactory::CreateProxMoreau(int idx, int size, bool diagsteps, const mxArray *data) {

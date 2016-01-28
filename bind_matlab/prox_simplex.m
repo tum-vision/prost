@@ -1,6 +1,5 @@
-function [prox] = prox_simplex( idx, count, dim, interleaved, a )
+function [prox] = prox_simplex(idx, count, dim, interleaved)
 
-data = { a };
-prox = { 'simplex', idx, count, dim, interleaved, false, data };
+prox = { 'elem_operation:simplex', idx, count*dim, false, { count, dim, interleaved } };
 
 end

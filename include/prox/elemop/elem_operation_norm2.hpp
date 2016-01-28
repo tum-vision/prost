@@ -3,6 +3,9 @@
 
 #include "elem_operation.hpp"
 #include "function_1d.hpp"
+
+namespace prox {
+namespace elemop {
 /**
  * @brief Provides proximal operator for sum of 2-norms, with a nonlinear
  *        function ProxFunction1D applied to the norm.
@@ -10,8 +13,6 @@
  *
  *
  */
-namespace prox {
-namespace elemop {
 template<typename T, class FUN_1D>
 struct ElemOperationNorm2 : public ElemOperation<0> {
 
