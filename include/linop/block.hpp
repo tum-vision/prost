@@ -22,11 +22,11 @@ public:
   
   void EvalAdd(
     thrust::device_vector<T>& result, 
-    const thrust::device_vector<T> rhs);
+    const thrust::device_vector<T>& rhs);
 
   void EvalAdjointAdd(
     thrust::device_vector<T>& result, 
-    const thrust::device_vector<T> rhs);
+    const thrust::device_vector<T>& rhs);
 
   // required for preconditioners
   // row and col are "local" for the operator, which means they start at 0
@@ -43,11 +43,11 @@ public:
 protected:
   virtual void EvalLocalAdd(
     const thrust::device_ptr<T>& result, 
-    const thrust::device_ptr<T>& rhs) = 0;
+    const thrust::device_ptr<const T>& rhs) = 0;
 
   virtual void EvalAdjointLocalAdd(
     const thrust::device_ptr<T>& result, 
-    const thrust::device_ptr<T>& rhs) = 0;
+    const thrust::device_ptr<const T>& rhs) = 0;
   
   size_t row_;
   size_t col_;

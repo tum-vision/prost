@@ -14,17 +14,17 @@ Block<T>::~Block()
 template<typename T>
 void Block<T>::EvalAdd(
   thrust::device_vector<T>& result, 
-  const thrust::device_vector<T> rhs)
+  const thrust::device_vector<T>& rhs)
 {
-//  EvalLocalAdd(&result[row_], &rhs[col_]);
+  EvalLocalAdd(&result[row_], &rhs[col_]);
 }
 
 template<typename T>
 void Block<T>::EvalAdjointAdd(
   thrust::device_vector<T>& result, 
-  const thrust::device_vector<T> rhs)
+  const thrust::device_vector<T>& rhs)
 {
-//  EvalAdjointLocalAdd(&result[col_], &rhs[row_]);
+  EvalAdjointLocalAdd(&result[col_], &rhs[row_]);
 }
 
 // Explicit template instantiation

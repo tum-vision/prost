@@ -1,8 +1,12 @@
 #ifndef BACKEND_PDHG_HPP_
 #define BACKEND_PDHG_HPP_
 
+#include <memory>
 #include <thrust/device_vector.h>
+
 #include "backend/backend.hpp"
+
+template<typename T> class Prox;
 
 ///
 /// \brief Implementation of the primal-dual hybrid-gradient method.
@@ -76,11 +80,6 @@ public:
 
   virtual void current_solution(std::vector<T>& primal, std::vector<T>& dual) const;
 
-  virtual T primal_var_norm() const;
-  virtual T dual_var_norm() const;
-  virtual T primal_residual() const;
-  virtual T dual_residual() const;
-
   /// \brief Returns amount of gpu memory required in bytes.
   virtual size_t gpu_mem_amount() const;
 
@@ -110,7 +109,7 @@ protected:
   thrust::device_vector<T> kx_prev_;
 
   // holds mat-vec product K^T y^{k-1}
-  thrust::device_vector<T> kty_prev; 
+  thrust::device_vector<T> kty_prev_; 
 
   /// \brief Current primal step size.
   T tau_;
@@ -126,6 +125,21 @@ protected:
 
   /// \brief PDHG stepszie callback
   typename BackendPDHG<T>::StepsizeCallback stepsize_cb_;
+
+  /// \brief Internal iteration counter.
+  size_t iteration_;
+
+  /// \brief For adaptive step size rule from Boyd's paper
+  int arb_l_, arb_u_;
+
+  /// \brief For adaptive step size rule from Goldstein's paper
+  T arg_alpha_;
+
+  /// \brief Internal prox_g
+  std::vector< std::shared_ptr<Prox<T> > > prox_g_;
+
+  /// \brief Internal prox_fstar
+  std::vector< std::shared_ptr<Prox<T> > > prox_fstar_;
 };
 
 #endif

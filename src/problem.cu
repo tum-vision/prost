@@ -97,10 +97,10 @@ void Problem<T>::Initialize()
   ncols_ = linop_->ncols();
 
   if(prox_f_.empty() && prox_fstar_.empty())
-    throw new Exception("No proximal operator for f or f* specified.");
+    throw new Exception("No proximal operator for f or fstar specified.");
 
   if(prox_g_.empty() && prox_gstar_.empty())
-    throw new Exception("No proximal operator for g or g* specified.");
+    throw new Exception("No proximal operator for g or gstar specified.");
 
   // check if whole domain is covered by prox operators
   if(!CheckDomainProx<T>(prox_g_, ncols_)) 
@@ -110,10 +110,10 @@ void Problem<T>::Initialize()
     throw new Exception("prox_f does not cover the whole domain!");
    
   if(!CheckDomainProx<T>(prox_gstar_, ncols_)) 
-    throw new Exception("prox_g* does not cover the whole domain!");
+    throw new Exception("prox_gstar does not cover the whole domain!");
 
   if(!CheckDomainProx<T>(prox_fstar_, nrows_)) 
-    throw new Exception("prox_f* does not cover the whole domain!");
+    throw new Exception("prox_fstar does not cover the whole domain!");
 
   // Init Proxs
   for(auto& prox : prox_f_) 
@@ -127,6 +127,25 @@ void Problem<T>::Initialize()
 
   for(auto& prox : prox_gstar_) 
     prox->Init(); 
+
+  // Init Scaling
+  if(scaling_type_ == Problem<T>::Scaling::kScalingAlpha)
+  {
+    throw new Exception("Alpha scaling is not implemented yet.");
+  }
+  else if(scaling_type_ == Problem<T>::Scaling::kScalingIdentity)
+  {
+    scaling_left_ = thrust::device_vector<T>(nrows_, 1);
+    scaling_right_ = thrust::device_vector<T>(ncols_, 1);
+  }
+  else if(scaling_type_ == Problem<T>::Scaling::kScalingCustom)
+  {
+    scaling_left_ = thrust::device_vector<T>(scaling_left_custom_.begin(), scaling_left_custom_.end());
+    scaling_right_ = thrust::device_vector<T>(scaling_right_custom_.begin(), scaling_right_custom_.end());
+
+    if((scaling_left_custom_.size() != nrows_) || (scaling_right_custom_.size() != ncols_))
+      throw new Exception("Preconditioners/diagonal scaling vectors do not fit the size of linear operator.");
+  }
 }
 
 template<typename T>
@@ -154,12 +173,8 @@ void Problem<T>::SetScalingCustom(
   const std::vector<T>& right)
 {
   scaling_type_ = Problem<T>::Scaling::kScalingCustom;
-
-  scaling_left_ = thrust::device_vector<T>(left.begin(), left.end());
-  scaling_right_ = thrust::device_vector<T>(right.begin(), right.end());
-
-  if((left.size() != nrows_) || (right.size() != ncols_))
-    throw new Exception("Preconditioners/diagonal scaling vectors do not fit the size of linear operator.");
+  scaling_left_custom_ = left;
+  scaling_right_custom_ = right;
 }
 
 // computes a scaling using the Diagonal Preconditioners

@@ -16,7 +16,7 @@
 template<typename T>
 class ProxMoreau : public Prox<T> {
 public:
-  ProxMoreau(std::unique_ptr<Prox<T> > conjugate);
+  ProxMoreau(std::shared_ptr<Prox<T> > conjugate);
   virtual ~ProxMoreau();
 
   virtual void Init();
@@ -25,7 +25,7 @@ public:
   virtual size_t gpu_mem_amount() const;
 
 protected:
-  std::unique_ptr<Prox<T> > conjugate_;
+  std::shared_ptr<Prox<T> > conjugate_;
   thrust::device_vector<T> scaled_arg_;
 
   virtual void EvalLocal(
