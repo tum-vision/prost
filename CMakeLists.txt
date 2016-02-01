@@ -24,6 +24,7 @@ include_directories("include")
 set(SOURCES
   "src/linop/block.cu"
   "src/linop/block_zero.cu"
+  "src/linop/block_sparse.cu"
   "src/linop/linearoperator.cu"
 
   "src/prox/prox.cu"
@@ -37,6 +38,7 @@ set(SOURCES
 
   "include/linop/block.hpp"
   "include/linop/block_zero.hpp"
+  "include/linop/block_sparse.hpp"
   "include/linop/linearoperator.hpp"
 
   "include/prox/prox.hpp"

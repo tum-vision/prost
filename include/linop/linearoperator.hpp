@@ -32,6 +32,16 @@ public:
     thrust::device_vector<T>& result, 
     const thrust::device_vector<T>& rhs);
 
+  /// \brief For debugging/testing purposes. 
+  void Eval(
+    std::vector<T>& result,
+    const std::vector<T>& rhs);
+
+  /// \brief For debugging/testing purposes. 
+  void EvalAdjoint(
+    std::vector<T>& result,
+    const std::vector<T>& rhs);
+
   /// \brief Returns \sum_{col=1}^{ncols} |K_{row,col}|^{\alpha}.
   T row_sum(size_t row, T alpha) const;
 

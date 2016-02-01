@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+#include "exception.hpp"
 #include "mex_factory.hpp"
 
 #ifdef __cplusplus
