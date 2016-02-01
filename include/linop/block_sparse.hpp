@@ -7,6 +7,11 @@
 #include <thrust/device_vector.h>
 #include <thrust/device_ptr.h>
 
+#include <cuda_runtime.h>
+#include <cusparse.h>
+
+#include "linop/block.hpp"
+
 /// 
 /// \brief Linear operator based on sparse matrix.
 /// 
@@ -22,15 +27,14 @@ public:
     int m,
     int n,
     int nnz,
-    T *val,
-    int32_t *ptr,
-    int32_t *val);
+    const std::vector<T>& val,
+    const std::vector<int32_t>& ptr,
+    const std::vector<int32_t>& ind);
 
   virtual ~BlockSparse();
 
   virtual void Initialize();
-  virtual void Release();
-  
+
   /// \brief Required for preconditioners, row and col are "local" 
   ///        for the operator, which means they start at 0.
   virtual T row_sum(size_t row, T alpha) const;
@@ -39,6 +43,8 @@ public:
   virtual size_t gpu_mem_amount() const;
   
 protected:
+  // TODO: implement sparse matrix multiplication on CPU
+
   virtual void EvalLocalAdd(
     const typename thrust::device_vector<T>::iterator& res_begin,
     const typename thrust::device_vector<T>::iterator& res_end,
@@ -64,6 +70,14 @@ protected:
   std::vector<int32_t> host_ind_, host_ind_t_;
   std::vector<int32_t> host_ptr_, host_ptr_t_;
   std::vector<T> host_val_, host_val_t_;
+
+private:
+  /// \brief Helper function that converts CSR format to CSC format, 
+  ///        not in-place, if a == NULL, only pattern is reorganized
+  ///        the size of matrix is n x m.
+  static void csr2csc(int n, int m, int nz, 
+    T *a, int *col_idx, int *row_start,
+    T *csc_a, int *row_idx, int *col_start); // TODO: why not int32_t?
 };
 
 #endif

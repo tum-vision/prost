@@ -5,7 +5,8 @@
 #include <thrust/device_vector.h>
 #include <thrust/fill.h>
 
-bool LinearOperator::RectangleOverlap(
+template<typename T>
+bool LinearOperator<T>::RectangleOverlap(
   size_t x1, size_t y1,
   size_t x2, size_t y2,
   size_t a1, size_t b1,
@@ -95,7 +96,7 @@ void LinearOperator<T>::Initialize()
     throw new Exception("There's empty space between the blocks inside the linear operator. Recheck the indicies.");
 
   for(auto block : blocks_)
-    block->Init();
+    block->Initialize();
 }
 
 template<typename T>
@@ -125,6 +126,42 @@ void LinearOperator<T>::EvalAdjoint(
 
   for(auto block : blocks_)
     block->EvalAdjointAdd(result, rhs);
+}
+
+template<typename T>
+void LinearOperator<T>::Eval(
+  std::vector<T>& result,
+  const std::vector<T>& rhs)
+{
+  std::cout << "Building rhs/result" << std::endl;
+  thrust::device_vector<T> d_rhs(rhs.begin(), rhs.end());
+  thrust::device_vector<T> d_res;
+  d_res.resize(nrows());
+
+  std::cout << "Forward evaluating linear operator" << std::endl;
+  Eval(d_res, d_rhs);
+
+  std::cout << "Copying back..." << std::endl;
+  result.resize(nrows());
+  thrust::copy(d_res.begin(), d_res.end(), result.begin());
+}
+
+template<typename T>
+void LinearOperator<T>::EvalAdjoint(
+  std::vector<T>& result,
+  const std::vector<T>& rhs)
+{
+  std::cout << "Building rhs/result" << std::endl;
+  thrust::device_vector<T> d_rhs(rhs.begin(), rhs.end());
+  thrust::device_vector<T> d_res;
+  d_res.resize(ncols());
+
+  std::cout << "Adjoint evaluating linear operator" << std::endl;
+  EvalAdjoint(d_res, d_rhs);
+
+  std::cout << "Copying back..." << std::endl;
+  result.resize(ncols());
+  thrust::copy(d_res.begin(), d_res.end(), result.begin());
 }
 
 template<typename T>
@@ -173,6 +210,8 @@ size_t LinearOperator<T>::gpu_mem_amount() const
 template<typename T>
 T LinearOperator<T>::normest(T tol, int max_iters)
 {
+  // TODO: implement via power iteration
+  return 0;
 }
 
 

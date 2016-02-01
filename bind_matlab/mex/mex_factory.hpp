@@ -10,11 +10,11 @@
 #include "linop/linearoperator.hpp"
 #include "linop/block.hpp"
 #include "linop/block_zero.hpp"
+#include "linop/block_sparse.hpp"
 
 #include "backend/backend.hpp"
 #include "backend/backend_pdhg.hpp"
 
-#include "exception.hpp"
 #include "problem.hpp"
 #include "solver.hpp"
 
@@ -38,6 +38,7 @@ public:
   static ProxZero<real>* CreateProxZero(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
   static BlockZero<real>* CreateBlockZero(size_t row, size_t col, const mxArray *data);
+  static BlockSparse<real>* CreateBlockSparse(size_t row, size_t col, const mxArray *data);
 
   static BackendPDHG<real>* CreateBackendPDHG(const mxArray *data);
 

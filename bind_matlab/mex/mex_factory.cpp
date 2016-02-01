@@ -3,6 +3,9 @@
 #include <algorithm>
 #include <memory>
 #include <string>
+#include <sstream>
+
+#include "exception.hpp"
 
 mxArray *MexFactory::PDHG_stepsize_cb_handle = nullptr;
 mxArray *MexFactory::Solver_interm_cb_handle = nullptr;
@@ -32,6 +35,7 @@ MexFactory::Init()
 
   // blocks
   BlockFactory::GetInstance()->Register<BlockZero<real>* >("zero", CreateBlockZero);
+  BlockFactory::GetInstance()->Register<BlockSparse<real>* >("sparse", CreateBlockSparse);
 
   // backends
   BackendFactory::GetInstance()->Register<BackendPDHG<real>* >("pdhg", CreateBackendPDHG);
@@ -55,7 +59,37 @@ MexFactory::CreateBlockZero(size_t row, size_t col, const mxArray *data)
   size_t nrows = (size_t) mxGetScalar(mxGetCell(data, 0));
   size_t ncols = (size_t) mxGetScalar(mxGetCell(data, 1));
   
-    return new BlockZero<real>(row, col, nrows, ncols);
+  return new BlockZero<real>(row, col, nrows, ncols);
+}
+
+BlockSparse<real>*
+MexFactory::CreateBlockSparse(size_t row, size_t col, const mxArray *data)
+{
+  mxArray *pm = mxGetCell(data, 0);
+
+  double *val = mxGetPr(pm);
+  mwIndex *ind = mxGetIr(pm);
+  mwIndex *ptr = mxGetJc(pm);
+  const mwSize *dims = mxGetDimensions(pm);
+
+  int nrows = dims[0];
+  int ncols = dims[1];
+  int nnz = ptr[ncols];
+
+  // convert from mwIndex -> int32_t, double -> real
+  std::vector<real> vec_val(val, val + nnz);
+  std::vector<int32_t> vec_ptr(ptr, ptr + (ncols + 1));
+  std::vector<int32_t> vec_ind(ind, ind + nnz); 
+
+  return BlockSparse<real>::CreateFromCSC(
+    row, 
+    col,
+    nrows,
+    ncols,
+    nnz,
+    vec_val,
+    vec_ptr,
+    vec_ind);
 }
 
 BackendPDHG<real>* 
@@ -90,7 +124,7 @@ MexFactory::CreateBackendPDHG(const mxArray *data)
   else if(stepsize_variant == "callback")
     opts.stepsize_variant= BackendPDHG<real>::StepsizeVariant::kPDHGStepsCallback;
   else
-    throw new Exception("Couldn't recognize step-size variant.");
+    throw Exception("Couldn't recognize step-size variant.");
 
   PDHG_stepsize_cb_handle = mxGetField(data, 0, "stepsize_callback");
 
@@ -111,7 +145,21 @@ MexFactory::CreateProx(const mxArray *pm)
   bool diagsteps = (bool) mxGetScalar(mxGetCell(pm, 3));
   mxArray *data = mxGetCell(pm, 4);
         
-  return ProxFactory::GetInstance()->Create(name, idx, size, diagsteps, data);
+  Prox<real> *prox = nullptr;
+
+  try
+  {
+    prox = ProxFactory::GetInstance()->Create(name, idx, size, diagsteps, data);
+  }
+  catch(const std::out_of_range& oor)
+  {
+    std::ostringstream ss;
+    ss << "MexFactory::CreateProx failed. Prox with ID '" << name.c_str() << "' not registered in ProxFactory.";
+
+    throw Exception(ss.str());
+  }
+
+  return prox;
 }
 
 Block<real>* 
@@ -124,7 +172,21 @@ MexFactory::CreateBlock(const mxArray *pm)
   size_t col = (size_t) mxGetScalar(mxGetCell(pm, 2));
   mxArray *data = mxGetCell(pm, 3);
 
-  return BlockFactory::GetInstance()->Create(name, row, col, data);
+  Block<real> *block = nullptr;
+
+  try 
+  {
+    block = BlockFactory::GetInstance()->Create(name, row, col, data);
+  }
+  catch(const std::out_of_range& oor)
+  {
+    std::ostringstream ss;
+    ss << "MexFactory::CreateBlock failed. Block with ID '" << name.c_str() << "' not registered in BlockFactory.";
+
+    throw Exception(ss.str());
+  }
+
+  return block;
 }
     
 Backend<real>* 
@@ -133,7 +195,21 @@ MexFactory::CreateBackend(const mxArray *pm)
   std::string name(mxArrayToString(mxGetCell(pm, 0)));
   std::transform(name.begin(), name.end(), name.begin(), ::tolower);
 
-  return BackendFactory::GetInstance()->Create(name, mxGetCell(pm, 1));
+  Backend<real> *backend = nullptr;
+
+  try
+  {
+    backend = BackendFactory::GetInstance()->Create(name, mxGetCell(pm, 1));
+  }
+  catch(const std::out_of_range& oor)
+  {
+    std::ostringstream ss;
+    ss << "MexFactory::CreateBackend '" << name.c_str() << "' not registered in BackendFactory.";
+
+    throw Exception(ss.str());
+  }
+
+  return backend;
 }
 
 Problem<real>* 
@@ -198,7 +274,7 @@ MexFactory::CreateProblem(const mxArray *pm)
     prob->SetScalingCustom(left, right);
   }
   else
-    throw new Exception("Problem scaling variant not recognized.");
+    throw Exception("Problem scaling variant not recognized.");
 
   return prob;
 }
@@ -222,12 +298,12 @@ MexFactory::CreateSolverOptions(const mxArray *pm)
 }
 
 
-  static void PDHGStepsizeCallback(int iter, double res_primal, double res_dual, double& tau, double &sigma)
-  {
-    // TODO: Call MATLAB function PDHG_stepsize_cb_handle
-  }
+static void PDHGStepsizeCallback(int iter, double res_primal, double res_dual, double& tau, double &sigma)
+{
+  // TODO: Call MATLAB function PDHG_stepsize_cb_handle
+}
 
-  static void SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vector<real>& dual)
-  {
-    // TODO: Call MATLAB function Solver_interm_cb_handle
-  }
+static void SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vector<real>& dual)
+{
+  // TODO: Call MATLAB function Solver_interm_cb_handle
+}
