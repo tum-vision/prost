@@ -52,9 +52,9 @@ BlockSparse<T>* BlockSparse<T>::CreateFromCSC(
   block->nnz_ = nnz;
 
   // create data on host
-  block->host_ind_t_ = ind; //std::vector<int32_t>(ind, ind + block->nnz_);
-  block->host_ptr_t_ = ptr; //std::vector<int32_t>(ptr, ptr + block->ncols() + 1);
-  block->host_val_t_ = val; //std::vector<T>(val, val + block->nnz_);
+  block->host_ind_t_ = ind; 
+  block->host_ptr_t_ = ptr; 
+  block->host_val_t_ = val; 
 
   block->host_ind_.resize(block->nnz_);
   block->host_val_.resize(block->nnz_);

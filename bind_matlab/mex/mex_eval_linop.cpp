@@ -34,12 +34,19 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   for(mwSize i = 0; i < dims_linop[0]; i++)
     linop->AddBlock( std::shared_ptr<Block<real> >(MexFactory::CreateBlock(mxGetCell(cell_linop, i))) );
 
-  std::vector<real> rhs(mxGetPr(prhs[1]), mxGetPr(prhs[1]) + linop->ncols());
+  std::vector<real> rhs;
   bool transpose = static_cast<bool>(mxGetScalar(prhs[2]));
   const mwSize *dims = mxGetDimensions(prhs[1]);
 
   if(dims[1] != 1)
     mexErrMsgTxt("Right-hand side input to eval_linop should be a n-times-1 vector!");
+
+  if(transpose)
+    rhs = std::vector<real>(mxGetPr(prhs[1]), mxGetPr(prhs[1]) + linop->nrows());
+  else
+    rhs = std::vector<real>(mxGetPr(prhs[1]), mxGetPr(prhs[1]) + linop->ncols());
+
+  mexPrintf("Size of rhs=%d\n", rhs.size());
 
   mexPrintf("Initializing linop...\n");
   try 
