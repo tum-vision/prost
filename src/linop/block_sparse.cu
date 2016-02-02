@@ -1,5 +1,7 @@
 #include "linop/block_sparse.hpp"
 
+#include <thrust/transform_reduce.h>
+#include <iostream>
 #include <sstream>
 #include "exception.hpp"
 
@@ -114,19 +116,27 @@ void BlockSparse<T>::Initialize()
   thrust::copy(host_ptr_.begin(), host_ptr_.end(), ptr_.begin());
   thrust::copy(host_val_.begin(), host_val_.end(), val_.begin());
 }
- 
+
 template<typename T>
 T BlockSparse<T>::row_sum(size_t row, T alpha) const
 {
-  // TODO: implement with thrust.
-  return 0;
+  T sum = 0;
+
+  for(int32_t i = host_ptr_[row]; i < host_ptr_[row + 1]; i++)
+    sum += std::pow(std::abs(host_val_[i]), alpha);
+
+  return sum;
 }
 
 template<typename T>
 T BlockSparse<T>::col_sum(size_t col, T alpha) const
 {
-  // TODO: implement with thrust.
-  return 0;
+  T sum = 0;
+
+  for(int32_t i = host_ptr_t_[col]; i < host_ptr_t_[col + 1]; i++)
+    sum += std::pow(std::abs(host_val_t_[i]), alpha);
+
+  return sum;
 }
 
 template<typename T>
@@ -152,10 +162,6 @@ void BlockSparse<float>::EvalLocalAdd(
   const float alpha = 1;
   const float beta = 1;
 
-  std::cout << "nrows=" << nrows() << ", ncols=" << ncols() << std::endl;
-  std::cout << "nnz=" << nnz_ << std::endl;
-  std::cout << val_.size() << ", " << ptr_.size() << ", " << ind_.size() << std::endl;
-
   stat = cusparseScsrmv(cusp_handle_,
     CUSPARSE_OPERATION_NON_TRANSPOSE,
     nrows(),
@@ -177,8 +183,6 @@ void BlockSparse<float>::EvalLocalAdd(
 
     throw Exception(ss.str());
   }
-  else
-    std::cout << "success!\n";
 }
 
 template<>
@@ -207,7 +211,12 @@ void BlockSparse<float>::EvalAdjointLocalAdd(
     thrust::raw_pointer_cast(&(*res_begin)));
 
   if(stat != CUSPARSE_STATUS_SUCCESS)
-    throw Exception("Sparse Matrix-Vector multiplication failed.");
+  {
+    std::ostringstream ss;
+    ss << "Sparse Matrix-Vector multiplication failed. Error code = " << stat << ".";
+
+    throw Exception(ss.str());
+  }
 }
 
 template<>
@@ -217,6 +226,31 @@ void BlockSparse<double>::EvalLocalAdd(
   const typename thrust::device_vector<double>::const_iterator& rhs_begin,
   const typename thrust::device_vector<double>::const_iterator& rhs_end)
 {
+  cusparseStatus_t stat;
+  const double alpha = 1;
+  const double beta = 1;
+
+  stat = cusparseDcsrmv(cusp_handle_,
+    CUSPARSE_OPERATION_NON_TRANSPOSE,
+    nrows(),
+    ncols(),
+    nnz_,
+    &alpha,
+    descr_,
+    thrust::raw_pointer_cast(val_.data()),
+    thrust::raw_pointer_cast(ptr_.data()),
+    thrust::raw_pointer_cast(ind_.data()),
+    thrust::raw_pointer_cast(&(*rhs_begin)),
+    &beta,
+    thrust::raw_pointer_cast(&(*res_begin)));
+
+  if(stat != CUSPARSE_STATUS_SUCCESS)
+  {
+    std::ostringstream ss;
+    ss << "Sparse Matrix-Vector multiplication failed. Error code = " << stat << ".";
+
+    throw Exception(ss.str());
+  }
 }
 
 template<>
@@ -226,6 +260,31 @@ void BlockSparse<double>::EvalAdjointLocalAdd(
   const typename thrust::device_vector<double>::const_iterator& rhs_begin,
   const typename thrust::device_vector<double>::const_iterator& rhs_end)
 {
+  cusparseStatus_t stat;
+  const double alpha = 1;
+  const double beta = 1;
+
+  stat = cusparseDcsrmv(cusp_handle_,
+    CUSPARSE_OPERATION_NON_TRANSPOSE,
+    ncols(),
+    nrows(),
+    nnz_,
+    &alpha,
+    descr_,
+    thrust::raw_pointer_cast(val_t_.data()),
+    thrust::raw_pointer_cast(ptr_t_.data()),
+    thrust::raw_pointer_cast(ind_t_.data()),
+    thrust::raw_pointer_cast(&(*rhs_begin)),
+    &beta,
+    thrust::raw_pointer_cast(&(*res_begin)));
+
+  if(stat != CUSPARSE_STATUS_SUCCESS)
+  {
+    std::ostringstream ss;
+    ss << "Sparse Matrix-Vector multiplication failed. Error code = " << stat << ".";
+
+    throw Exception(ss.str());
+  }
 }
 
 // Explicit template instantiation
