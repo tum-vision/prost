@@ -28,7 +28,6 @@ void Prox<T>::Eval(std::vector<T>& arg, std::vector<T>& res, std::vector<T>& tau
 
     Eval(d_arg, d_res, d_tau, tau);
 
-    res.resize(arg.size());
     thrust::copy(d_res.begin(), d_res.end(), res.begin());
 }
 

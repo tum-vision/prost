@@ -1,7 +1,7 @@
 % generate random points and project them onto the simplex
 
-N=600000;
-d=32;
+N=6000;
+d=4;
 
 P = -2 + 4 * rand(N, d);
 P = P(:);
@@ -12,17 +12,12 @@ Tau = ones(N * d, 1);
 % h(x) = c f(ax - b) + dx + 0.5ex^2
 
 tic;
-idx, count, dim, interleaved, fun, a, ...
-                             b, c, d, e, alpha, beta
-Q = pdsolver_eval_prox( prox_norm2(0, N, d, false, 'abs', ), P, tau, Tau);
+Q = pdsolver_eval_prox( prox_norm2(0, N, d, false, 'zero', 1, 1, 0, 0, 0, 0, 0), P, tau, Tau);
 toc;
 
 tic;
-Q2 = zeros(size(P));
-for i=0:(N-1)
-    ind = 1 + i+(0:(d-1))*N;
-    Q2(ind) = projsplx(P(ind));
-end
+Q2 = P ./ repmat(sqrt(sum(reshape(P, N, d)'.^2))', d, 1);
+
 toc;
 
 Q = reshape(Q, N, d);

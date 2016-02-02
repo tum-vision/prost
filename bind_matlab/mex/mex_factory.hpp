@@ -28,8 +28,8 @@ class MexFactory {
 public:
     static void Init();
     
-    template<class COEFFS_1D>
-    static void GetCoefficients1D(vector<COEFFS_1D>& coeffs, const mxArray *coeffs_mx);
+    template<size_t COEFFS_COUNT>
+    static void GetCoefficients(array<vector<real>, COEFFS_COUNT>& coeffs, const mxArray *coeffs_mx, size_t count);
     
     template<class FUN_1D>
     static prox::ProxElemOperation<real, prox::elemop::ElemOperation1D<real, FUN_1D>>* CreateProxElemOperation1D(int idx, int size, bool diagsteps, const mxArray *data);

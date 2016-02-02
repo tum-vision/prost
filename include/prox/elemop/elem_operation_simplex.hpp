@@ -23,7 +23,7 @@ namespace elemop {
  *        would be much too slow.
  */
 template<typename T>
-struct ElemOperationSimplex : public ElemOperation<0> {
+struct ElemOperationSimplex : public ElemOperation<0, 0> {
 
   typedef T shared_mem_type;
   
