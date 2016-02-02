@@ -6,11 +6,6 @@
 
 namespace prox {
 namespace elemop {
-    
-template<typename T>
-struct Coefficients1D {
-    T a, b, c, d, e, alpha, beta;
-};   
 
 // implementation of 1D prox operators
 template<typename T>

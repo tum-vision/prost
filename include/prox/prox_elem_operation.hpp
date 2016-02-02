@@ -27,20 +27,11 @@
  *
  */
 namespace prox {
-template<typename T>
-struct has_coeffs {
-private:
-    template<typename V> static void probe(decltype(typename V::Coefficients(), int()));
-    template<typename V> static bool probe(char);
-public:
-    static const bool value = std::is_same<void, decltype(probe<T>(0))>::value;
-};  
-
 template<typename T, class ELEM_OPERATION, class ENABLE = void>
 class ProxElemOperation {};
 
 template<typename T, class ELEM_OPERATION>
-class ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<!has_coeffs<ELEM_OPERATION>::value>::type> : public ProxSeparableSum<T> {
+class ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<ELEM_OPERATION::coeffs_count == 0>::type> : public ProxSeparableSum<T> {
 public:    
   ProxElemOperation(size_t index, size_t count, size_t dim, bool interleaved, bool diagsteps) : ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim <= 0 ? dim : ELEM_OPERATION::dim, interleaved, diagsteps) {}
 
@@ -73,14 +64,14 @@ protected:
 };
 
 template<typename T, class ELEM_OPERATION>
-class ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<has_coeffs<ELEM_OPERATION>::value>::type> : public ProxSeparableSum<T> {
+class ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<ELEM_OPERATION::coeffs_count != 0>::type> : public ProxSeparableSum<T> {
 public:    
   ProxElemOperation(size_t index, 
           size_t count, 
           size_t dim, 
           bool interleaved, 
           bool diagsteps, 
-          const std::vector<typename ELEM_OPERATION::Coefficients>& coeffs) :
+          std::array<std::vector<T>, ELEM_OPERATION::coeffs_count> coeffs) :
       ProxSeparableSum<T>(index, count, ELEM_OPERATION::dim <= 0 ? dim : ELEM_OPERATION::dim, interleaved, diagsteps), 
               coeffs_(coeffs) {}
 
@@ -88,19 +79,16 @@ public:
    * @brief Initializes the prox Operator, copies data to the GPU.
    *
    */
-  virtual void Init() {
-    try {
-        thrust::copy(coeffs_.begin(), coeffs_.end(), d_coeffs_.begin());
-    } catch(std::bad_alloc &e) {
-        throw PDSolverException("Failed to copy coefficients to device");
-    } catch(thrust::system_error &e) {
-        throw PDSolverException("Failed to copy coefficients to device");
-    }
-  }
+  virtual void Init();
   
   // set/get methods
   virtual size_t gpu_mem_amount() {
-    return this->count_ * sizeof(typename ELEM_OPERATION::Coefficients);
+    size_t mem = 0;
+    for(size_t i = 0; i < ELEM_OPERATION::coeffs_count; i++) {
+        if(coeffs_[i].size() > 1)
+            mem += this->count_ * sizeof(T);
+    }
+    return mem;
   }
 
    
@@ -127,8 +115,8 @@ protected:
                          bool invert_tau);
   
 private:
-  std::vector<typename ELEM_OPERATION::Coefficients> coeffs_;
-  thrust::device_vector<typename ELEM_OPERATION::Coefficients> d_coeffs_;  
+  std::array<std::vector<T>, ELEM_OPERATION::coeffs_count> coeffs_;
+  std::array<thrust::device_vector<T>, ELEM_OPERATION::coeffs_count> d_coeffs_;  
 };
 }
 #endif

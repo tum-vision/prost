@@ -1,7 +1,7 @@
 % generate random points and project them onto the simplex
 
-N=600000;
-d=32;
+N=6000;
+d=3;
 
 P = -2 + 4 * rand(N, d);
 P = P(:);

@@ -44,7 +44,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   try {
     prox->Init();
   } catch(exception& e) {
-    mexErrMsgTxt("Failed to init prox!");
+    mexErrMsgTxt(e.what());
   }
   
   // convert double -> float if necessary
@@ -59,7 +59,9 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
   // evaluate prox
   Timer t;
   t.start();
+
   prox->Eval(h_arg, h_result, h_tau, tau);
+
   mexPrintf("Evaluation of prox took %f seconds.\n", t.get());
 
 

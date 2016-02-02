@@ -36,53 +36,23 @@ void MexFactory::Init() {
     ProxFactory::GetInstance()->Register<ProxZero<real>>("zero", CreateProxZero);
 }
 
-template<class COEFFS_1D>
-void MexFactory::GetCoefficients1D(vector<COEFFS_1D>& coeffs, const mxArray *coeffs_mx) {
-  double *val;
-
-  const mwSize *dims = mxGetDimensions(mxGetCell(coeffs_mx, 0));
-  coeffs.resize(dims[0]);
-
-  // coeffs.a
-  val = mxGetPr(mxGetCell(coeffs_mx, 0));
-  for(size_t i = 0; i < coeffs.size(); i++)
-      coeffs[i].a = (real)val[i];
-
-
-  // coeffs.b
-  val = mxGetPr(mxGetCell(coeffs_mx, 1));
-  for(size_t i = 0; i < coeffs.size(); i++)
-      coeffs[i].b = (real)val[i];
-
-
-  // coeffs.c
-  val = mxGetPr(mxGetCell(coeffs_mx, 2));
-  for(size_t i = 0; i < coeffs.size(); i++)
-      coeffs[i].c = (real)val[i];
-
-
-  // coeffs.d
-  val = mxGetPr(mxGetCell(coeffs_mx, 3));
-  for(size_t i = 0; i < coeffs.size(); i++)
-      coeffs[i].d = (real)val[i];
-
-
-  // coeffs.e
-  val = mxGetPr(mxGetCell(coeffs_mx, 4));
-  for(size_t i = 0; i < coeffs.size(); i++)
-      coeffs[i].e = (real)val[i];
-
-
-  // coeffs.alpha
-  val = mxGetPr(mxGetCell(coeffs_mx, 5));
-  for(size_t i = 0; i < coeffs.size(); i++)
-      coeffs[i].alpha = (real)val[i];
-
-
-  // coeffs.beta
-  val = mxGetPr(mxGetCell(coeffs_mx, 6));
-  for(size_t i = 0; i < coeffs.size(); i++)
-      coeffs[i].beta = (real)val[i];
+template<size_t COEFFS_COUNT>
+void MexFactory::GetCoefficients(array<vector<real>, COEFFS_COUNT>& coeffs, const mxArray *coeffs_mx, size_t count) {
+  for(size_t i = 0; i < COEFFS_COUNT; i++) {
+      
+    const mwSize *dims = mxGetDimensions(mxGetCell(coeffs_mx, i));
+    
+    if(dims[0] != 1 && dims[0] != count) {
+      mexErrMsgTxt("Dimension of coefficients has to be equal to 1 or count\n");
+      exit(-1);
+    }
+        
+    coeffs[i].resize(dims[0]);
+    double *val;
+    val = mxGetPr(mxGetCell(coeffs_mx, i));
+    for(size_t j = 0; j < dims[0]; j++)
+      coeffs[i][j] = (real)val[j];
+  }
 }
 
 template<class FUN_1D>
@@ -90,9 +60,9 @@ ProxElemOperation<real, ElemOperation1D<real, FUN_1D>>* MexFactory::CreateProxEl
   size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
   bool interleaved = (bool) mxGetScalar(mxGetCell(data, 1));
 
-  vector<typename ElemOperation1D<real, FUN_1D>::Coefficients> coeffs;
+  array<vector<real>, 7> coeffs;
   mxArray *coeffs_mx = mxGetCell(data, 2);
-  GetCoefficients1D<typename ElemOperation1D<real, FUN_1D>::Coefficients>(coeffs, coeffs_mx);
+  GetCoefficients<7>(coeffs, coeffs_mx, count);
 
   return new ProxElemOperation<real, ElemOperation1D<real, FUN_1D>>(idx, count, 1, interleaved, diagsteps, coeffs);   
 }
@@ -103,16 +73,15 @@ ProxElemOperation<real, ElemOperationNorm2<real, FUN_1D>>* MexFactory::CreatePro
   size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
   bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
 
-  vector<typename ElemOperationNorm2<real, FUN_1D>::Coefficients> coeffs;
-
+  array<vector<real>, 7> coeffs;
   mxArray *coeffs_mx = mxGetCell(data, 3);
-  GetCoefficients1D<typename ElemOperationNorm2<real, FUN_1D>::Coefficients>(coeffs, coeffs_mx);
-
+  GetCoefficients<7>(coeffs, coeffs_mx, count);
+  
   return new ProxElemOperation<real, ElemOperationNorm2<real, FUN_1D>>(idx, count, dim, interleaved, diagsteps, coeffs);   
 }
 
 ProxElemOperation<real, ElemOperationSimplex<real>>* MexFactory::CreateProxElemOperationSimplex(int idx, int size, bool diagsteps, const mxArray *data) {
-    size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
+  size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
   size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
   bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
 
@@ -138,17 +107,18 @@ unique_ptr<Prox<real>> MexFactory::CreateProx(const mxArray *pm) {
     bool diagsteps = (bool) mxGetScalar(mxGetCell(pm, 3));
     mxArray *data = mxGetCell(pm, 4);
 
-    mexPrintf("Attempting to create prox<'%s', idx=%d, size=%d, diagsteps=%d>...",
+    mexPrintf("Attempting to create prox<'%s', idx=%d, size=%d, diagsteps=%d>...\n",
     name.c_str(), idx, size, diagsteps);
-
+    
     Prox<real>* prox = nullptr;
     try {
       prox = ProxFactory::GetInstance()->Create(name, idx, size, diagsteps, data);
     } catch (const std::out_of_range& oor) {
-      mexPrintf(" Failed.\nWarning: Prox with ID '%s' not registered in ProxFactory\n", name.c_str());
+      mexPrintf("Failed. Warning: Prox with ID '%s' not registered in ProxFactory\n", name.c_str());
+      exit(-1);
       return nullptr;
     }
-    mexPrintf(" success.\n");
+    mexPrintf("success.\n");
   
     return move(unique_ptr<Prox<real>>(prox));
 }

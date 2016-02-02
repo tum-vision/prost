@@ -9,17 +9,11 @@ namespace elemop {
 /**
  * @brief Provides proximal operator for sum of 2-norms, with a nonlinear
  *        function ProxFunction1D applied to the norm.
- *
- *
- *
  */
 template<typename T, class FUN_1D>
-struct ElemOperationNorm2 : public ElemOperation<0> {
-
- struct Coefficients : public Coefficients1D<T> {};
-
+struct ElemOperationNorm2 : public ElemOperation<0, 7> {
   #ifdef __CUDACC__
-  __device__ ElemOperationNorm2(Coefficients& coeffs, size_t dim, SharedMem<ElemOperationNorm2<T, FUN_1D>>& shared_mem) : coeffs_(coeffs), dim_(dim) {} 
+  __device__ ElemOperationNorm2(T* coeffs, size_t dim, SharedMem<ElemOperationNorm2<T, FUN_1D>>& shared_mem) : coeffs_(coeffs), dim_(dim) {} 
  
  
  inline __device__ void operator()(Vector<T, ElemOperationNorm2<T, FUN_1D>>& arg, Vector<T, ElemOperationNorm2<T, FUN_1D>>& res, Vector<T,ElemOperationNorm2<T, FUN_1D>>& tau_diag, T tau_scal, bool invert_tau) {
@@ -30,26 +24,24 @@ struct ElemOperationNorm2 : public ElemOperation<0> {
       const T val = arg[i];
       norm += val * val;
     }
-    
-    //TODO check coeffs_.val[i] == NULL
-    
+
     if(norm > 0) {
       norm = sqrt(norm);
 
       // compute step-size
-      const T tau = invert_tau ? (1. / (tau_scal * tau_diag[0])) : (tau_scal * tau_diag[0]);
+      T tau = invert_tau ? (1. / (tau_scal * tau_diag[0])) : (tau_scal * tau_diag[0]);
 
       // compute scaled prox argument and step 
-      const T prox_arg = ((coeffs_.a * (norm - coeffs_.d * tau)) /
-                     (1. + tau * coeffs_.e)) - coeffs_.b;
-    
-      const T step = (coeffs_.c * coeffs_.a * coeffs_.a * tau) /
-                     (1. + tau * coeffs_.e);
-      
+      const T prox_arg = ((coeffs_[0] * (norm - coeffs_[3] * tau)) /
+                     (1. + tau * coeffs_[4])) - coeffs_[1];
+
+      const T step = (coeffs_[2] * coeffs_[0] * coeffs_[0] * tau) /
+                     (1. + tau * coeffs_[4]);
+
       // compute prox
       FUN_1D fun;
-      const T prox_result = (fun(prox_arg, step, coeffs_.alpha, coeffs_.beta) +
-                             coeffs_.b) / coeffs_.a;
+      const T prox_result = (fun(prox_arg, step, coeffs_[5], coeffs_[6]) +
+                             coeffs_[1]) / coeffs_[0];
 
       // combine together for result
       for(size_t i = 0; i < dim_; i++) {
@@ -59,12 +51,12 @@ struct ElemOperationNorm2 : public ElemOperation<0> {
       for(size_t i = 0; i < dim_; i++) {
         res[i] = 0;
       }
-    }
+    }    
  }
  #endif
  
 private:
-  Coefficients& coeffs_;
+  T* coeffs_;
   size_t dim_;
 };
 }
