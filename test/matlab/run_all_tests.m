@@ -8,8 +8,6 @@ for i=1:size(unit_tests,1)
     if passed
         fprintf(' success!\n');
         num_passed = num_passed + 1;
-    else
-        fprintf(' failure!\n');
     end
 end
 

@@ -1,64 +1,74 @@
 function [passed] = test_linop_sparse()
 
-    % build big block matrix out of many sparse matrices
-    K = [];
-    linop = {};
-    idx = 1;
-    row = 0;
-    nrows = 321;
-    ncols = 117;
-
-    By = 12;
-    Bx = 14;
-
-    for i=1:By
-    
-        K_row = [];
-        col = 0;
-        for j=1:Bx
-            K_mat = sprand(nrows,ncols,0.01);
-            K_row = cat(2, K_row, K_mat);
-            linop{idx, 1} = block_sparse(row, col, K_mat);
-            idx = idx + 1;
-            col = col + ncols;
-        end
-    
-        row = row + nrows;
-        K = cat(1, K, K_row);
-    end
-
-    inp = rand(ncols*Bx, 1);
-    inp2 = rand(nrows*By, 1);
-
-    [x,~,~] = pdsolver_eval_linop(linop, inp, false);
-    [y,rowsum,colsum] = pdsolver_eval_linop(linop, inp2, true);
-
-    x_ml = K*inp;
-    y_ml = K'*inp2;
-
-    rowsum_ml = sum(abs(K), 2);
-    colsum_ml = sum(abs(K), 1)';
-
+    rng(1);
     passed = true;
-
-    if norm(x-x_ml) > 1e-3
-        fprintf('norm_diff_forward: %f\n', norm(x-x_ml));
-        passed = false;
-    end
     
-    if norm(y-y_ml) > 1e-3
-        fprintf('norm_diff_adjoint: %f\n', norm(y-y_ml));
-        passed = false;
-    end
-    
-    if norm(rowsum-rowsum_ml) > 1e-3
-        fprintf('norm_diff_rowsum: %f\n', norm(rowsum-rowsum_ml));
-        passed = false;
-    end
+    for n_test = 1:10
+        
+        K = [];
+        linop = {};
+        idx = 1;
+        row = 0;
+        nrows = randi(1000);
+        ncols = randi(1000);
 
-    if norm(colsum-colsum_ml) > 1e-3
-        fprintf('norm_diff_colsum: %f\n', norm(colsum-colsum_ml));
-        passed = false;
+        By = randi(25);
+        Bx = randi(25);
+
+        for i=1:By
+            
+            K_row = [];
+            col = 0;
+            for j=1:Bx
+                K_mat = sprand(nrows,ncols,0.01);
+                K_row = cat(2, K_row, K_mat);
+                linop{idx, 1} = block_sparse(row, col, K_mat);
+                idx = idx + 1;
+                col = col + ncols;
+            end
+            
+            row = row + nrows;
+            K = cat(1, K, K_row);
+        end
+        
+        inp2 = rand(nrows*By, 1);
+        [y,rowsum,colsum] = pdsolver_eval_linop(linop, inp2, true);
+        y_ml = K'*inp2;
+
+        if norm(y-y_ml) > 1e-3
+            fprintf('failed! Reason: norm_diff_adjoint > 1e-3: %f\n', norm(y-y_ml));
+            passed = false;
+            
+            size(K)
+            
+            return;
+        end
+        
+        inp = rand(ncols*Bx, 1);
+        [x,~,~] = pdsolver_eval_linop(linop, inp, false);
+        x_ml = K*inp;
+
+        if norm(x-x_ml) > 1e-3
+            fprintf('failed! Reason: norm_diff_forward > 1e-3: %f\n', norm(x-x_ml));
+            passed = false;
+            
+            return;
+        end
+        
+        rowsum_ml = sum(abs(K), 2);
+        colsum_ml = sum(abs(K), 1)';
+        
+        if norm(rowsum-rowsum_ml) > 1e-3
+            fprintf('failed! Reason: norm_diff_rowsum > 1e-3: %f\n', norm(rowsum-rowsum_ml));
+            passed = false;
+            return;
+        end
+
+        if norm(colsum-colsum_ml) > 1e-3
+            fprintf('failed! Reason: norm_diff_colsum > 1e-3: %f\n', norm(colsum-colsum_ml));
+            passed = false;
+            return;
+        end
     end
     
 end

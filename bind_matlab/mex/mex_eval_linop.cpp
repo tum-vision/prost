@@ -41,14 +41,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if(dims[1] != 1)
     mexErrMsgTxt("Right-hand side input to eval_linop should be a n-times-1 vector!");
 
-  if(transpose)
-    rhs = std::vector<real>(mxGetPr(prhs[1]), mxGetPr(prhs[1]) + linop->nrows());
-  else
-    rhs = std::vector<real>(mxGetPr(prhs[1]), mxGetPr(prhs[1]) + linop->ncols());
-
-  mexPrintf("Size of rhs=%d\n", rhs.size());
-
-  mexPrintf("Initializing linop...\n");
   try 
   {
     linop->Initialize();
@@ -60,10 +52,16 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mexPrintf(ss.str().c_str());
   }
 
-  mexPrintf("Evaluating linop...\n");
+  double *matlab_rhs = (double *)mxGetPr(prhs[1]);
+
+  if(transpose)
+    rhs = std::vector<real>( matlab_rhs, matlab_rhs + linop->nrows());
+  else
+    rhs = std::vector<real>( matlab_rhs, matlab_rhs + linop->ncols());
+
+  std::vector<real> res;
   try
   {
-    std::vector<real> res;
     if(transpose)
       linop->EvalAdjoint(res, rhs);
     else 
@@ -76,17 +74,21 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mexPrintf(ss.str().c_str());
   }
 
-  mexPrintf("Copying result back...\n");
   plhs[0] = mxCreateDoubleMatrix(transpose ? linop->ncols() : linop->nrows(), 1, mxREAL);
   plhs[1] = mxCreateDoubleMatrix(linop->nrows(), 1, mxREAL);
   plhs[2] = mxCreateDoubleMatrix(linop->ncols(), 1, mxREAL);
 
-  std::vector<double> rowsum(mxGetPr(plhs[1]), mxGetPr(plhs[1]) + linop->nrows());
-  std::vector<double> colsum(mxGetPr(plhs[2]), mxGetPr(plhs[2]) + linop->ncols());
+  std::copy(res.begin(), res.end(), (double *)mxGetPr(plhs[0]));
+
+  std::vector<double> rowsum(linop->nrows());
+  std::vector<double> colsum(linop->ncols());
 
   for(size_t row = 0; row < linop->nrows(); row++)
     rowsum[row] = linop->row_sum(row, 1);
 
   for(size_t col = 0; col < linop->ncols(); col++)
     colsum[col] = linop->col_sum(col, 1);
+
+  std::copy(rowsum.begin(), rowsum.end(), (double *)mxGetPr(plhs[1]));
+  std::copy(colsum.begin(), colsum.end(), (double *)mxGetPr(plhs[2]));
 }

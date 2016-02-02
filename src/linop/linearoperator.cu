@@ -95,14 +95,14 @@ void LinearOperator<T>::Initialize()
   if(area != nrows_ * ncols_)  
     throw new Exception("There's empty space between the blocks inside the linear operator. Recheck the indicies.");
 
-  for(auto block : blocks_)
+  for(auto& block : blocks_)
     block->Initialize();
 }
 
 template<typename T>
 void LinearOperator<T>::Release()
 {
-  for(auto block : blocks_)
+  for(auto& block : blocks_)
     block->Release();
 }
 
@@ -113,7 +113,7 @@ void LinearOperator<T>::Eval(
 {
   thrust::fill(result.begin(), result.end(), 0);
 
-  for(auto block : blocks_)
+  for(auto& block : blocks_)
     block->EvalAdd(result, rhs);
 }
 
@@ -124,7 +124,7 @@ void LinearOperator<T>::EvalAdjoint(
 {
   thrust::fill(result.begin(), result.end(), 0);
 
-  for(auto block : blocks_)
+  for(auto& block : blocks_)
     block->EvalAdjointAdd(result, rhs);
 }
 
@@ -133,15 +133,12 @@ void LinearOperator<T>::Eval(
   std::vector<T>& result,
   const std::vector<T>& rhs)
 {
-  std::cout << "Building rhs/result" << std::endl;
   thrust::device_vector<T> d_rhs(rhs.begin(), rhs.end());
   thrust::device_vector<T> d_res;
   d_res.resize(nrows());
 
-  std::cout << "Forward evaluating linear operator" << std::endl;
   Eval(d_res, d_rhs);
 
-  std::cout << "Copying back..." << std::endl;
   result.resize(nrows());
   thrust::copy(d_res.begin(), d_res.end(), result.begin());
 }
@@ -151,15 +148,12 @@ void LinearOperator<T>::EvalAdjoint(
   std::vector<T>& result,
   const std::vector<T>& rhs)
 {
-  std::cout << "Building rhs/result" << std::endl;
   thrust::device_vector<T> d_rhs(rhs.begin(), rhs.end());
   thrust::device_vector<T> d_res;
   d_res.resize(ncols());
 
-  std::cout << "Adjoint evaluating linear operator" << std::endl;
   EvalAdjoint(d_res, d_rhs);
 
-  std::cout << "Copying back..." << std::endl;
   result.resize(ncols());
   thrust::copy(d_res.begin(), d_res.end(), result.begin());
 }
@@ -169,7 +163,7 @@ T LinearOperator<T>::row_sum(size_t row, T alpha) const
 {
   T sum = 0;
   
-  for(auto block : blocks_)
+  for(auto& block : blocks_)
   {
     if(row < block->row() ||
        row >= (block->row() + block->nrows()))
@@ -185,7 +179,8 @@ template<typename T>
 T LinearOperator<T>::col_sum(size_t col, T alpha) const 
 {
   T sum = 0;
-  for(auto block : blocks_) {
+  for(auto& block : blocks_) 
+  {
     if(col < block->col() ||
        col >= (block->col() + block->ncols()))
       continue;
@@ -201,7 +196,7 @@ size_t LinearOperator<T>::gpu_mem_amount() const
 {
   size_t mem = 0;
 
-  for(auto block : blocks_)
+  for(auto& block : blocks_)
     mem += block->gpu_mem_amount();
 
   return mem;
