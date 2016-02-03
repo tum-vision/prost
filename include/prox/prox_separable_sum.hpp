@@ -3,9 +3,6 @@
 
 #include "prox/prox.hpp"
 
-namespace prox
-{
-
 /// 
 /// \brief Abstract base class for proximal operators 
 ///        for a sum of separable functions:
@@ -46,7 +43,5 @@ protected:
   /// \brief Ordering of elements if dim > 1.
   bool interleaved_; 
 };
-
-}
 
 #endif

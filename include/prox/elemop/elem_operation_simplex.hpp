@@ -3,9 +3,6 @@
 
 #include "elem_operation.hpp"
 
-namespace prox 
-{
-
 /// 
 /// \brief Computes prox for sum of simplex indicator functions.
 ///
@@ -30,17 +27,18 @@ struct ElemOperationSimplex : public ElemOperation<0, 0, T>
     return dim;
   }
 
-  __host__ __device__
+  __device__
   ElemOperationSimplex(size_t dim, SharedMem<ElemOperationSimplex<T>>& shared_mem)
       : dim_(dim), shared_mem_(shared_mem) { } 
   
-  inline __host__ __device__
+  inline __device__
   void
-  operator()(Vector<T>& arg,
-             Vector<T>& res,
-             Vector<T>& tau_diag,
-             T tau_scal,
-             bool invert_tau) 
+  operator()(
+    Vector<T>& res,
+    const Vector<T>& arg,
+    const Vector<T>& tau_diag,
+    T tau_scal,
+    bool invert_tau) 
   {
     // 1) read dim-dimensional vector into shared memory
     for(size_t i = 0; i < dim_; i++)
@@ -49,7 +47,9 @@ struct ElemOperationSimplex : public ElemOperation<0, 0, T>
       shared_mem_[i] = val;
     }
       
+#ifdef CUDACC
     __syncthreads();
+#endif
       
     // 2) sort inside shared memory
     ShellSort();
@@ -76,11 +76,11 @@ struct ElemOperationSimplex : public ElemOperation<0, 0, T>
     {
       T val = arg[i];
 
-      res[i] = max(val - tmax, 0);
+      res[i] = max(val - tmax, static_cast<T>(0));
     }  
   }
   
-  __host__ __device__
+  __device__
   void
   ShellSort()
   {
@@ -107,7 +107,5 @@ struct ElemOperationSimplex : public ElemOperation<0, 0, T>
   SharedMem<ElemOperationSimplex<T>>& shared_mem_;
   size_t dim_;
 };
-
-}
 
 #endif

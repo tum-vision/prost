@@ -31,10 +31,8 @@ public:
     }
 
     /// \brief Registers concrete class derived from type T in the internal data structures of Factory.
-    /// @tparam class C. The concrete class to be registered.
     /// @param const string& identifier. A unique string that is used as a key to obtain an instance via create() afterwards.
     /// @param const string& label. A label that can for example serve as menu path in case of CustomContextMenuItem
-    template<class C>
     void Register(const string& identifier, const function<T*(Args...)>& create_fun) {
         create_funs_.insert(pair<string, function<T*(Args...)>>(identifier, create_fun));
     }

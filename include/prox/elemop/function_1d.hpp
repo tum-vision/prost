@@ -1,9 +1,6 @@
 #ifndef FUNCTION_1D_HPP_
 #define FUNCTION_1D_HPP_
 
-namespace prox 
-{
-
 // implementation of 1D prox operators
 template<typename T>
 struct Function1DZero
@@ -116,7 +113,7 @@ struct Function1DMaxPos0
 template<typename T>
 struct Function1DL0
 {
-  inline __host __device__
+  inline __host__ __device__
   T
   operator()(T x0, T tau, T alpha, T beta) const
   {
@@ -140,7 +137,5 @@ struct Function1DHuber
     return x0 - tau * result;
   }
 };
-
-}
 
 #endif

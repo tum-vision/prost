@@ -1,14 +1,11 @@
 #ifndef SHARED_MEM_HPP_
 #define SHARED_MEM_HPP_
 
-namespace prox
-{
-
 template<class ELEM_OPERATION>
 class SharedMem 
 {
 public:
-  __host__ __device__
+  __device__
   SharedMem(size_t dim, size_t threadIdx_x)
       : dim_(dim), threadIdx_x_(threadIdx_x)
   {
@@ -16,7 +13,7 @@ public:
     sh_arg_ = reinterpret_cast<typename ELEM_OPERATION::SharedMemType*>(sh_mem);
   }
 
-  inline __host__ __device__
+  inline __device__
   typename ELEM_OPERATION::SharedMemType
   operator[](size_t i) const
   {
@@ -24,7 +21,7 @@ public:
     return sh_arg_[index];
   }
 
-  inline __host__ __device__
+  inline __device__
   typename ELEM_OPERATION::SharedMemType&
   operator[](size_t i)
   {
@@ -38,7 +35,5 @@ private:
   size_t threadIdx_x_;
   typename ELEM_OPERATION::SharedMemType* sh_arg_;
 };
-
-}
 
 #endif
