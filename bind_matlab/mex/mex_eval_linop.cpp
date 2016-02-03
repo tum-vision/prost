@@ -24,7 +24,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if(nlhs != 3)
     mexErrMsgTxt("Three outputs (result, rowsum, colsum) required.");
 
-  MexFactory::Init();
+  mex_factory::Initialize();
   
   // read input arguments
   std::shared_ptr<LinearOperator<real> > linop(new LinearOperator<real>());
@@ -32,7 +32,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   const mxArray *cell_linop = prhs[0];
   const mwSize *dims_linop = mxGetDimensions(cell_linop);
   for(mwSize i = 0; i < dims_linop[0]; i++)
-    linop->AddBlock( std::shared_ptr<Block<real> >(MexFactory::CreateBlock(mxGetCell(cell_linop, i))) );
+    linop->AddBlock( std::shared_ptr<Block<real> >(mex_factory::CreateBlock(mxGetCell(cell_linop, i))) );
 
   std::vector<real> rhs;
   bool transpose = static_cast<bool>(mxGetScalar(prhs[2]));

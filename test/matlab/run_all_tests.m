@@ -1,4 +1,4 @@
-unit_tests = { 'linop_sparse' };
+unit_tests = { 'linop_sparse'; 'prox_simplex'; 'prox_norm2' };
 
 num_passed = 0;
 for i=1:size(unit_tests,1)

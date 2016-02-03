@@ -1,28 +1,34 @@
 #ifndef VECTOR_HPP_
 #define VECTOR_HPP_
 
-
-namespace prox 
-{
-
 template<typename T>
-class Vector 
+class Vector
 {
 public:
   __host__ __device__
-  Vector(size_t count, size_t dim, bool interleaved, size_t tx, T* data) : 
+  Vector(size_t count, size_t dim, bool interleaved, size_t tx, const T* data) :
     count_(count),
     dim_(dim),
     interleaved_(interleaved),
     tx_(tx),
-    data_(data) {}
+    data_(nullptr),
+    const_data_(data) { }
+
+  __host__ __device__
+  Vector(size_t count, size_t dim, bool interleaved, size_t tx, T* data) :
+    count_(count),
+    dim_(dim),
+    interleaved_(interleaved),
+    tx_(tx),
+    data_(data), 
+    const_data_(nullptr) { }
 
   inline __host__ __device__
   T
   operator[](size_t i) const 
   {
     size_t index = interleaved_ ? (tx_ * dim_ + i) : (tx_ + count_ * i);
-    return data_[index];
+    return const_data_[index];
   }
 
   inline __host__ __device__
@@ -39,8 +45,7 @@ private:
   bool interleaved_;
   size_t tx_;
   T* data_;
+  const T* const_data_;
 };
-
-}
 
 #endif

@@ -1,11 +1,17 @@
 #include "mex_factory.hpp"
 
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <string>
 #include <sstream>
+#include <vector>
 
+#include "prox/elemop/function_1d.hpp"
 #include "exception.hpp"
+
+namespace mex_factory 
+{
 
 mxArray *PDHG_stepsize_cb_handle = nullptr;
 mxArray *Solver_interm_cb_handle = nullptr;
@@ -30,15 +36,64 @@ void
 Initialize() 
 {
   // prox operators
-  ProxFactory::GetInstance()->Register<ProxMoreau<real>* >("moreau", CreateProxMoreau);
-  ProxFactory::GetInstance()->Register<ProxZero<real>* >("zero", CreateProxZero);
+  ProxFactory::GetInstance()->Register("moreau", CreateProxMoreau);
+  ProxFactory::GetInstance()->Register("zero", CreateProxZero);
+  ProxFactory::GetInstance()->Register("elem_operation:simplex", CreateProxElemOperationSimplex);
+
+  // 
+  // ElemOperation1D 
+  // 
+  ProxFactory::GetInstance()->Register("elem_operation:1d:zero", 
+    CreateProxElemOperation1D<Function1DZero<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:1d:abs", 
+    CreateProxElemOperation1D<Function1DAbs<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:1d:square", 
+    CreateProxElemOperation1D<Function1DSquare<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:1d:ind_leq0", 
+    CreateProxElemOperation1D<Function1DIndLeq0<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:1d:ind_geq0", 
+    CreateProxElemOperation1D<Function1DIndGeq0<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:1d:ind_eq0", 
+    CreateProxElemOperation1D<Function1DIndEq0<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:1d:ind_box01", 
+    CreateProxElemOperation1D<Function1DIndBox01<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:1d:max_pos0", 
+    CreateProxElemOperation1D<Function1DMaxPos0<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:1d:l0", 
+    CreateProxElemOperation1D<Function1DL0<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:1d:huber", 
+    CreateProxElemOperation1D<Function1DHuber<real> >);
+
+  // 
+  // ElemOperationNorm2
+  // 
+  ProxFactory::GetInstance()->Register("elem_operation:norm2:zero", 
+    CreateProxElemOperationNorm2<Function1DZero<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:norm2:abs", 
+    CreateProxElemOperationNorm2<Function1DAbs<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:norm2:square", 
+    CreateProxElemOperationNorm2<Function1DSquare<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:norm2:ind_leq0", 
+    CreateProxElemOperationNorm2<Function1DIndLeq0<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:norm2:ind_geq0", 
+    CreateProxElemOperationNorm2<Function1DIndGeq0<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:norm2:ind_eq0", 
+    CreateProxElemOperationNorm2<Function1DIndEq0<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:norm2:ind_box01", 
+      CreateProxElemOperationNorm2<Function1DIndBox01<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:norm2:max_pos0", 
+    CreateProxElemOperationNorm2<Function1DMaxPos0<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:norm2:l0", 
+    CreateProxElemOperationNorm2<Function1DL0<real> >);
+  ProxFactory::GetInstance()->Register("elem_operation:norm2:huber", 
+    CreateProxElemOperationNorm2<Function1DHuber<real> >);
 
   // blocks
-  BlockFactory::GetInstance()->Register<BlockZero<real>* >("zero", CreateBlockZero);
-  BlockFactory::GetInstance()->Register<BlockSparse<real>* >("sparse", CreateBlockSparse);
+  BlockFactory::GetInstance()->Register("zero", CreateBlockZero);
+  BlockFactory::GetInstance()->Register("sparse", CreateBlockSparse);
 
   // backends
-  BackendFactory::GetInstance()->Register<BackendPDHG<real>* >("pdhg", CreateBackendPDHG);
+  BackendFactory::GetInstance()->Register("pdhg", CreateBackendPDHG);
 }
   
 ProxMoreau<real>* 
@@ -60,6 +115,64 @@ CreateBlockZero(size_t row, size_t col, const mxArray *data)
   size_t ncols = (size_t) mxGetScalar(mxGetCell(data, 1));
   
   return new BlockZero<real>(row, col, nrows, ncols);
+}
+
+template<size_t COEFFS_COUNT>
+void GetCoefficients(
+  std::array<std::vector<real>, COEFFS_COUNT>& coeffs, 
+  const mxArray *coeffs_mx, 
+  size_t count) 
+{
+  for(size_t i = 0; i < COEFFS_COUNT; i++) 
+  {    
+    const mwSize *dims = mxGetDimensions(mxGetCell(coeffs_mx, i));
+    
+    if(dims[0] != 1 && dims[0] != count) 
+      throw Exception("Prox: Dimension of coefficients has to be equal to 1 or count\n");
+        
+    double *val = mxGetPr(mxGetCell(coeffs_mx, i));
+    coeffs[i] = std::vector<real>(val, val + dims[0]);
+  }
+}
+
+template<class FUN_1D> 
+ProxElemOperation<real, ElemOperation1D<real, FUN_1D> >*
+CreateProxElemOperation1D(size_t idx, size_t size, bool diagsteps, const mxArray *data)
+{
+  size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
+  size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
+  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+
+  std::array<std::vector<real>, 7> coeffs;
+  GetCoefficients<7>(coeffs, mxGetCell(data, 3), size);
+
+  return new ProxElemOperation<real, ElemOperation1D<real, FUN_1D>>(
+    idx, count, dim, interleaved, diagsteps, coeffs);   
+}
+
+template<class FUN_1D>
+ProxElemOperation<real, ElemOperationNorm2<real, FUN_1D> >* 
+CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+{
+  size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
+  size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
+  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+
+  std::array<std::vector<real>, 7> coeffs;
+  GetCoefficients<7>(coeffs, mxGetCell(data, 3), count);
+  
+  return new ProxElemOperation<real, ElemOperationNorm2<real, FUN_1D>>(
+    idx, count, dim, interleaved, diagsteps, coeffs);   
+}
+
+ProxElemOperation<real, ElemOperationSimplex<real> >* 
+CreateProxElemOperationSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+{
+  size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
+  size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
+  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+
+  return new ProxElemOperation<real, ElemOperationSimplex<real> >(idx, count, dim, interleaved, diagsteps);   
 }
 
 BlockSparse<real>*
@@ -297,3 +410,4 @@ CreateSolverOptions(const mxArray *pm)
   return opts;
 }
 
+}

@@ -57,8 +57,8 @@ public:
   ///
   void Eval(
     std::vector<T>& result, 
-    std::vector<T>& arg, 
-    std::vector<T>& tau_diag, 
+    const std::vector<T>& arg, 
+    const std::vector<T>& tau_diag, 
     T tau); 
 
   virtual size_t gpu_mem_amount() const = 0;

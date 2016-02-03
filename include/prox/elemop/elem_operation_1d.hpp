@@ -3,19 +3,15 @@
 
 #include "prox/elemop/elem_operation.hpp"
 
-namespace prox 
-{
-
 template<typename T, class FUN_1D>
 struct ElemOperation1D : public ElemOperation<1, 7> 
 {
     
-  #ifdef __CUDACC__
   inline __host__ __device__
   ElemOperation1D(T* coeffs, size_t dim, SharedMem<ElemOperation1D>& shared_mem) : coeffs_(coeffs) { } 
   
   inline __host__ __device__
-  void operator()(Vector<T>& arg, Vector<T>& res, Vector<T>& tau_diag, T tau_scal, bool invert_tau)
+  void operator()(Vector<T>& res, const Vector<T>& arg, const Vector<T>& tau_diag, T tau_scal, bool invert_tau)
   {
     if(coeffs_[2] == 0) // c == 0 -> prox_zero -> return argument
       res[0] = arg[0];
@@ -38,12 +34,9 @@ struct ElemOperation1D : public ElemOperation<1, 7>
         / coeffs_[0];
     }
   }
-  #endif
   
 private:
   T* coeffs_;
 };
-
-}
 
 #endif

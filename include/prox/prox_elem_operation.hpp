@@ -7,9 +7,6 @@
 
 #include "prox/prox_separable_sum.hpp"
 
-namespace prox 
-{
-
 template<typename T, class ELEM_OPERATION, class ENABLE = void>
 class ProxElemOperation { };
 
@@ -82,7 +79,5 @@ private:
   std::array<std::vector<T>, ELEM_OPERATION::kCoeffsCount> coeffs_;
   std::array<thrust::device_vector<T>, ELEM_OPERATION::kCoeffsCount> d_coeffs_;  
 };
-
-}
 
 #endif

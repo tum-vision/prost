@@ -8,11 +8,11 @@
 #include "mex_factory.hpp"
 
 #ifdef __cplusplus
-    extern "C" bool utIsInterruptPending();
-    extern "C" void utSetInterruptPending(bool);
+extern "C" bool utIsInterruptPending();
+extern "C" void utSetInterruptPending(bool);
 #else
-    extern bool utIsInterruptPending();
-    extern void utSetInterruptPending(bool);
+extern bool utIsInterruptPending();
+extern void utSetInterruptPending(bool);
 #endif
 
 bool
@@ -36,15 +36,15 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   try 
   {
-    MexFactory::Init();
+    mex_factory::Initialize();
 
-    shared_ptr<Problem<real> > problem = MexFactory::CreateProblem(prhs[0]);
-    shared_ptr<Backend<real> > backend = MexFactory::CreateBackend(prhs[1]);
-    typename Solver<real>::Options opts = MexFactory::CreateSolverOptions(prhs[2]);
+    shared_ptr<Problem<real> > problem = mex_factory::CreateProblem(prhs[0]);
+    shared_ptr<Backend<real> > backend = mex_factory::CreateBackend(prhs[1]);
+    typename Solver<real>::Options opts = mex_factory::CreateSolverOptions(prhs[2]);
 
     shared_ptr<Solver<real> > solver( new Solver<real>(problem, backend) );
     solver->SetOptions(opts);
-    solver->SetIntermCallback(MexFactory::SolverIntermCallback);
+    solver->SetIntermCallback(mex_factory::SolverIntermCallback);
     solver->SetStoppingCallback(MexStoppingCallback);
 
     solver->Initialize();
@@ -71,12 +71,12 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     }
 
     std::copy(solver->cur_dual_sol().begin(),
-              solver->cur_dual_sol().end(),
-              (double *)mxGetPr(mex_dual_sol));
+      solver->cur_dual_sol().end(),
+      (double *)mxGetPr(mex_dual_sol));
 
     std::copy(solver->cur_primal_sol().begin(),
-              solver->cur_dual.sol().end(),
-              (double *)mxGetPr(mex_primal_sol));
+      solver->cur_primal_sol().end(),
+      (double *)mxGetPr(mex_primal_sol));
 
     const char *fieldnames[3] = {
       "x",
@@ -86,8 +86,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
     plhs[0] = mxCreateStructMatrix(1, 1, 3, fieldnames);
 
-    mxSetFieldByNumber(plhs[0], 0, 0, mx_primal_sol);
-    mxSetFieldByNumber(plhs[0], 0, 1, mx_dual_sol);
+    mxSetFieldByNumber(plhs[0], 0, 0, mex_primal_sol);
+    mxSetFieldByNumber(plhs[0], 0, 1, mex_dual_sol);
     mxSetFieldByNumber(plhs[0], 0, 2, result_string);
 
     solver->Release();

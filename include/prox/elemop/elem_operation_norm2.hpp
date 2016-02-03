@@ -3,9 +3,6 @@
 
 #include "elem_operation.hpp"
 
-namespace prox
-{
-
 /// 
 /// \brief Provides proximal operator for sum of 2-norms, with a nonlinear
 ///        function Function1D applied to the norm.
@@ -19,9 +16,9 @@ struct ElemOperationNorm2 : public ElemOperation<0, 7>
  
  inline __host__ __device__ 
  void operator()(
-     Vector<T>& arg, 
      Vector<T>& res, 
-     Vector<T>& tau_diag, 
+     const Vector<T>& arg, 
+     const Vector<T>& tau_diag, 
      T tau_scal, 
      bool invert_tau) 
   {
@@ -72,7 +69,5 @@ private:
   T* coeffs_;
   size_t dim_;
 };
-
-}
 
 #endif
