@@ -17,8 +17,8 @@
 /// \param Prox diagonal step size.
 /// \returns Result of prox.
 /// 
-void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) {
-  
+void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
+{ 
   if(nrhs < 4)
     mexErrMsgTxt("At least four inputs required.");
 

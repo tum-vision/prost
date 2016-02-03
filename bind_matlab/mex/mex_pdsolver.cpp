@@ -29,8 +29,6 @@ MexStoppingCallback()
 
 void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[]) 
 {
-  cudaDeviceReset();
-
   if(nrhs != 3)
     mexErrMsgTxt("Three inputs required. Usage: result = pdsolver(problem, backend, opts);");
 
