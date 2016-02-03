@@ -1,9 +1,10 @@
 #ifndef SOLVER_HPP_
 #define SOLVER_HPP_
 
+#include <iostream> // for std::function
 #include <memory>
-#include <vector>
 #include <string>
+#include <vector>
 
 template<typename T> class Problem;
 template<typename T> class Backend;
@@ -14,9 +15,11 @@ template<typename T> class Backend;
 /// @tparam typename T. Floating point-type
 /// 
 template<typename T>
-class Solver {
+class Solver
+{
 public:
-  struct Options {
+  struct Options
+  {
     /// \brief relative primal stopping tolerance
     T tol_rel_primal;
 
@@ -40,7 +43,8 @@ public:
     bool verbose;
   };
 
-  enum ConvergenceResult {
+  enum ConvergenceResult
+  {
     kConverged,
     kStoppedMaxIters,
     kStoppedUser
