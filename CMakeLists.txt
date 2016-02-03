@@ -6,7 +6,7 @@ find_package(CUDA REQUIRED)
 
 # Platform specific setup
 if(APPLE)
-  set(CUDA_HOST_COMPILER /usr/bin/clang)
+  set(CUDA_HOST_COMPILER /usr/bin/clang++)
   set(CMAKE_CXX_FLAGS "-O3 -stdlib=libstdc++ -std=c++11 -Wall")
 elseif(UNIX)
   set(CMAKE_CXX_FLAGS "-O3 -std=c++11 -fPIC -Wall")
@@ -28,6 +28,7 @@ set(SOURCES
   "src/linop/linearoperator.cu"
 
   "src/prox/prox.cu"
+  "src/prox/prox_elem_operation.cu"
   "src/prox/prox_moreau.cu"
   "src/prox/prox_zero.cu"
 

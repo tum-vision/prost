@@ -7,27 +7,27 @@
 
 #include "exception.hpp"
 
-mxArray *MexFactory::PDHG_stepsize_cb_handle = nullptr;
-mxArray *MexFactory::Solver_interm_cb_handle = nullptr;
+mxArray *PDHG_stepsize_cb_handle = nullptr;
+mxArray *Solver_interm_cb_handle = nullptr;
 
 typedef Factory<Prox<real>, size_t, size_t, bool, const mxArray*> ProxFactory;
 typedef Factory<Block<real>, size_t, size_t, const mxArray*> BlockFactory;
 typedef Factory<Backend<real>, const mxArray*> BackendFactory;
 
-void 
-MexFactory::PDHGStepsizeCallback(int iter, double res_primal, double res_dual, double& tau, double &sigma)
+void
+PDHGStepsizeCallback(int iter, double res_primal, double res_dual, double& tau, double &sigma)
 {
-  // TODO: Call MATLAB function MexFactory::PDHG_stepsize_cb_handle
+  // TODO: Call MATLAB function PDHG_stepsize_cb_handle
+}
+
+void
+SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vector<real>& dual)
+{
+  // TODO: Call MATLAB function Solver_interm_cb_handle
 }
 
 void 
-MexFactory::SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vector<real>& dual)
-{
-  // TODO: Call MATLAB function MexFactory::Solver_interm_cb_handle
-}
-
-void 
-MexFactory::Init() 
+Initialize() 
 {
   // prox operators
   ProxFactory::GetInstance()->Register<ProxMoreau<real>* >("moreau", CreateProxMoreau);
@@ -42,19 +42,19 @@ MexFactory::Init()
 }
   
 ProxMoreau<real>* 
-MexFactory::CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
 {
-  return new ProxMoreau<real>(std::unique_ptr<Prox<real> >(CreateProx(mxGetCell(data, 0))));
+  return new ProxMoreau<real>(CreateProx(mxGetCell(data, 0)));
 }
     
 ProxZero<real>* 
-MexFactory::CreateProxZero(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+CreateProxZero(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
 {
   return new ProxZero<real>(idx, size);
 }
 
 BlockZero<real>* 
-MexFactory::CreateBlockZero(size_t row, size_t col, const mxArray *data)
+CreateBlockZero(size_t row, size_t col, const mxArray *data)
 {
   size_t nrows = (size_t) mxGetScalar(mxGetCell(data, 0));
   size_t ncols = (size_t) mxGetScalar(mxGetCell(data, 1));
@@ -63,7 +63,7 @@ MexFactory::CreateBlockZero(size_t row, size_t col, const mxArray *data)
 }
 
 BlockSparse<real>*
-MexFactory::CreateBlockSparse(size_t row, size_t col, const mxArray *data)
+CreateBlockSparse(size_t row, size_t col, const mxArray *data)
 {
   mxArray *pm = mxGetCell(data, 0);
 
@@ -93,7 +93,7 @@ MexFactory::CreateBlockSparse(size_t row, size_t col, const mxArray *data)
 }
 
 BackendPDHG<real>* 
-MexFactory::CreateBackendPDHG(const mxArray *data)
+CreateBackendPDHG(const mxArray *data)
 {
   typename BackendPDHG<real>::Options opts;
 
@@ -134,8 +134,8 @@ MexFactory::CreateBackendPDHG(const mxArray *data)
   return backend;
 }
     
-Prox<real>* 
-MexFactory::CreateProx(const mxArray *pm) 
+std::shared_ptr<Prox<real> >
+CreateProx(const mxArray *pm) 
 {
   std::string name(mxArrayToString(mxGetCell(pm, 0)));
   std::transform(name.begin(), name.end(), name.begin(), ::tolower);
@@ -159,11 +159,11 @@ MexFactory::CreateProx(const mxArray *pm)
     throw Exception(ss.str());
   }
 
-  return prox;
+  return std::shared_ptr<Prox<real> >(prox);
 }
 
-Block<real>* 
-MexFactory::CreateBlock(const mxArray *pm)
+std::shared_ptr<Block<real> >
+CreateBlock(const mxArray *pm)
 {
   std::string name(mxArrayToString(mxGetCell(pm, 0)));
   std::transform(name.begin(), name.end(), name.begin(), ::tolower);
@@ -186,11 +186,11 @@ MexFactory::CreateBlock(const mxArray *pm)
     throw Exception(ss.str());
   }
 
-  return block;
+  return std::shared_ptr<Block<real> >(block);
 }
     
-Backend<real>* 
-MexFactory::CreateBackend(const mxArray *pm)
+std::shared_ptr<Backend<real> >
+CreateBackend(const mxArray *pm)
 {
   std::string name(mxArrayToString(mxGetCell(pm, 0)));
   std::transform(name.begin(), name.end(), name.begin(), ::tolower);
@@ -209,11 +209,11 @@ MexFactory::CreateBackend(const mxArray *pm)
     throw Exception(ss.str());
   }
 
-  return backend;
+  return std::shared_ptr<Backend<real> >(backend);
 }
 
-Problem<real>* 
-MexFactory::CreateProblem(const mxArray *pm)
+std::shared_ptr<Problem<real> >
+CreateProblem(const mxArray *pm)
 {
   Problem<real> *prob = new Problem<real>;
 
@@ -276,11 +276,11 @@ MexFactory::CreateProblem(const mxArray *pm)
   else
     throw Exception("Problem scaling variant not recognized.");
 
-  return prob;
+  return std::shared_ptr<Problem<real> >(prob);
 }
 
 typename Solver<real>::Options 
-MexFactory::CreateSolverOptions(const mxArray *pm)
+CreateSolverOptions(const mxArray *pm)
 {
   typename Solver<real>::Options opts;
 
@@ -297,13 +297,3 @@ MexFactory::CreateSolverOptions(const mxArray *pm)
   return opts;
 }
 
-
-static void PDHGStepsizeCallback(int iter, double res_primal, double res_dual, double& tau, double &sigma)
-{
-  // TODO: Call MATLAB function PDHG_stepsize_cb_handle
-}
-
-static void SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vector<real>& dual)
-{
-  // TODO: Call MATLAB function Solver_interm_cb_handle
-}

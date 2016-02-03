@@ -34,11 +34,11 @@ public:
   Problem();
   virtual ~Problem();
 
-  void AddBlock(Block<T> *block);
-  void AddProx_g(Prox<T> *prox);
-  void AddProx_f(Prox<T> *prox);
-  void AddProx_gstar(Prox<T> *prox);
-  void AddProx_fstar(Prox<T> *prox);
+  void AddBlock(std::shared_ptr<Block<T> > block);
+  void AddProx_g(std::shared_ptr<Prox<T> > prox);
+  void AddProx_f(std::shared_ptr<Prox<T> > prox);
+  void AddProx_gstar(std::shared_ptr<Prox<T> > prox);
+  void AddProx_fstar(std::shared_ptr<Prox<T> > prox);
 
   // builds the linear operator and checks if prox cover the 
   // whole domain

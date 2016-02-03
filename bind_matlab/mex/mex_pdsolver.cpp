@@ -15,7 +15,8 @@
     extern void utSetInterruptPending(bool);
 #endif
 
-bool MexStoppingCallback() 
+bool
+MexStoppingCallback() 
 {
   if(utIsInterruptPending())
   {
@@ -37,8 +38,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   {
     MexFactory::Init();
 
-    shared_ptr<Problem<real> > problem( MexFactory::CreateProblem(prhs[0]) );
-    shared_ptr<Backend<real> > backend( MexFactory::CreateBackend(prhs[1]) );
+    shared_ptr<Problem<real> > problem = MexFactory::CreateProblem(prhs[0]);
+    shared_ptr<Backend<real> > backend = MexFactory::CreateBackend(prhs[1]);
     typename Solver<real>::Options opts = MexFactory::CreateSolverOptions(prhs[2]);
 
     shared_ptr<Solver<real> > solver( new Solver<real>(problem, backend) );
@@ -50,8 +51,8 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     Solver<real>::ConvergenceResult result = solver->Solve();
 
     // Copy result back to MATLAB
-    mxArray *mx_primal_sol = mxCreateDoubleMatrix(problem->ncols(), 1, mxREAL);
-    mxArray *mx_dual_sol = mxCreateDoubleMatrix(problem->nrows(), 1, mxREAL);
+    mxArray *mex_primal_sol = mxCreateDoubleMatrix(problem->ncols(), 1, mxREAL);
+    mxArray *mex_dual_sol = mxCreateDoubleMatrix(problem->nrows(), 1, mxREAL);
     mxArray *result_string;
 
     switch(result)
@@ -69,14 +70,13 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
       break;
     }
 
-    double *primal_sol = mxGetPr(mx_primal_sol);
-    double *dual_sol = mxGetPr(mx_dual_sol);
+    std::copy(solver->cur_dual_sol().begin(),
+              solver->cur_dual_sol().end(),
+              (double *)mxGetPr(mex_dual_sol));
 
-    for(size_t i = 0; i < problem->nrows(); i++)
-      dual_sol[i] = static_cast<double>(solver->cur_dual_sol()[i]);
-
-    for(size_t i = 0; i < problem->ncols(); i++)
-      primal_sol[i] = static_cast<double>(solver->cur_primal_sol()[i]);     
+    std::copy(solver->cur_primal_sol().begin(),
+              solver->cur_dual.sol().end(),
+              (double *)mxGetPr(mex_primal_sol));
 
     const char *fieldnames[3] = {
       "x",

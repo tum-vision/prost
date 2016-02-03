@@ -2,38 +2,40 @@
 #define ELEM_OPERATION_NORM2_HPP_
 
 #include "elem_operation.hpp"
-#include "function_1d.hpp"
 
-namespace prox {
+namespace prox
+{
 
 /// 
 /// \brief Provides proximal operator for sum of 2-norms, with a nonlinear
-///        function ProxFunction1D applied to the norm.
+///        function Function1D applied to the norm.
 /// 
 template<typename T, class FUN_1D>
 struct ElemOperationNorm2 : public ElemOperation<0, 7> 
 {
-  #ifdef __CUDACC__
   __host__ __device__ 
   ElemOperationNorm2(T* coeffs, size_t dim, SharedMem<ElemOperationNorm2<T, FUN_1D>>& shared_mem) 
-    : coeffs_(coeffs), dim_(dim) {} 
+    : coeffs_(coeffs), dim_(dim) { } 
  
  inline __host__ __device__ 
- void operator()(Vector<T>& arg, 
-   Vector<T>& res, 
-   Vector<T>& tau_diag, 
-   T tau_scal, 
-   bool invert_tau) 
+ void operator()(
+     Vector<T>& arg, 
+     Vector<T>& res, 
+     Vector<T>& tau_diag, 
+     T tau_scal, 
+     bool invert_tau) 
   {
     // compute dim-dimensional 2-norm at each point
     T norm = 0;
 
-    for(size_t i = 0; i < dim_; i++) {
+    for(size_t i = 0; i < dim_; i++)
+    {
       const T val = arg[i];
       norm += val * val;
     }
 
-    if(norm > 0) {
+    if(norm > 0)
+    {
       norm = sqrt(norm);
 
       // compute step-size
@@ -52,16 +54,19 @@ struct ElemOperationNorm2 : public ElemOperation<0, 7>
                              coeffs_[1]) / coeffs_[0];
 
       // combine together for result
-      for(size_t i = 0; i < dim_; i++) {
+      for(size_t i = 0; i < dim_; i++)
+      {
         res[i] = prox_result * arg[i] / norm;
       }
-    } else { // in that case, the result is zero. 
-      for(size_t i = 0; i < dim_; i++) {
+    }
+    else
+    { // in that case, the result is zero. 
+      for(size_t i = 0; i < dim_; i++)
+      {
         res[i] = 0;
       }
     }    
  }
- #endif
  
 private:
   T* coeffs_;

@@ -9,23 +9,26 @@ template<typename T>
 class Vector 
 {
 public:
-  __device__ Vector(size_t count, size_t dim, bool interleaved, size_t tx, T* data) : 
+  __host__ __device__
+  Vector(size_t count, size_t dim, bool interleaved, size_t tx, T* data) : 
     count_(count),
     dim_(dim),
     interleaved_(interleaved),
     tx_(tx),
     data_(data) {}
 
-  inline __device__ T operator[](size_t i) const 
+  inline __host__ __device__
+  T
+  operator[](size_t i) const 
   {
-    // Out of bounds check?
     size_t index = interleaved_ ? (tx_ * dim_ + i) : (tx_ + count_ * i);
     return data_[index];
   }
 
-  inline __device__ T& operator[](size_t i) 
+  inline __host__ __device__
+  T&
+  operator[](size_t i) 
   {
-    // Out of bounds check?
     size_t index = interleaved_ ? (tx_ * dim_ + i) : (tx_ + count_ * i);
     return data_[index];
   }
@@ -41,5 +44,3 @@ private:
 }
 
 #endif
-
-

@@ -3,6 +3,9 @@
 
 #include "prox/prox.hpp"
 
+namespace prox
+{
+
 /// 
 /// \brief Abstract base class for proximal operators 
 ///        for a sum of separable functions:
@@ -17,25 +20,21 @@
 ///        If interleaved_ is set of false, then there are dim_ contigiuous
 ///        chunks of count_ many elements.
 /// 
-
-namespace prox
-{
-
 template<typename T>
 class ProxSeparableSum : public Prox<T> 
 {
 public:
-  ProxSeparableSum(
-    size_t index, 
-    size_t count, 
-    size_t dim, 
-    bool interleaved,
-    bool diagsteps) : Prox<T>(index, count*dim, diagsteps),
-                      count_(count),
-                      dim_(dim),
-                      interleaved_(interleaved) { }
+  ProxSeparableSum(size_t index, 
+                   size_t count, 
+                   size_t dim, 
+                   bool interleaved,
+                   bool diagsteps)
+      
+      : Prox<T>(index, count*dim, diagsteps),
+      count_(count),
+      dim_(dim),
+      interleaved_(interleaved) { }
 
-  // set/get methods
   size_t dim() const { return dim_; }
   size_t count() const { return count_; }
   bool interleaved() const { return interleaved_; }

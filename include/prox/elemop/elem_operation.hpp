@@ -1,9 +1,6 @@
 #ifndef ELEM_OPERATION_HPP_
 #define ELEM_OPERATION_HPP_
 
-#include "prox/elemop/shared_mem.hpp"
-#include "prox/elemop/vector.hpp"
-
 namespace prox 
 {
 

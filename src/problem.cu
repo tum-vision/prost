@@ -58,33 +58,33 @@ Problem<T>::~Problem()
 }
 
 template<typename T>
-void Problem<T>::AddBlock(Block<T> *block)
+void Problem<T>::AddBlock(std::shared_ptr<Block<T> > block)
 {
-  linop_->AddBlock(std::shared_ptr<Block<T> >(block));
+  linop_->AddBlock(block);
 }
 
 template<typename T>
-void Problem<T>::AddProx_g(Prox<T> *prox)
+void Problem<T>::AddProx_g(std::shared_ptr<Prox<T> > prox)
 {
-  prox_g_.push_back(std::shared_ptr<Prox<T> >(prox));
+  prox_g_.push_back(prox);
 }
 
 template<typename T>
-void Problem<T>::AddProx_f(Prox<T> *prox)
+void Problem<T>::AddProx_f(std::shared_ptr<Prox<T> > prox)
 {
-  prox_f_.push_back(std::shared_ptr<Prox<T> >(prox));
+  prox_f_.push_back(prox);
 }
 
 template<typename T>
-void Problem<T>::AddProx_gstar(Prox<T> *prox)
+void Problem<T>::AddProx_gstar(std::shared_ptr<Prox<T> > prox)
 {
-  prox_gstar_.push_back(std::shared_ptr<Prox<T> >(prox));
+  prox_gstar_.push_back(prox);
 }
 
 template<typename T>
-void Problem<T>::AddProx_fstar(Prox<T> *prox)
+void Problem<T>::AddProx_fstar(std::shared_ptr<Prox<T> > prox)
 {
-  prox_fstar_.push_back(std::shared_ptr<Prox<T> >(prox));
+  prox_fstar_.push_back(prox);
 }
 
 // builds the linear operator and checks if prox cover the 
@@ -97,23 +97,23 @@ void Problem<T>::Initialize()
   ncols_ = linop_->ncols();
 
   if(prox_f_.empty() && prox_fstar_.empty())
-    throw new Exception("No proximal operator for f or fstar specified.");
+    throw Exception("No proximal operator for f or fstar specified.");
 
   if(prox_g_.empty() && prox_gstar_.empty())
-    throw new Exception("No proximal operator for g or gstar specified.");
+    throw Exception("No proximal operator for g or gstar specified.");
 
   // check if whole domain is covered by prox operators
   if(!CheckDomainProx<T>(prox_g_, ncols_)) 
-    throw new Exception("prox_g does not cover the whole domain!");
+    throw Exception("prox_g does not cover the whole domain!");
 
   if(!CheckDomainProx<T>(prox_f_, nrows_)) 
-    throw new Exception("prox_f does not cover the whole domain!");
+    throw Exception("prox_f does not cover the whole domain!");
    
   if(!CheckDomainProx<T>(prox_gstar_, ncols_)) 
-    throw new Exception("prox_gstar does not cover the whole domain!");
+    throw Exception("prox_gstar does not cover the whole domain!");
 
   if(!CheckDomainProx<T>(prox_fstar_, nrows_)) 
-    throw new Exception("prox_fstar does not cover the whole domain!");
+    throw Exception("prox_fstar does not cover the whole domain!");
 
   // Init Proxs
   for(auto& prox : prox_f_) 
@@ -131,7 +131,18 @@ void Problem<T>::Initialize()
   // Init Scaling
   if(scaling_type_ == Problem<T>::Scaling::kScalingAlpha)
   {
-    throw new Exception("Alpha scaling is not implemented yet.");
+    scaling_left_.resize(nrows());
+    scaling_right_.resize(ncols());
+
+    std::vector<T> left(nrows()), right(ncols());
+    for(size_t row = 0; row < nrows(); row++)
+      left[row] = linop_->row_sum(row, scaling_alpha_);
+
+    for(size_t col = 0; col < ncols(); col++)
+      right[col] = linop_->col_sum(col, scaling_alpha_);
+
+    thrust::copy(left.begin(), left.end(), scaling_left_.begin());
+    thrust::copy(right.begin(), right.end(), scaling_right_.end());
   }
   else if(scaling_type_ == Problem<T>::Scaling::kScalingIdentity)
   {
@@ -144,7 +155,7 @@ void Problem<T>::Initialize()
     scaling_right_ = thrust::device_vector<T>(scaling_right_custom_.begin(), scaling_right_custom_.end());
 
     if((scaling_left_custom_.size() != nrows_) || (scaling_right_custom_.size() != ncols_))
-      throw new Exception("Preconditioners/diagonal scaling vectors do not fit the size of linear operator.");
+      throw Exception("Preconditioners/diagonal scaling vectors do not fit the size of linear operator.");
   }
 }
 
