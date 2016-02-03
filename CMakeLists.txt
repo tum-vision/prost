@@ -6,8 +6,7 @@ find_package(CUDA REQUIRED)
 
 # Platform specific setup
 if(APPLE)
-  set(CUDA_HOST_COMPILER /usr/bin/clang++)
-  set(CMAKE_CXX_FLAGS "-O3 -stdlib=libstdc++ -std=c++11 -Wall")
+  set(CMAKE_CXX_FLAGS "-O3")
 elseif(UNIX)
   set(CMAKE_CXX_FLAGS "-O3 -std=c++11 -fPIC -Wall")
 elseif(WIN32)
@@ -16,8 +15,8 @@ else()
   message( FATAL_ERROR "Operating system not supported." )
 endif()
 
-# TODO: build fat binary for several common architectures
-set(CUDA_NVCC_FLAGS "-O3 -std=c++11 -gencode=arch=compute_52,code=compute_52")
+set(CUDA_NVCC_FLAGS "-O3 -std=c++11
+-gencode=arch=compute_52,code=compute_52 -gencode=arch=compute_20,code=compute_20")
 
 include_directories("include")
 
