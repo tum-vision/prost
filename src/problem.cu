@@ -139,10 +139,10 @@ void Problem<T>::Initialize()
     right.resize(ncols());
     
     for(size_t row = 0; row < nrows(); row++)
-      left[row] = linop_->row_sum(row, scaling_alpha_);
+      left[row] = 1. / linop_->row_sum(row, scaling_alpha_);
 
     for(size_t col = 0; col < ncols(); col++)
-      right[col] = linop_->col_sum(col, scaling_alpha_);
+      right[col] = 1. / linop_->col_sum(col, scaling_alpha_);
 
     thrust::copy(left.begin(), left.end(), scaling_left_.begin());
     thrust::copy(right.begin(), right.end(), scaling_right_.begin());
