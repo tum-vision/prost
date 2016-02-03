@@ -38,23 +38,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   {
     mex_factory::Initialize();
 
-    mexPrintf("Creating problem...\n");
     shared_ptr<Problem<real> > problem = mex_factory::CreateProblem(prhs[0]);
-    mexPrintf("Creating backend...\n");
     shared_ptr<Backend<real> > backend = mex_factory::CreateBackend(prhs[1]);
-    mexPrintf("Creating options...\n");
     typename Solver<real>::Options opts = mex_factory::CreateSolverOptions(prhs[2]);
 
-    mexPrintf("Creating solver...\n");
     shared_ptr<Solver<real> > solver( new Solver<real>(problem, backend) );
     solver->SetOptions(opts);
     solver->SetIntermCallback(mex_factory::SolverIntermCallback);
     solver->SetStoppingCallback(MexStoppingCallback);
 
-    mexPrintf("Initializing solver...\n");
     solver->Initialize();
 
-    mexPrintf("Solving...\n");
     Solver<real>::ConvergenceResult result = solver->Solve();
 
     // Copy result back to MATLAB

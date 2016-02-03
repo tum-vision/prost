@@ -2,7 +2,7 @@ im = imread('24004.jpg');
 im = imresize(im, 1);
 [ny, nx, nc] = size(im);
 N = nx * ny * nc;
-f = double(im(:) / 255);
+f = double(im(:)) / 255.;
 grad = spmat_gradient2d(nx, ny, nc);
 lmb = 1;
 
@@ -21,12 +21,12 @@ backend = pdsolver_backend_pdhg(...
 
 % specify solver options
 opts = pdsolver_options();
-opts.max_iters = 10;
+opts.max_iters = 1000;
 opts.tol_abs_primal = -1;
 opts.tol_abs_dual = -1;
 
 % solve problem
-tic;
 solution = pdsolver(prob, backend, opts);
-toc;
+
+
 
