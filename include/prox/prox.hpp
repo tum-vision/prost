@@ -6,9 +6,9 @@
 
 template<typename T> class ProxMoreau;
 
-/**
- * @brief Virtual base class for all proximal operators. 
- */
+///
+/// \brief Virtual base class for all proximal operators. 
+///
 template<typename T>
 class Prox {
   friend class ProxMoreau<T>;
