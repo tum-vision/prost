@@ -250,7 +250,7 @@ BackendPDHG<T>::PerformIteration()
 
     // apply prox_fstar
     for(auto& p : prox_fstar_)
-      p->Eval(x_, temp_, this->problem_->scaling_left(), sigma_);
+      p->Eval(y_, temp_, this->problem_->scaling_left(), sigma_);
 
     // remember K^T y^k
     kty_.swap(kty_prev_);
