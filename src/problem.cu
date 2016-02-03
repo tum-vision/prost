@@ -137,12 +137,19 @@ void Problem<T>::Initialize()
     std::vector<T> left, right;
     left.resize(nrows());
     right.resize(ncols());
-    
+
+    // TODO: average step sizes for points where prox doesn't allow diagsteps
     for(size_t row = 0; row < nrows(); row++)
-      left[row] = 1. / linop_->row_sum(row, scaling_alpha_);
+    {
+      T rowsum = linop_->row_sum(row, scaling_alpha_);
+      left[row] = 1. / ((rowsum > 0) ? rowsum : 1.);
+    }
 
     for(size_t col = 0; col < ncols(); col++)
-      right[col] = 1. / linop_->col_sum(col, scaling_alpha_);
+    {
+      T colsum = linop_->col_sum(col, scaling_alpha_);
+      right[col] = 1. / ((colsum > 0) ? colsum : 1.);
+    }
 
     thrust::copy(left.begin(), left.end(), scaling_left_.begin());
     thrust::copy(right.begin(), right.end(), scaling_right_.begin());
