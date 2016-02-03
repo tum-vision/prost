@@ -134,7 +134,10 @@ void Problem<T>::Initialize()
     scaling_left_.resize(nrows());
     scaling_right_.resize(ncols());
 
-    std::vector<T> left(nrows()), right(ncols());
+    std::vector<T> left, right;
+    left.resize(nrows());
+    right.resize(ncols());
+    
     for(size_t row = 0; row < nrows(); row++)
       left[row] = linop_->row_sum(row, scaling_alpha_);
 
@@ -142,7 +145,7 @@ void Problem<T>::Initialize()
       right[col] = linop_->col_sum(col, scaling_alpha_);
 
     thrust::copy(left.begin(), left.end(), scaling_left_.begin());
-    thrust::copy(right.begin(), right.end(), scaling_right_.end());
+    thrust::copy(right.begin(), right.end(), scaling_right_.begin());
   }
   else if(scaling_type_ == Problem<T>::Scaling::kScalingIdentity)
   {
