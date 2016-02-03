@@ -149,7 +149,7 @@ BackendPDHG<T>::Initialize()
   }
   catch(std::bad_alloc& e)
   {
-    throw new Exception("Out of memory.");
+    throw Exception("Out of memory.");
   }
 
   iteration_ = 0;
@@ -164,7 +164,7 @@ BackendPDHG<T>::Initialize()
   if(this->problem_->prox_g().empty())
   {
     if(this->problem_->prox_gstar().empty())
-      throw new Exception("Neither prox_g nor prox_gstar specified.");
+      throw Exception("Neither prox_g nor prox_gstar specified.");
 
     for(auto& p : this->problem_->prox_gstar())
       prox_g_.push_back( std::shared_ptr<Prox<T> >(new ProxMoreau<T>(p)) );
@@ -175,7 +175,7 @@ BackendPDHG<T>::Initialize()
   if(this->problem_->prox_fstar().empty())
   {
     if(this->problem_->prox_f().empty())
-      throw new Exception("Neither prox_f nor prox_fstar specified.");
+      throw Exception("Neither prox_f nor prox_fstar specified.");
 
     for(auto& p : this->problem_->prox_f())
       prox_fstar_.push_back( std::shared_ptr<Prox<T> >(new ProxMoreau<T>(p)) );
@@ -259,7 +259,7 @@ BackendPDHG<T>::PerformIteration()
   else
   {
     // TODO: implement
-    throw new Exception("PDHG with overrelaxation on the dual variables is not implemented yet!");
+    throw Exception("PDHG with overrelaxation on the dual variables is not implemented yet!");
   }
 
   // compute residuals every "opts_.residual_iter" iterations and

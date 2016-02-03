@@ -1,14 +1,19 @@
-nx = 1024;
-ny = 1024;
-nc = 3;
+im = imread('24004.jpg');
+im = imresize(im, 1);
+[ny, nx, nc] = size(im);
 N = nx * ny * nc;
+f = double(im(:) / 255);
+grad = spmat_gradient2d(nx, ny, nc);
+lmb = 1;
 
 % create problem description
+
 prob = pdsolver_problem();
-prob.linop = { linop_zero(0, 0, N, N) };
-prob.prox_g = { prox_zero(0, N) };
-prob.prox_fstar = { prox_zero(0, N) };
-prob.scaling = 'identity';
+prob.linop = { block_sparse(0, 0, grad) };
+prob.prox_g = { prox_1d(0, N, 'square', 1, f, 1, 0, 0) };
+prob.prox_fstar = { prox_norm2(0, N, 2, false, 'ind_leq0', ...
+                               1 / lmb, 1, 1, 0, 0) };
+prob.scaling = 'alpha';
 
 % create backend
 backend = pdsolver_backend_pdhg(...
@@ -16,7 +21,7 @@ backend = pdsolver_backend_pdhg(...
 
 % specify solver options
 opts = pdsolver_options();
-opts.max_iters = 10000;
+opts.max_iters = 10;
 opts.tol_abs_primal = -1;
 opts.tol_abs_dual = -1;
 
