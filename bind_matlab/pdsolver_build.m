@@ -1,7 +1,6 @@
 if ismac
-    % TODO: change back when cuda is installed?
-    cuda_lib = '/Developer/NVIDIA/CUDA-7.5/lib/';
-    cuda_inc = '/Developer/NVIDIA/CUDA-7.5/include/';
+    cuda_lib = '/usr/local/cuda/lib';
+    cuda_inc = '/usr/local/cuda/include';
 elseif isunix
     cuda_lib = '/work/sdks/cudacurrent/lib64';
     cuda_inc = '/work/sdks/cudacurrent/include';

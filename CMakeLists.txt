@@ -16,7 +16,7 @@ else()
 endif()
 
 set(CUDA_NVCC_FLAGS "-O3 -std=c++11
--gencode=arch=compute_52,code=compute_52 -gencode=arch=compute_20,code=compute_20")
+-gencode=arch=compute_52,code=compute_52 -gencode=arch=compute_30,code=compute_30")
 
 include_directories("include")
 
