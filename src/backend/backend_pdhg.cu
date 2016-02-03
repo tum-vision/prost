@@ -104,8 +104,8 @@ struct residual_tuple_sum : public thrust::binary_function< thrust::tuple<T, T>,
   Tuple operator()(const Tuple& t0, const Tuple& t1) const
   {
     return Tuple(
-        thrust::get<0>(t0) + thrust::get<0>(t0), 
-        thrust::get<1>(t1) + thrust::get<1>(t1));
+        thrust::get<0>(t0) + thrust::get<0>(t1), 
+        thrust::get<1>(t0) + thrust::get<1>(t1));
   }
 };
 
@@ -248,6 +248,8 @@ BackendPDHG<T>::PerformIteration()
 
         dual_proxarg_functor<T>(sigma_, theta_));
 
+    y_.swap(y_prev_);
+    
     // apply prox_fstar
     for(auto& p : prox_fstar_)
       p->Eval(y_, temp_, this->problem_->scaling_left(), sigma_);
@@ -338,7 +340,6 @@ BackendPDHG<T>::PerformIteration()
         break;
 
       case BackendPDHG<T>::StepsizeVariant::kPDHGStepsResidualBoyd:
-        // TODO: test this
         if( (this->dual_residual_ < eps_dual) && (opts_.arb_tau * iteration_ > arb_l_) )
         {
           tau_ *= opts_.arb_delta;
@@ -356,7 +357,6 @@ BackendPDHG<T>::PerformIteration()
 
       case BackendPDHG<T>::StepsizeVariant::kPDHGStepsCallback:
         {
-          // TODO: test this
           double new_tau = tau_;
           double new_sigma = sigma_;
 

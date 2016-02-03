@@ -18,16 +18,17 @@ prob.scaling = 'alpha';
 % create backend
 backend = pdsolver_backend_pdhg(...
     'residual_iter', 10, ...
-    'stepsize', 'alg1');
+    'stepsize', 'alg1' );
 
 % specify solver options
 opts = pdsolver_options();
-opts.max_iters = 50;
+opts.max_iters = 10000;
 opts.tol_abs_primal = -1;
 opts.tol_abs_dual = -1;
 
 % solve problem
 solution = pdsolver(prob, backend, opts);
 
-
+figure;
+imshow(reshape(solution.x, ny, nx, nc));
 
