@@ -1,10 +1,22 @@
 #include "problem.hpp"
 
 #include <algorithm>
+#include <random>
+#include <thrust/transform_reduce.h>
 
-#include "prox/prox.hpp"
 #include "linop/linearoperator.hpp"
+#include "prox/prox.hpp"
 #include "exception.hpp"
+
+template<typename T>
+struct square
+{
+  __host__ __device__
+  T operator()(const T& x) const 
+  { 
+    return x * x;
+  }
+};
 
 // used for sorting prox operators according to their starting index
 template<typename T>
@@ -233,23 +245,49 @@ T Problem<T>::normest(T tol, int max_iters)
 {
   thrust::device_vector<T> x(ncols()), Ax(nrows());
 
-  // TODO: fill x with random numbers
+  std::vector<T> x_host(ncols());
+  std::generate(x_host.begin(), x_host.end(), []{ return (double)std::rand() / RAND_MAX; } );
+  thrust::copy(x_host.begin(), x_host.end(), x.begin());
 
   T norm = 0, norm_prev;
   for(int i = 0; i < max_iters; i++)
   {
     norm_prev = norm;
 
-    // TODO: scale x with right
+    thrust::transform(
+      x.begin(), 
+      x.end(), 
+      scaling_right_.begin(), 
+      scaling_right_.end(),
+      thrust::multiplies<T>());
+
     linop_->Eval(Ax, x);
-    // TODO: scale Ax with left
 
-    // TODO: scale Ax with left
+    thrust::transform(
+      Ax.begin(), 
+      Ax.end(), 
+      scaling_left_.begin(), 
+      scaling_left_.end(),
+      thrust::multiplies<T>());
+
+    thrust::transform(
+      Ax.begin(), 
+      Ax.end(), 
+      scaling_left_.begin(), 
+      scaling_left_.end(),
+      thrust::multiplies<T>());
+
     linop_->EvalAdjoint(x, Ax);
-    // TODO: scale x with right
 
-    T norm_x = 0; // TODO: compute norm of x
-    T norm_Ax = 0; // TODO: compute norm of Ax
+    thrust::transform(
+      x.begin(), 
+      x.end(), 
+      scaling_right_.begin(), 
+      scaling_right_.end(),
+      thrust::multiplies<T>());
+
+    T norm_x = std::sqrt( thrust::transform_reduce(x.begin(), x.end(), square<T>(), 0, thrust::plus<T>()) ); 
+    T norm_Ax = std::sqrt( thrust::transform_reduce(Ax.begin(), Ax.end(), square<T>(), 0, thrust::plus<T>()) );  
 
     norm = norm_x / norm_Ax;
 
