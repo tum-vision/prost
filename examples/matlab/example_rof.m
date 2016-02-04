@@ -7,7 +7,6 @@ grad = spmat_gradient2d(nx, ny, nc);
 lmb = 1;
 
 % create problem description
-
 prob = pdsolver_problem();
 prob.linop = { block_sparse(0, 0, grad) };
 prob.prox_g = { prox_1d(0, N, 'square', 1, f, 1, 0, 0) };
@@ -31,4 +30,3 @@ solution = pdsolver(prob, backend, opts);
 
 figure;
 imshow(reshape(solution.x, ny, nx, nc));
-

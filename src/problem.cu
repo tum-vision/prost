@@ -213,6 +213,54 @@ void Problem<T>::SetScalingIdentity()
   scaling_type_ = Problem<T>::Scaling::kScalingIdentity;
 }
 
+template<typename T>
+size_t Problem<T>::gpu_mem_amount() const
+{
+  size_t mem = 0;
+
+  for(auto& p : prox_f_) mem += p->gpu_mem_amount();
+  for(auto& p : prox_g_) mem += p->gpu_mem_amount();
+  for(auto& p : prox_fstar_) mem += p->gpu_mem_amount();
+  for(auto& p : prox_gstar_) mem += p->gpu_mem_amount();
+  mem += linop_->gpu_mem_amount();
+  mem += sizeof(T) * (nrows() + ncols());
+
+  return mem;
+}
+
+template<typename T>
+T Problem<T>::normest(T tol, int max_iters)
+{
+  thrust::device_vector<T> x(ncols()), Ax(nrows());
+
+  // TODO: fill x with random numbers
+
+  T norm = 0, norm_prev;
+  for(int i = 0; i < max_iters; i++)
+  {
+    norm_prev = norm;
+
+    // TODO: scale x with right
+    linop_->Eval(Ax, x);
+    // TODO: scale Ax with left
+
+    // TODO: scale Ax with left
+    linop_->EvalAdjoint(x, Ax);
+    // TODO: scale x with right
+
+    T norm_x = 0; // TODO: compute norm of x
+    T norm_Ax = 0; // TODO: compute norm of Ax
+
+    norm = norm_x / norm_Ax;
+
+    if(std::abs(norm_prev - norm) < tol * norm)
+      break;
+  }
+
+  return norm;
+}
+
+
 // Explicit template instantiation
 template class Problem<float>;
 template class Problem<double>;
