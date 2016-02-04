@@ -71,7 +71,7 @@ public:
   size_t gpu_mem_amount() const;
 
   /// \brief Estimates the norm of the scaled linear operator via power iteration.
-  T normest(T tol = 1e-6, int max_iters = 100);
+  T normest(T tol = 1e-6, int max_iters = 250);
   
 protected:
   size_t nrows_, ncols_; // problem size

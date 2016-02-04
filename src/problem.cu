@@ -8,16 +8,6 @@
 #include "prox/prox.hpp"
 #include "exception.hpp"
 
-template<typename T>
-struct square
-{
-  __host__ __device__
-  T operator()(const T& x) const 
-  { 
-    return x * x;
-  }
-};
-
 // used for sorting prox operators according to their starting index
 template<typename T>
 struct ProxCompare {
@@ -241,12 +231,46 @@ size_t Problem<T>::gpu_mem_amount() const
 }
 
 template<typename T>
+struct normest_square
+{
+  __host__ __device__
+  T operator()(const T& x) const 
+  { 
+    return x * x;
+  }
+};
+
+template<typename T>
+struct normest_divide
+{
+  normest_divide(T fac) : fac_(fac) { }
+
+  __host__ __device__
+  T operator()(const T& x) const 
+  { 
+    return x / fac_;
+  }
+
+  T fac_;
+};
+
+template<typename T>
+struct normest_multiply_square : public thrust::binary_function<T, T, T>
+{
+  __host__ __device__
+  T operator()(const T& a, const T& b) const
+  {
+    return a*a*b;
+  }
+};
+
+template<typename T>
 T Problem<T>::normest(T tol, int max_iters)
 {
   thrust::device_vector<T> x(ncols()), Ax(nrows());
 
   std::vector<T> x_host(ncols());
-  std::generate(x_host.begin(), x_host.end(), []{ return (double)std::rand() / RAND_MAX; } );
+  std::generate(x_host.begin(), x_host.end(), []{ return (T)std::rand() / (T)RAND_MAX; } );
   thrust::copy(x_host.begin(), x_host.end(), x.begin());
 
   T norm = 0, norm_prev;
@@ -255,40 +279,45 @@ T Problem<T>::normest(T tol, int max_iters)
     norm_prev = norm;
 
     thrust::transform(
-      x.begin(), 
-      x.end(), 
       scaling_right_.begin(), 
       scaling_right_.end(),
+      x.begin(), 
+      x.begin(), 
       thrust::multiplies<T>());
 
     linop_->Eval(Ax, x);
 
     thrust::transform(
-      Ax.begin(), 
-      Ax.end(), 
       scaling_left_.begin(), 
       scaling_left_.end(),
-      thrust::multiplies<T>());
-
-    thrust::transform(
       Ax.begin(), 
-      Ax.end(), 
-      scaling_left_.begin(), 
-      scaling_left_.end(),
-      thrust::multiplies<T>());
+      Ax.begin(), 
+      normest_multiply_square<T>());
 
     linop_->EvalAdjoint(x, Ax);
 
     thrust::transform(
-      x.begin(), 
-      x.end(), 
       scaling_right_.begin(), 
       scaling_right_.end(),
+      x.begin(), 
+      x.begin(), 
       thrust::multiplies<T>());
 
-    T norm_x = std::sqrt( thrust::transform_reduce(x.begin(), x.end(), square<T>(), 0, thrust::plus<T>()) ); 
-    T norm_Ax = std::sqrt( thrust::transform_reduce(Ax.begin(), Ax.end(), square<T>(), 0, thrust::plus<T>()) );  
+    T norm_x = std::sqrt( thrust::transform_reduce(
+        x.begin(), 
+        x.end(), 
+        normest_square<T>(), 
+        static_cast<T>(0), 
+        thrust::plus<T>()) ); 
 
+    T norm_Ax = std::sqrt( thrust::transform_reduce(
+        Ax.begin(), 
+        Ax.end(), 
+        normest_square<T>(), 
+        static_cast<T>(0), 
+        thrust::plus<T>()) ); 
+
+    thrust::transform(x.begin(), x.end(), x.begin(), normest_divide<T>(norm_x));
     norm = norm_x / norm_Ax;
 
     if(std::abs(norm_prev - norm) < tol * norm)
