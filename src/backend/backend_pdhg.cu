@@ -196,11 +196,6 @@ BackendPDHG<T>::Initialize()
 
     tau_ /= norm;
     sigma_ /= norm;
-
-    if(this->solver_opts_.verbose)
-    {
-      std::cout << "Scaled tau_ and sigma_ by factor " << (1 / norm) << "." << std::endl;
-    }
   }
 }
 
