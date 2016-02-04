@@ -48,9 +48,6 @@ public:
   /// \brief Returns \sum_{row=1}^{nrows} |K_{row,col}|^{\alpha}.
   T col_sum(size_t col, T alpha) const;
 
-  /// \brief Estimates the norm of the linear operator via power iteration.
-  T normest(T tol = 1e-6, int max_iters = 100);
-
   size_t nrows() const { return nrows_; }
   size_t ncols() const { return ncols_; } 
 

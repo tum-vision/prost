@@ -82,11 +82,12 @@ Solver<T>::Initialize()
 
   if(opts_.verbose) 
   {
+    size_t mem = problem_->gpu_mem_amount() + backend_->gpu_mem_amount();
+    
     std::cout << "Initialized solver successfully. Problem dimension:" << std::endl;
     std::cout << "# primal variables: " << problem_->ncols() << std::endl;
     std::cout << "# dual variables: " << problem_->nrows() << std::endl;
-
-    // TODO: output precise memory requirements
+    std::cout << "Memory requirements: " << mem / (1024 * 1024) << "MB." << std::endl;
   }
 }
 

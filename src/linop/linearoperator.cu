@@ -202,14 +202,6 @@ size_t LinearOperator<T>::gpu_mem_amount() const
   return mem;
 }
 
-template<typename T>
-T LinearOperator<T>::normest(T tol, int max_iters)
-{
-  // TODO: implement via power iteration
-  return 0;
-}
-
-
 // Explicit template instantiation
 template class LinearOperator<float>;
 template class LinearOperator<double>;

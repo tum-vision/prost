@@ -2,131 +2,30 @@ TODOs:
  o rename pdsolver, introduce namespace 
  o epi_huber -> epi_conj_huber (TM)
  o Create doxygen
- o Add folder for unit-tests
  o epi_piecewise_lin -> epi_maxlin1d (EL)
  o add math_utils.hpp to util for Halfspace projection etc
- o Brain-stormed folder structre:
-   pdsolver
-     bind_matlab
-       test
-       examples
-  
-     -> In CMakeLists.txt die Datei externalpaths includen, included src/cuda/pdsolver
-
-  preciserelaxation
-    src/
-      cuda
-        pdsolver
-          prox
-            prox_epi_conjquadr.cpp
-          linop
-            linop_data_graphprec.cpp
-          bind_matlab
-            prox_epi_conjquadr.m
-            test
-
-        .. papersachen
-
-      pure_matlab
-        .. masterarbeitssachen
-
- o prox Basisklasse hat index & size
-   - ProxSeparableSum erbt von Prox,
-   - ProxSeparableSumSimple ersetzt Prox1D, ProxNorm2, ProxEpiParabola, etc
-   - ProxSimplex : ProxSeparableSum
-   - ProxEpiMaxLin : ProxSeparableSum
-   - ProxMoreau : Prox
-   - ProxScaled : Prox
-   - ProxLinTerm : Prox
-
- o prox'en umschreiben á la
-
-""
-template<typename T, struct ElementaryProxOperation<T>, size_t dim> 
-__global__
-void KernelProxSeparableSum(
-  thrust::device_vector<char> raw_data,
-  ElementaryProxOperation<T>::Data *data,  // eigentlich mit thrust
-  const ElementaryProxOperation<T>& prox)
-{
-  int tx = ...;
-
-  if(tx>...) {
-
-    Data dataAtPoint(raw_data, tx * ..., dim);
-
-    prox(&arg[tx], &result[tx], dataAtPoint, dim);
-  }
-}
-
-
-
-thrust::device_vector<Data> 
-
-template<typename T, size_t dim, size_t shMemInBytes = 0>
-struct ProxEpiParabola : public ElementaryProxOperation<T>
-{
-  template<typename T, size_t dim>
-  struct Data {
-    T a, b, c, d, e, alpha, beta;
-    T normal[dim];
-  };
-
-  // prox im R^3 implementieren
-  virtual operator()(T *argument, T *result, const DataEpiParabola& dataAtPoint, size_t dim)
-  {
-  for(int i =0; i<dim; i++)
-     dataAtPoint->normal[i]
-  }
-};
-""
-
- o Factory a la ShapeAnalyzer für Proxen und LinOps
- (o Clean up mex_factory.cpp, const char* and function pointer arrays
-   instead of big if statements. write helper functions for MATLAB stuff.)
- o prox_1d als arbitrary_transformation
- o use thrust::device_vector instead of raw pointers everywhere
- o thrust exceptions
- o shared_ptr und C++11 features for(auto a : liste) verwenden
- o hardcoded adaptivity every 250 steps --> add parameter 
  o if someone passes a sparse-matrix instead of a linear operator to the 
    solver, automatically build a LinOpSparse inside the mex-Function.
- o int -> size_t
  o prox operator constructor in matlab doesn't need index -- infer
-   this automatically!
- o ? default arguments for prox operator
- o mexPrintf instead of std::cout <<... or general PRINTF define
- o Implement alpha != 1 for preconds.
- o Do math functions for double/float properly
+   this automatically. -> add comfortable interface where user
+   declares "variables".
+ o ? default arguments for prox operator, add simpler prox operators
+   such as prox_l1 etc. which in turn create a prox_1d
  o ? Fix bug where residuals are 0 at beginning?
- o Add templates instead of typedef real float...
- o ? Write proper Makefiles
  o Check whether is necessary to static_cast<real>(1) and so
    on... (compile time cast!!)
  o ? Do sanity check before creating the prox operators (don't allocate
    stuff inside the constructor)
  o Test Simplex prox (multilabel segmentation example, with few
  labels)
- o Add LinOpZero and make LinOp an abstract base class
  o Add LinOpTranspose
- o Remove interleaved flag
- o Write proper error handling/checking code, with exceptions and have
-   meaningful error messages. 
- o Add own exception class
- o Have DEBUG/Verbose mode, which outputs lots of information.
+ o Have DEBUG/Verbose mode, which outputs lots of information. TODO:
+   make factory etc verbose. For verbose=false, solver is completely silent
  o Write CMakeLists.txt and pdsolver_build.m properly so it builds
-   nicely everywhere (Mac, Linux, Windows)
+   nicely on Windows
  o Check coding style with lint / use cpplint to ensure google-style-guide
  o run with valgrind/cuda-memcheck/cuda-gdb to check for memleaks
- o Compile with -Werror, -Wall compiler flags
- o Unit tests for prox operators
  o Python/C/C++ bindings
- o prox_1d die function als template parameter
-
-Very future work:
- o Graph Projection Splitting backend with indirect CG solver
-   (e.g. CGLS).
- o Subgradient projection for initialization?!
 
 Done:
  x Check for Memory Leaks and Out-Of-Bounds accesses in CUDA kernels.
@@ -151,6 +50,20 @@ Done:
    maybe LinearOperatorZero (cudaMemset) and LinearOperatorIdentity (cudaMemcpy). 
  x Write helper functions for interleaved index calculation and
    double=>real conversion
+ x Add folder for unit-tests
+ x prox_1d als arbitrary_transformation
+ x use thrust::device_vector instead of raw pointers everywhere
+ x thrust exceptions
+ x shared_ptr und C++11 features for(auto a : liste) verwenden
+ x hardcoded adaptivity every 250 steps --> add parameter 
+ x int -> size_t
+ x Add templates instead of typedef real float...
+ x Add LinOpZero and make LinOp an abstract base class
+ x Write proper error handling/checking code, with exceptions and have
+   meaningful error messages. 
+ x Add own exception class
+ x Unit tests for prox operators
+ x prox_1d die function als template parameter
 
 Ideas of cool Prox-Operators to implement:
  o implement prox_scaled, remove prox_epi_conjquadr_scaled

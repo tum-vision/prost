@@ -150,7 +150,7 @@ BackendPDHG<T>::Initialize()
   }
   catch(std::bad_alloc& e)
   {
-    throw Exception("Out of memory.");
+    throw Exception("BackendPDHG: out of memory.");
   }
 
   iteration_ = 0;
@@ -189,6 +189,19 @@ BackendPDHG<T>::Initialize()
   this->dual_var_norm_ = 0;
   this->primal_residual_ = 0;
   this->dual_residual_ = 0;
+
+  if(opts_.scale_steps_operator)
+  {
+    T norm = this->problem_->normest();
+
+    tau_ /= norm;
+    sigma_ /= norm;
+
+    if(this->solver_opts_.verbose)
+    {
+      std::cout << "Scaled tau_ and sigma_ by factor " << (1 / norm) << "." << std::endl;
+    }
+  }
 }
 
 template<typename T>
