@@ -8,7 +8,7 @@ struct ElemOperation1D : public ElemOperation<1, 7>
 {
     
   inline __host__ __device__
-  ElemOperation1D(T* coeffs, size_t dim, SharedMem<ElemOperation1D>& shared_mem) : coeffs_(coeffs) { } 
+  ElemOperation1D(T* coeffs, size_t dim, SharedMem<SharedMemType, GetSharedMemCount>& shared_mem) : coeffs_(coeffs) { } 
   
   inline __host__ __device__
   void operator()(Vector<T>& res, const Vector<T>& arg, const Vector<T>& tau_diag, T tau_scal, bool invert_tau)

@@ -27,6 +27,7 @@ set(SOURCES
 
   "src/prox/prox.cu"
   "src/prox/prox_elem_operation.cu"
+  "src/prox/proj_epi_quadratic_fun.cu"
   "src/prox/prox_moreau.cu"
   "src/prox/prox_zero.cu"
 
