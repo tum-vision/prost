@@ -26,5 +26,5 @@ opts.max_iters = 10000;
 % solve problem
 solution = pdsolver(prob, backend, opts);
 
-%figure;
-%imshow(reshape(solution.x, ny, nx, nc));
+figure;
+imshow(reshape(solution.x, ny, nx, nc));

@@ -20,15 +20,12 @@
 template<typename T>
 struct ElemOperationSimplex : public ElemOperation<0, 0, T>
 {
-  inline __host__ __device__ static
-  size_t
-  GetSharedMemCount(size_t dim)
-  {
-    return dim;
-  }
+  struct GetSharedMemCount {
+    inline __host__ __device__ size_t operator()(size_t dim) { return dim; }
+  };
 
   __device__
-  ElemOperationSimplex(size_t dim, SharedMem<ElemOperationSimplex<T>>& shared_mem)
+  ElemOperationSimplex(size_t dim, SharedMem<typename ElemOperationSimplex::SharedMemType, typename ElemOperationSimplex::GetSharedMemCount>& shared_mem)
       : dim_(dim), shared_mem_(shared_mem) { } 
   
   inline __device__
@@ -104,7 +101,7 @@ struct ElemOperationSimplex : public ElemOperation<0, 0, T>
   }
     
  private:
-  SharedMem<ElemOperationSimplex<T>>& shared_mem_;
+  SharedMem<typename ElemOperationSimplex::SharedMemType, typename ElemOperationSimplex::GetSharedMemCount>& shared_mem_;
   size_t dim_;
 };
 
