@@ -3,8 +3,6 @@
 
 #include <memory>
 
-#include "factory.hpp"
-
 #include "prox/prox.hpp"
 #include "prox/prox_moreau.hpp"
 #include "prox/prox_zero.hpp"
@@ -33,13 +31,12 @@
 namespace mex_factory
 {
 
-void Initialize();
 void SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vector<real>& dual);
      
-shared_ptr<Prox<real> > CreateProx(const mxArray *pm);
-shared_ptr<Block<real> > CreateBlock(const mxArray *pm);
-shared_ptr<Backend<real> > CreateBackend(const mxArray *pm);
-shared_ptr<Problem<real> > CreateProblem(const mxArray *pm);
+std::shared_ptr<Prox<real> > CreateProx(const mxArray *pm);
+std::shared_ptr<Block<real> > CreateBlock(const mxArray *pm);
+std::shared_ptr<Backend<real> > CreateBackend(const mxArray *pm);
+std::shared_ptr<Problem<real> > CreateProblem(const mxArray *pm);
 typename Solver<real>::Options CreateSolverOptions(const mxArray *pm);
 
 // prox
@@ -63,6 +60,28 @@ BlockSparse<real>* CreateBlockSparse(size_t row, size_t col, const mxArray *data
 
 // backend
 BackendPDHG<real>* CreateBackendPDHG(const mxArray *data);
+
+struct ProxRegistry
+{
+  std::string name;
+  std::function<Prox<real>*(size_t, size_t, bool, const mxArray*)> create_fn;
+};
+
+struct BlockRegistry
+{
+  std::string name;
+  std::function<Block<real>*(size_t, size_t, const mxArray*)> create_fn;
+};
+
+struct BackendRegistry
+{
+  std::string name;
+  std::function<Backend<real>*(const mxArray*)> create_fn;
+};
+
+// user-defined custom prox operators and blocks
+extern ProxRegistry custom_prox_reg[];
+extern BlockRegistry custom_block_reg[];
 
 }
 
