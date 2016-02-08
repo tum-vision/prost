@@ -1,0 +1,207 @@
+\usepackage{pgfplots}
+\pgfplotsset{compat=newest}
+%% the following commands are sometimes needed
+\usetikzlibrary{plotmarks}
+\usepackage{grffile}
+
+\usepackage{latexsym}
+\usepackage{babel}
+% %\usepackage{rotating}
+\usepackage{subfig}
+%\usepackage{multibbl}
+%\usepackage{calc}
+%\usepackage{lastpage}
+\usepackage{amsmath,epsfig,amssymb,amsbsy, amsthm}
+%\usepackage{euproposal}
+\usepackage{multirow}
+%\usepackage{natbib}
+%\usepackage{multibib}
+%\usepackage{fancybox}
+\usepackage{nicefrac}
+%\usepackage[table]{xcolor}
+%\usepackage[right]{eurosym}
+
+
+
+\usepackage[bordercolor=white,backgroundcolor=gray!30,linecolor=black,colorinlistoftodos]{todonotes}
+
+%\usepackage[T1]{fontenc}
+
+\usepackage{wrapfig,graphicx}
+\usepackage{url}
+%\usepackage{titlesec}
+
+\usepackage{color}
+\usepackage{colortbl}
+
+
+\newcommand{\todobase}[3]{\todo[color=#3,inline]{#2}}
+
+\newcommand{\jl}[1]{\todobase{J}{#1}{yellow}}
+\newcommand{\tmo}[1]{\todobase{J}{#1}{pink}}
+\newcommand{\mm}[1]{\todobase{J}{#1}{cyan}}
+
+\renewcommand{\baselinestretch}{1.2} 
+
+\newcommand\dimOmega{d}
+\newcommand{\ngradients}{m}
+\newcommand{\mfindex}{k} %k
+\newcommand{\unarycost}{s}
+\newcommand{\mfweights}{b}
+\newcommand{\bitem}{\begin{itemize}}
+\newcommand{\eitem}{\end{itemize}}
+\newcommand{\mc}[1]{\mathcal{#1}}
+\newcommand{\mb}[1]{\mathbb{#1}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\B}{\mathbb{B}}
+\newcommand{\U}{\mathbb{U}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Q}{\mathbb{Q}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\PP}{\mathbb{P}}
+\newcommand{\bpm}{\begin{pmatrix}}      
+\newcommand{\epm}{\end{pmatrix}}
+\newcommand{\T}{\top}
+\newcommand{\tr}{\mathsf{tr}}
+\newcommand{\ol}[1]{\overline{#1}}      
+\newcommand{\la}{\langle}
+\newcommand{\ra}{\rangle}
+\newcommand{\si}{\sigma}
+\newcommand{\mrm}[1]{\mathrm{#1}}
+\newcommand{\msf}[1]{\mathsf{#1}}
+\newcommand{\Diag}{\mathrsf{Diag}}
+\newcommand{\row}[2]{{#1}_{#2,\bullet}}
+\newcommand{\col}[2]{{#1}_{\bullet,#2}}
+\newcommand{\veps}{\varepsilon}
+\newcommand{\toset}{\rightrightarrows}
+\newcommand{\w}{\omega}
+\newcommand{\gdw}{\Leftrightarrow}
+\newcommand{\vphi}{\varphi}
+\newcommand{\tmop}[1]{\ensuremath{\operatorname{#1}}}
+\newcommand{\norm}[1]{\Vert #1 \Vert}
+\newcommand{\normc}[1]{| #1 |}
+\newcommand{\bbR}{\mathbb{R}}
+\newcommand{\bbRext}{\mathbb{R} \cup \{ \infty \} }
+\providecommand{\iprod}[2]{\langle#1,#2\rangle}
+
+
+\newcommand{\bi}{\begin{itemize}}
+\newcommand{\ei}{\end{itemize}}
+\newcommand{\HH}{\mathcal{H}}
+\newcommand{\MM}{\mathcal{M}}
+
+\newcommand{\DD}{\mathcal{D}}
+\newcommand{\JJ}{\mathcal{J}}
+\newcommand{\Ss}{\mathcal{S}}
+
+\newcommand{\reps}{\rho_{\veps}}
+\newcommand{\geqs}{\geqslant}
+\newcommand{\leqs}{\leqslant}
+
+
+%\newcommand{\cref}[1]{ [{#1}]}
+\newcommand{\cref}[1]{ {\tiny[{#1}]}}
+%\newcommand{\tm}[1]{[#1] }
+\newcommand{\tm}[1]{}
+
+\newcommand{\VI}{\mathsf{VI}}
+\newcommand{\SOL}{\mathsf{SOL}}
+\newcommand{\graph}{\mathsf{gph}}
+\newcommand{\dom}{\mathsf{dom}}
+\newcommand{\rint}{\mathsf{rint}}
+\newcommand{\bd}{\mathsf{bd}}
+\newcommand{\rge}{\mathsf{rge}}
+\newcommand{\epi}{\mathsf{epi}}
+\newcommand{\lev}{\mathsf{lev}}
+\newcommand{\argmin}{\mathsf{argmin}}
+\newcommand{\argmax}{\mathsf{argmax}}
+
+\newcommand{\detail}{\ding{43} \structure{Detail}}
+
+\newcommand{\fr}[3][]{\frame{\frametitle{#2}\begin{textblock*}{6cm}(12cm,1.5cm)\rotatebox{90}{\parbox{7cm}{\scriptsize\structure{#1}}}\end{textblock*}\bi #3 \ei}}
+\newcommand{\frb}[3][]{\frame{\frametitle{#2}\begin{textblock*}{6cm}(12cm,1.5cm)\rotatebox{90}{\parbox{7cm}{\scriptsize\structure{#1}}}\end{textblock*}#3}}
+\newcommand{\tmemtitle}{\textbf}
+
+\newcommand{\mathbbm}{\mathbb}
+\newcommand{\C}{\mathcal{C}}
+\newcommand{\D}{\mathcal{D}}
+\newcommand{\Rn}{\mathbb{R}^n}
+\newcommand{\Rm}{\mathbb{R}^m}
+\newcommand{\Rmxn}{\mathbb{R}^{m \times n}}
+\newcommand{\Rd}{\mathbb{R}^d}
+\newcommand{\Rl}{\mathbb{R}^L}
+\newcommand{\beq}{\begin{equation}}
+\newcommand{\eeq}{\end{equation}}
+\newcommand{\beqa}{\begin{eqnarray}}
+\newcommand{\eeqa}{\end{eqnarray}}
+\newcommand{\bc}{\begin{center}}
+\newcommand{\ec}{\end{center}}
+\newcommand{\lcb}{\left\{}
+\newcommand{\rcb}{\right\}}
+\newcommand{\lbr}{\left(}
+\newcommand{\rbr}{\right)}
+\newcommand{\seq}{\subseteq}
+\newcommand{\PC}{\Pi_{\C}}
+\newcommand{\PD}{\Pi_{\D}}
+\newcommand{\assign}{:=}
+\newcommand{\Om}{\Omega}
+\newcommand{\BV}{\tmop{BV}}
+\newcommand{\SBV}{\tmop{SBV}}
+\newcommand{\Ccinf}{C_c^{\infty}}
+\newcommand{\Dloc}{\D_{\tmop{loc}}}
+\newcommand{\Hausd}{\mathcal{H}}
+\newcommand{\tmtextbf}[1]{{\bfseries{#1}}}
+\newcommand{\tmtextit}[1]{{\itshape{#1}}}
+\newcommand{\tmem}[1]{{\em #1\/}}
+%\newcommand{\subs}[1]{\smallskip\noindent\textbf{#1.} }
+\newcommand{\subs}[1]{\medskip\noindent\textbf{#1.} }
+%\newcommand{\subs}[1]{\noindent\textbf{#1.} }
+%\newcommand{\subs}[1]{\paragraph{#1.} }
+
+\newcommand{\wi}{.1\columnwidth}
+
+\newcommand \M   {{\mathcal{M}}}                     % manifold
+
+\newcommand \Sone       {{{\Ss}^1}}                           % S^1
+\newcommand \TVS        {{TV_\Sone}}                        % TV_{S^1}
+\newcommand \TVM        {{TV_\M}}                        % TV_{S^1}
+\newcommand \Stwo       {{{\Ss}^2}}                           % S^1
+\newcommand \TVStwo        {{TV_\Stwo}}                        % TV_{S^1}
+\newcommand \TVSg       {{TV_\Sone^g}}                      % TV_{S^1}^g
+\newcommand \TV         {{TV}}                              % TV
+\newcommand{\dx}         {\,dx}
+\newcommand \Su         {{S_u}}                             % subset
+% of Omega w 
+\newcommand \omegaDim   {{m}}                               % image domain dimension
+\newcommand \dH         {{d\;\!\mathcal{H}^{\omegaDim-1}}}  % Hausdorff measure
+\newcommand{\Div}{\tmop{Div}}
+
+
+%\arrayrulecolor{black} % green tables otherwise
+%\renewcommand{\familydefault}{\sfdefault}
+%\usepackage{arial}
+
+\newcommand{\fc}{^{\ast}}
+\newcommand{\fcc}{^{\ast\ast}}
+\newcommand{\ow}{\text{otherwise}}
+
+\newcommand{\RL}{\R^L}
+\newcommand{\Rb}{\bar{\R}}
+
+%\newtheorem{thm}{Theorem}[section]
+%\newtheorem{prop}[thm]{Proposition}
+
+\newtheorem{lem}{Lemma}
+\newtheorem{prop}{Proposition}
+\newtheorem{cor}{Corollary}
+
+\newcommand{\dat}{\boldsymbol{\rho}}
+\newcommand{\dats}{\boldsymbol{\sigma}}
+\newcommand{\reg}{\boldsymbol{\Phi}}
+\newcommand{\Gr}{\mathbf{1}}
+\newcommand{\ul}{\boldsymbol{u}}
+\newcommand{\vl}{\boldsymbol{v}}
+\newcommand{\gl}{\boldsymbol{g}}
+\newcommand{\pl}{\boldsymbol{p}}
+\newcommand{\ql}{\boldsymbol{q}}
+\newcommand{\Tau}{\mathrm{T}}
