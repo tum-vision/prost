@@ -3,8 +3,8 @@
 #include <iostream>
 #include <sstream>
 
-#include "prox/elemop/shared_mem.hpp"
-#include "prox/elemop/vector.hpp"
+#include "prox/shared_mem.hpp"
+#include "prox/vector.hpp"
 
 #include "config.hpp"
 #include "exception.hpp"
@@ -36,7 +36,7 @@ void ProxElemOperationKernel(
     Vector<T> arg(count, dim, interleaved, tx, d_arg);
     Vector<T> tau_diag(count, dim, interleaved, tx, d_tau);
 
-    SharedMem<ELEM_OPERATION> sh_mem(dim, threadIdx.x);
+    SharedMem<typename ELEM_OPERATION::SharedMemType, typename ELEM_OPERATION::GetSharedMemCount> sh_mem(dim, threadIdx.x);
 
     ELEM_OPERATION op(dim, sh_mem);
     op(res, arg, tau_diag, tau, invert_tau);
@@ -64,7 +64,7 @@ void ProxElemOperationKernel(
     Vector<T> arg(count, dim, interleaved, tx, d_arg);
     Vector<T> tau_diag(count, dim, interleaved, tx, d_tau);
 
-    SharedMem<ELEM_OPERATION> sh_mem(dim, threadIdx.x);
+    SharedMem<typename ELEM_OPERATION::SharedMemType, typename ELEM_OPERATION::GetSharedMemCount> sh_mem(dim, threadIdx.x);
 
     T coeffs_local[ELEM_OPERATION::kCoeffsCount];
     for(int i = 0; i < ELEM_OPERATION::kCoeffsCount; i++)
@@ -95,8 +95,11 @@ ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<ELEM_OPERATION::kCo
   dim3 block(kBlockSizeCUDA, 1, 1);
   dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
+  typename ELEM_OPERATION::GetSharedMemCount get_shared_mem_count;
+
+
   size_t shmem_bytes =
-    ELEM_OPERATION::GetSharedMemCount(this->dim_) *
+    get_shared_mem_count(this->dim_) *
     block.x *
     sizeof(typename ELEM_OPERATION::SharedMemType);
   
@@ -151,8 +154,10 @@ ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<ELEM_OPERATION::kCo
     }
   }
 
+  typename ELEM_OPERATION::GetSharedMemCount get_shared_mem_count;
+
   size_t shmem_bytes =
-    ELEM_OPERATION::GetSharedMemCount(this->dim_) *
+    get_shared_mem_count(this->dim_) *
     block.x *
     sizeof(typename ELEM_OPERATION::SharedMemType);
   
