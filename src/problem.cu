@@ -6,6 +6,7 @@
 
 #include "linop/linearoperator.hpp"
 #include "prox/prox.hpp"
+#include "prox/prox_separable_sum.hpp"
 #include "exception.hpp"
 
 // used for sorting prox operators according to their starting index
@@ -94,6 +95,8 @@ void Problem<T>::AddProx_fstar(std::shared_ptr<Prox<T> > prox)
 template<typename T>
 void Problem<T>::Initialize()
 {
+  std::cout << "Initializing problem...\n";
+
   linop_->Initialize();
   nrows_ = linop_->nrows();
   ncols_ = linop_->ncols();
@@ -103,6 +106,12 @@ void Problem<T>::Initialize()
 
   if(prox_g_.empty() && prox_gstar_.empty())
     throw Exception("No proximal operator for g or gstar specified.");
+
+  if(!prox_f_.empty() && !prox_fstar_.empty())
+    throw Exception("Proximal operator for f AND fstar specified. Only set one!");
+
+  if(!prox_g_.empty() && !prox_gstar_.empty())
+    throw Exception("Proximal operator for g AND gstar specified. Only set one!");
 
   // check if whole domain is covered by prox operators
   if(!CheckDomainProx<T>(prox_g_, ncols_)) 
@@ -133,42 +142,53 @@ void Problem<T>::Initialize()
   // Init Scaling
   if(scaling_type_ == Problem<T>::Scaling::kScalingAlpha)
   {
-    scaling_left_.resize(nrows());
-    scaling_right_.resize(ncols());
-
-    std::vector<T> left, right;
-    left.resize(nrows());
-    right.resize(ncols());
-
-    // TODO: average step sizes for points where prox doesn't allow diagsteps
     for(size_t row = 0; row < nrows(); row++)
     {
       T rowsum = linop_->row_sum(row, scaling_alpha_);
-      left[row] = 1. / ((rowsum > 0) ? rowsum : 1.);
+      scaling_left_host_[row] = 1. / ((rowsum > 0) ? rowsum : 1.);
     }
 
     for(size_t col = 0; col < ncols(); col++)
     {
       T colsum = linop_->col_sum(col, scaling_alpha_);
-      right[col] = 1. / ((colsum > 0) ? colsum : 1.);
+      scaling_right_host_[col] = 1. / ((colsum > 0) ? colsum : 1.);
     }
-
-    thrust::copy(left.begin(), left.end(), scaling_left_.begin());
-    thrust::copy(right.begin(), right.end(), scaling_right_.begin());
   }
   else if(scaling_type_ == Problem<T>::Scaling::kScalingIdentity)
   {
-    scaling_left_ = thrust::device_vector<T>(nrows_, 1);
-    scaling_right_ = thrust::device_vector<T>(ncols_, 1);
+    scaling_left_host_ = std::vector<T>(nrows_, 1);
+    scaling_right_host_ = std::vector<T>(ncols_, 1);
   }
   else if(scaling_type_ == Problem<T>::Scaling::kScalingCustom)
   {
-    scaling_left_ = thrust::device_vector<T>(scaling_left_custom_.begin(), scaling_left_custom_.end());
-    scaling_right_ = thrust::device_vector<T>(scaling_right_custom_.begin(), scaling_right_custom_.end());
-
-    if((scaling_left_custom_.size() != nrows_) || (scaling_right_custom_.size() != ncols_))
+    if((scaling_left_host_.size() != nrows_) || (scaling_right_host_.size() != ncols_))
       throw Exception("Preconditioners/diagonal scaling vectors do not fit the size of linear operator.");
   }
+
+  // average preconditioners at places where prox doesn't allow diagsteps
+  std::cout << "Averaging preconditioners...\n";
+  AveragePreconditioners(
+    scaling_left_host_,
+    prox_f_.empty() ? prox_fstar_ : prox_f_);
+
+  AveragePreconditioners(
+    scaling_right_host_,
+    prox_g_.empty() ? prox_gstar_ : prox_g_);
+  std::cout << "done!\n";
+
+  // copy to gpu
+  scaling_left_.resize(nrows());
+  scaling_right_.resize(ncols());
+
+  thrust::copy(
+    scaling_left_host_.begin(), 
+    scaling_left_host_.end(), 
+    scaling_left_.begin());
+
+  thrust::copy(
+    scaling_right_host_.begin(), 
+    scaling_right_host_.end(), 
+    scaling_right_.begin());
 }
 
 template<typename T>
@@ -189,30 +209,44 @@ void Problem<T>::Release()
     prox->Release();
 }
 
-// sets a predefined problem scaling
 template<typename T>
 void Problem<T>::SetScalingCustom(
   const std::vector<T>& left, 
   const std::vector<T>& right)
 {
   scaling_type_ = Problem<T>::Scaling::kScalingCustom;
-  scaling_left_custom_ = left;
-  scaling_right_custom_ = right;
+
+  scaling_left_host_ = std::vector<T>(left.size());
+  scaling_right_host_ = std::vector<T>(right.size());
+
+  std::transform(
+    left.begin(), 
+    left.end(),
+    scaling_left_host_.begin(),
+    [](T x) { return x * x; } );
+
+  std::transform(
+    right.begin(), 
+    right.end(),
+    scaling_right_host_.begin(),
+    [](T x) { return x * x; } );
 }
 
-// computes a scaling using the Diagonal Preconditioners
-// proposed in Pock, Chambolle ICCV '11.
 template<typename T>
 void Problem<T>::SetScalingAlpha(T alpha)
 {
   scaling_type_ = Problem<T>::Scaling::kScalingAlpha;
   scaling_alpha_ = alpha;
+  scaling_left_host_ = std::vector<T>(nrows());
+  scaling_right_host_ = std::vector<T>(ncols());
 }
 
 template<typename T>
 void Problem<T>::SetScalingIdentity()
 {
   scaling_type_ = Problem<T>::Scaling::kScalingIdentity;
+  scaling_left_host_ = std::vector<T>(nrows(), 1.);
+  scaling_right_host_ = std::vector<T>(ncols(), 1.);
 }
 
 template<typename T>
@@ -327,6 +361,60 @@ T Problem<T>::normest(T tol, int max_iters)
   return norm;
 }
 
+template<typename T>
+void Problem<T>::AveragePreconditioners(
+    std::vector<T>& precond,
+    const ProxList& prox)
+{
+  std::vector<std::tuple<size_t, size_t, size_t> > idx_cnt_std(precond.size());
+
+  // compute places where to average
+  for(auto& p : prox)
+  {
+    if(!p->diagsteps())
+    {
+      if(typeid(*p) == typeid(ProxSeparableSum<T>))
+      {
+        ProxSeparableSum<T> *pss = dynamic_cast<ProxSeparableSum<T> *>(p.get());
+
+        if(pss->interleaved())
+        {
+          for(size_t i = 0; i < pss->count(); i++)
+            idx_cnt_std.push_back( 
+              std::tuple<size_t, size_t, size_t>(pss->index() + i * pss->dim(), pss->dim(), 1) );
+        }
+        else
+        {
+          for(size_t i = 0; i < pss->count(); i++)
+            idx_cnt_std.push_back( 
+              std::tuple<size_t, size_t, size_t>(pss->index() + i, pss->dim(), pss->count()) );
+        }
+      }
+      else
+      {
+        idx_cnt_std.push_back( std::tuple<size_t, size_t, size_t>(p->index(), p->size(), 1) );
+      }
+    }
+  }
+
+  // perform averaging
+  for(auto& ics : idx_cnt_std)
+  {
+    size_t idx = std::get<0>(ics);
+    size_t cnt = std::get<1>(ics);
+    size_t std = std::get<2>(ics);
+
+    // compute average
+    T avg = 0;
+    for(size_t c = 0; c < cnt; c++)
+      avg += precond[idx + c * std];
+    avg /= static_cast<T>(cnt);
+
+    // fill values
+    for(size_t c = 0; c < cnt; c++)
+      precond[idx + c * std] = avg;
+  }
+}
 
 // Explicit template instantiation
 template class Problem<float>;
