@@ -28,5 +28,5 @@ opts.tol_abs_dual = -1;
 % solve problem
 solution = pdsolver(prob, backend, opts);
 
-%figure;
-%imshow(reshape(solution.x, ny, nx, nc));
+figure;
+imshow(reshape(solution.x, ny, nx, nc));

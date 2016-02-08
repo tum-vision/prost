@@ -11,7 +11,7 @@ template<typename T, class FUN_1D>
 struct ElemOperationNorm2 : public ElemOperation<0, 7> 
 {
   __host__ __device__ 
-  ElemOperationNorm2(T* coeffs, size_t dim, SharedMem<ElemOperationNorm2<T, FUN_1D>>& shared_mem) 
+  ElemOperationNorm2(T* coeffs, size_t dim, SharedMem<SharedMemType, GetSharedMemCount>& shared_mem) 
     : coeffs_(coeffs), dim_(dim) { } 
  
  inline __host__ __device__ 
