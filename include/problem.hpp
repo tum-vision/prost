@@ -11,13 +11,15 @@ template<typename T> class Prox;
 template<typename T> class Block;
 template<typename T> class LinearOperator;
 
-/**
- * @brief Contains all information describing the graph form problem
- *
- *          min_x,y   f(D^{-1} y) + g(E x)  s.t. y = DAE x. 
- *
- */
-
+/// @brief Contains all information describing the graph form problem
+/// 
+///         min_{x,z} g(\Tau^{1/2} x) + f(\Sigma^{-1/2} z) 
+/// 
+///         s.t. z = \Sigma^{1/2} K \Tau^{1/2} x. 
+/// 
+///         scaling_left_host_ = Sigma,
+///         scaling_right_host_ = Tau.
+/// 
 template<typename T>
 class Problem 
 {
@@ -25,7 +27,7 @@ public:
   enum Scaling
   {
     kScalingIdentity,
-    kScalingAlpha,
+    kScalingAlpha, // Pock, Chambolle ICCV '11 preconditioning
     kScalingCustom,
   };
 
@@ -40,21 +42,23 @@ public:
   void AddProx_gstar(std::shared_ptr<Prox<T> > prox);
   void AddProx_fstar(std::shared_ptr<Prox<T> > prox);
 
-  // builds the linear operator and checks if prox cover the 
-  // whole domain
+  /// \brief Builds the linear operator and checks if prox cover the 
+  ///        whole domain.
   void Initialize();
   void Release();
 
-  // sets a predefined problem scaling, has to be called after Init
+  /// \brief Sets a predefined problem scaling.
+  /// \param[in] left Left scaling/preconditioner diagonal matrix Sigma^{1/2}.
+  /// \param[in] right Right scaling/preconditioner diagonal matrix Tau^{1/2}.
   void SetScalingCustom(
     const std::vector<T>& left, 
     const std::vector<T>& right);
 
-  // computes a scaling using the Diagonal Preconditioners
-  // proposed in Pock, Chambolle ICCV '11. Has to be called after Init.
+  /// \brief Set the scaling to the Diagonal Preconditioners
+  ///        proposed in Pock, Chambolle ICCV '11. 
   void SetScalingAlpha(T alpha);
 
-  //
+  /// \brief Set the preconditioners to Sigma = Tau = Identity.
   void SetScalingIdentity();
 
   std::shared_ptr<LinearOperator<T> > linop() const { return linop_; }
@@ -76,22 +80,38 @@ public:
 protected:
   size_t nrows_, ncols_; // problem size
 
-  // matrix A
+  /// \brief matrix K
   std::shared_ptr<LinearOperator<T> > linop_;
 
-  // left/right preconditioners (D and E)
   typename Problem<T>::Scaling scaling_type_;
+
+  /// \brief (squared) Left-preconditioner Sigma
   thrust::device_vector<T> scaling_left_; 
+
+  /// \brief (squared) Right-preconditioner Tau
   thrust::device_vector<T> scaling_right_;
-  std::vector<T> scaling_left_custom_;
-  std::vector<T> scaling_right_custom_;
+
+  /// \brief User-defined (squared) left-preconditioner Sigma
+  std::vector<T> scaling_left_host_;
+
+  /// \brief User-defined (squared) right-preconditioner Tau
+  std::vector<T> scaling_right_host_;
+
+  /// \brief alpha for Pock-preconditioning
   T scaling_alpha_;
 
-  // proximal operators (overcomplete)
+  /// \brief proximal operators (may be overcomplete).
   ProxList prox_f_;
   ProxList prox_g_;
   ProxList prox_fstar_;
   ProxList prox_gstar_;
+
+private:
+  /// \brief Averages the values for the preconditioner at the entries where
+  ///        prox does not allow diagonal step sizes.
+  void AveragePreconditioners(
+    std::vector<T>& precond,
+    const ProxList& prox);
 };
 
 #endif

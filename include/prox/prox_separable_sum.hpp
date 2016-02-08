@@ -17,6 +17,10 @@
 ///        If interleaved_ is set of false, then there are dim_ contigiuous
 ///        chunks of count_ many elements.
 /// 
+///        Example: gradient operator for 3d image with 5 pixels
+///        interleaved_ == true : dx dy dz dx dy dz dx dy dz dx dy dz dx dy dz
+///        interleaved_ == false: dx dx dx dx dx dy dy dy dy dy dz dz dz dz dz
+/// 
 template<typename T>
 class ProxSeparableSum : public Prox<T> 
 {

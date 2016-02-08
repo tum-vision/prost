@@ -14,12 +14,12 @@
 \section{Problem class and scaling}
 The class of problems considered within this framework is given as the following:
 \begin{equation}
-  \underset{x \in \bbR^n, z \in \bbR^m} \min ~ g( \Tau^{\frac{1}{2}} x) + h(\Sigma^{-\frac{1}{2}} z), \quad \text{s.t.} \quad z = \Sigma^{\frac{1}{2}} K \Tau^{\frac{1}{2}} x.
+  \underset{x \in \bbR^n, z \in \bbR^m} \min ~ g( \Tau^{\frac{1}{2}} x) + f(\Sigma^{-\frac{1}{2}} z), \quad \text{s.t.} \quad z = \Sigma^{\frac{1}{2}} K \Tau^{\frac{1}{2}} x.
   \label{eq:scaled_problem}
 \end{equation}
-Here $g : \bbR^n \to \bbRext$ and $h : \bbR^m \to \bbRext$ are convex, proper, closed functions. $K \in \bbR^{m \times n}$ is a matrix and $\Tau \in \bbR^{n \times n}$, $\Sigma \in \bbR^{m \times m}$ are symmetric positive definite scaling (preconditioning) matrices. The dual problem of \eqref{eq:scaled_problem} is given as
+Here $g : \bbR^n \to \bbRext$ and $f : \bbR^m \to \bbRext$ are convex, proper, closed functions. $K \in \bbR^{m \times n}$ is a matrix and $\Tau \in \bbR^{n \times n}$, $\Sigma \in \bbR^{m \times m}$ are symmetric positive definite scaling (preconditioning) matrices. The dual problem of \eqref{eq:scaled_problem} is given as
 \begin{equation}
-  \underset{y \in \bbR^m, w \in \bbR^n} \max ~ -g^*(\Tau^{-\frac{1}{2}} w) - h^*(\Sigma^{\frac{1}{2}} y), \quad \text{s.t.} \quad w=-\Tau^{\frac{1}{2}} K^T \Sigma^{\frac{1}{2}} y.
+  \underset{y \in \bbR^m, w \in \bbR^n} \max ~ -g^*(\Tau^{-\frac{1}{2}} w) - f^*(\Sigma^{\frac{1}{2}} y), \quad \text{s.t.} \quad w=-\Tau^{\frac{1}{2}} K^T \Sigma^{\frac{1}{2}} y.
   \label{eq:scaled_dual_problem}
 \end{equation}
 Note that the scaled problems can be written using the substitutions
@@ -30,7 +30,7 @@ Note that the scaled problems can be written using the substitutions
     &\widehat y = \Sigma^{-\frac{1}{2}} y, \\
     &\widehat w = \Tau^{\frac{1}{2}} w, \\
     &\widehat g = g \circ \Tau^{\frac{1}{2}}, \\
-    &\widehat h = h \circ \Sigma^{-\frac{1}{2}}, \\
+    &\widehat f = f \circ \Sigma^{-\frac{1}{2}}, \\
     &\widehat K = \Sigma^{\frac{1}{2}} K \Tau^{\frac{1}{2}}.
   \end{aligned}
 \end{equation}
@@ -41,7 +41,7 @@ The algorithm is given as:
 \begin{equation}
   \begin{aligned}
     &x^{k+1} = (I + \tau \Tau \partial g)^{-1}(x^k - \tau \Tau K^T y^k),\\
-    &y^{k+1} = (I + \sigma \Sigma \partial h^*)^{-1}(y^k + \sigma \Sigma K (x^{k+1} + \theta (x^{k+1} - x^k))).\\
+    &y^{k+1} = (I + \sigma \Sigma \partial f^*)^{-1}(y^k + \sigma \Sigma K (x^{k+1} + \theta (x^{k+1} - x^k))).\\
   \end{aligned}
   \label{eq:pdhgm}
 \end{equation}
