@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <map>
 #include <memory>
 #include <string>
 #include <sstream>
@@ -16,9 +17,52 @@ namespace mex_factory
 mxArray *PDHG_stepsize_cb_handle = nullptr;
 mxArray *Solver_interm_cb_handle = nullptr;
 
-typedef Factory<Prox<real>, size_t, size_t, bool, const mxArray*> ProxFactory;
-typedef Factory<Block<real>, size_t, size_t, const mxArray*> BlockFactory;
-typedef Factory<Backend<real>, const mxArray*> BackendFactory;
+ProxRegistry prox_reg[] = 
+{
+  { "moreau",                         CreateProxMoreau                                       },
+  { "zero",                           CreateProxZero                                         },
+  { "elem_operation:simplex",         CreateProxElemOperationSimplex                         },
+  { "elem_operation:1d:zero",         CreateProxElemOperation1D<Function1DZero<real>>        },
+  { "elem_operation:1d:abs",          CreateProxElemOperation1D<Function1DAbs<real>>         },
+  { "elem_operation:1d:square",       CreateProxElemOperation1D<Function1DSquare<real>>      },
+  { "elem_operation:1d:ind_leq0",     CreateProxElemOperation1D<Function1DIndLeq0<real>>     },
+  { "elem_operation:1d:ind_geq0",     CreateProxElemOperation1D<Function1DIndGeq0<real>>     },
+  { "elem_operation:1d:ind_eq0",      CreateProxElemOperation1D<Function1DIndEq0<real>>      },
+  { "elem_operation:1d:ind_box01",    CreateProxElemOperation1D<Function1DIndBox01<real>>    },
+  { "elem_operation:1d:max_pos0",     CreateProxElemOperation1D<Function1DMaxPos0<real>>     },
+  { "elem_operation:1d:l0",           CreateProxElemOperation1D<Function1DL0<real>>          },
+  { "elem_operation:1d:huber",        CreateProxElemOperation1D<Function1DHuber<real>>       },
+  { "elem_operation:norm2:zero",      CreateProxElemOperationNorm2<Function1DZero<real>>     },
+  { "elem_operation:norm2:abs",       CreateProxElemOperationNorm2<Function1DAbs<real>>      },
+  { "elem_operation:norm2:square",    CreateProxElemOperationNorm2<Function1DSquare<real>>   },
+  { "elem_operation:norm2:ind_leq0",  CreateProxElemOperationNorm2<Function1DIndLeq0<real>>  },
+  { "elem_operation:norm2:ind_geq0",  CreateProxElemOperationNorm2<Function1DIndGeq0<real>>  },
+  { "elem_operation:norm2:ind_eq0",   CreateProxElemOperationNorm2<Function1DIndEq0<real>>   },
+  { "elem_operation:norm2:ind_box01", CreateProxElemOperationNorm2<Function1DIndBox01<real>> },
+  { "elem_operation:norm2:max_pos0",  CreateProxElemOperationNorm2<Function1DMaxPos0<real>>  },
+  { "elem_operation:norm2:l0",        CreateProxElemOperationNorm2<Function1DL0<real>>       },
+  { "elem_operation:norm2:huber",     CreateProxElemOperationNorm2<Function1DHuber<real>>    },
+
+  // The end.
+  { "END",                            nullptr                                                },
+};
+
+BlockRegistry block_reg[] = 
+{
+  { "zero",   CreateBlockZero   },
+  { "sparse", CreateBlockSparse },
+
+  // The end.
+  { "END",    nullptr           },
+};
+
+BackendRegistry backend_reg[] = 
+{
+  { "pdhg", CreateBackendPDHG },
+
+  // The end.
+  { "END",  nullptr           },
+};
 
 void
 PDHGStepsizeCallback(int iter, double res_primal, double res_dual, double& tau, double &sigma)
@@ -32,70 +76,6 @@ SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vecto
   // TODO: Call MATLAB function Solver_interm_cb_handle
 }
 
-void 
-Initialize() 
-{
-  // prox operators
-  ProxFactory::GetInstance()->Register("moreau", CreateProxMoreau);
-  ProxFactory::GetInstance()->Register("zero", CreateProxZero);
-  ProxFactory::GetInstance()->Register("elem_operation:simplex", CreateProxElemOperationSimplex);
-
-  // 
-  // ElemOperation1D 
-  // 
-  ProxFactory::GetInstance()->Register("elem_operation:1d:zero", 
-    CreateProxElemOperation1D<Function1DZero<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:1d:abs", 
-    CreateProxElemOperation1D<Function1DAbs<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:1d:square", 
-    CreateProxElemOperation1D<Function1DSquare<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:1d:ind_leq0", 
-    CreateProxElemOperation1D<Function1DIndLeq0<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:1d:ind_geq0", 
-    CreateProxElemOperation1D<Function1DIndGeq0<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:1d:ind_eq0", 
-    CreateProxElemOperation1D<Function1DIndEq0<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:1d:ind_box01", 
-    CreateProxElemOperation1D<Function1DIndBox01<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:1d:max_pos0", 
-    CreateProxElemOperation1D<Function1DMaxPos0<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:1d:l0", 
-    CreateProxElemOperation1D<Function1DL0<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:1d:huber", 
-    CreateProxElemOperation1D<Function1DHuber<real> >);
-
-  // 
-  // ElemOperationNorm2
-  // 
-  ProxFactory::GetInstance()->Register("elem_operation:norm2:zero", 
-    CreateProxElemOperationNorm2<Function1DZero<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:norm2:abs", 
-    CreateProxElemOperationNorm2<Function1DAbs<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:norm2:square", 
-    CreateProxElemOperationNorm2<Function1DSquare<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:norm2:ind_leq0", 
-    CreateProxElemOperationNorm2<Function1DIndLeq0<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:norm2:ind_geq0", 
-    CreateProxElemOperationNorm2<Function1DIndGeq0<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:norm2:ind_eq0", 
-    CreateProxElemOperationNorm2<Function1DIndEq0<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:norm2:ind_box01", 
-      CreateProxElemOperationNorm2<Function1DIndBox01<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:norm2:max_pos0", 
-    CreateProxElemOperationNorm2<Function1DMaxPos0<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:norm2:l0", 
-    CreateProxElemOperationNorm2<Function1DL0<real> >);
-  ProxFactory::GetInstance()->Register("elem_operation:norm2:huber", 
-    CreateProxElemOperationNorm2<Function1DHuber<real> >);
-
-  // blocks
-  BlockFactory::GetInstance()->Register("zero", CreateBlockZero);
-  BlockFactory::GetInstance()->Register("sparse", CreateBlockSparse);
-
-  // backends
-  BackendFactory::GetInstance()->Register("pdhg", CreateBackendPDHG);
-}
-  
 ProxMoreau<real>* 
 CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
 {
@@ -260,11 +240,16 @@ CreateProx(const mxArray *pm)
         
   Prox<real> *prox = nullptr;
 
-  try
-  {
-    prox = ProxFactory::GetInstance()->Create(name, idx, size, diagsteps, data);
-  }
-  catch(const std::out_of_range& oor)
+  for(size_t i = 0; prox_reg[i].create_fn != nullptr; i++)
+    if(prox_reg[i].name.compare(name) == 0)
+      prox = prox_reg[i].create_fn(idx, size, diagsteps, data);
+
+  if(!prox) // prox not found -> look in custom registry
+    for(size_t i = 0; custom_prox_reg[i].create_fn != nullptr; i++)
+      if(custom_prox_reg[i].name.compare(name) == 0)
+        prox = custom_prox_reg[i].create_fn(idx, size, diagsteps, data);
+
+  if(!prox) // prox with that name does not exist
   {
     std::ostringstream ss;
     ss << "MexFactory::CreateProx failed. Prox with ID '" << name.c_str() << "' not registered in ProxFactory.";
@@ -287,11 +272,16 @@ CreateBlock(const mxArray *pm)
 
   Block<real> *block = nullptr;
 
-  try 
-  {
-    block = BlockFactory::GetInstance()->Create(name, row, col, data);
-  }
-  catch(const std::out_of_range& oor)
+  for(size_t i = 0; block_reg[i].create_fn != nullptr; i++)
+    if(block_reg[i].name.compare(name) == 0)
+      block = block_reg[i].create_fn(row, col, data);
+
+  if(!block) // block not found -> look in custom registry
+    for(size_t i = 0; custom_block_reg[i].create_fn != nullptr; i++)
+      if(custom_block_reg[i].name.compare(name) == 0)
+        block = custom_block_reg[i].create_fn(row, col, data);
+
+  if(!block) // block with that name does not exist
   {
     std::ostringstream ss;
     ss << "MexFactory::CreateBlock failed. Block with ID '" << name.c_str() << "' not registered in BlockFactory.";
@@ -310,11 +300,11 @@ CreateBackend(const mxArray *pm)
 
   Backend<real> *backend = nullptr;
 
-  try
-  {
-    backend = BackendFactory::GetInstance()->Create(name, mxGetCell(pm, 1));
-  }
-  catch(const std::out_of_range& oor)
+  for(size_t i = 0; backend_reg[i].create_fn != nullptr; i++)
+    if(backend_reg[i].name.compare(name) == 0)
+      backend = backend_reg[i].create_fn(mxGetCell(pm, 1));
+
+  if(!backend)
   {
     std::ostringstream ss;
     ss << "MexFactory::CreateBackend '" << name.c_str() << "' not registered in BackendFactory.";
@@ -333,7 +323,7 @@ CreateProblem(const mxArray *pm)
   // add blocks
   mxArray *cell_linop = mxGetField(pm, 0, "linop");
   const mwSize *dims_linop = mxGetDimensions(cell_linop);
-
+  
   for(mwSize i = 0; i < dims_linop[0]; i++)
     prob->AddBlock( CreateBlock(mxGetCell(cell_linop, i)) );
 

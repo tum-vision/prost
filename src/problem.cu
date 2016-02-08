@@ -95,8 +95,6 @@ void Problem<T>::AddProx_fstar(std::shared_ptr<Prox<T> > prox)
 template<typename T>
 void Problem<T>::Initialize()
 {
-  std::cout << "Initializing problem...\n";
-
   linop_->Initialize();
   nrows_ = linop_->nrows();
   ncols_ = linop_->ncols();
@@ -142,6 +140,9 @@ void Problem<T>::Initialize()
   // Init Scaling
   if(scaling_type_ == Problem<T>::Scaling::kScalingAlpha)
   {
+    scaling_left_host_ = std::vector<T>(nrows_);
+    scaling_right_host_ = std::vector<T>(ncols_);
+
     for(size_t row = 0; row < nrows(); row++)
     {
       T rowsum = linop_->row_sum(row, scaling_alpha_);
@@ -166,15 +167,13 @@ void Problem<T>::Initialize()
   }
 
   // average preconditioners at places where prox doesn't allow diagsteps
-  std::cout << "Averaging preconditioners...\n";
-  AveragePreconditioners(
-    scaling_left_host_,
-    prox_f_.empty() ? prox_fstar_ : prox_f_);
-
   AveragePreconditioners(
     scaling_right_host_,
     prox_g_.empty() ? prox_gstar_ : prox_g_);
-  std::cout << "done!\n";
+
+  AveragePreconditioners(
+    scaling_left_host_,
+    prox_f_.empty() ? prox_fstar_ : prox_f_);
 
   // copy to gpu
   scaling_left_.resize(nrows());
@@ -237,16 +236,12 @@ void Problem<T>::SetScalingAlpha(T alpha)
 {
   scaling_type_ = Problem<T>::Scaling::kScalingAlpha;
   scaling_alpha_ = alpha;
-  scaling_left_host_ = std::vector<T>(nrows());
-  scaling_right_host_ = std::vector<T>(ncols());
 }
 
 template<typename T>
 void Problem<T>::SetScalingIdentity()
 {
   scaling_type_ = Problem<T>::Scaling::kScalingIdentity;
-  scaling_left_host_ = std::vector<T>(nrows(), 1.);
-  scaling_right_host_ = std::vector<T>(ncols(), 1.);
 }
 
 template<typename T>
@@ -366,14 +361,15 @@ void Problem<T>::AveragePreconditioners(
     std::vector<T>& precond,
     const ProxList& prox)
 {
-  std::vector<std::tuple<size_t, size_t, size_t> > idx_cnt_std(precond.size());
+  std::vector<std::tuple<size_t, size_t, size_t> > idx_cnt_std;
+  idx_cnt_std.reserve(precond.size());
 
   // compute places where to average
   for(auto& p : prox)
   {
     if(!p->diagsteps())
     {
-      if(typeid(*p) == typeid(ProxSeparableSum<T>))
+      try
       {
         ProxSeparableSum<T> *pss = dynamic_cast<ProxSeparableSum<T> *>(p.get());
 
@@ -390,7 +386,7 @@ void Problem<T>::AveragePreconditioners(
               std::tuple<size_t, size_t, size_t>(pss->index() + i, pss->dim(), pss->count()) );
         }
       }
-      else
+      catch(const std::bad_cast& e)
       {
         idx_cnt_std.push_back( std::tuple<size_t, size_t, size_t>(p->index(), p->size(), 1) );
       }

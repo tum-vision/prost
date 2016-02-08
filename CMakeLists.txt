@@ -6,17 +6,16 @@ find_package(CUDA REQUIRED)
 
 # Platform specific setup
 if(APPLE)
-  set(CMAKE_CXX_FLAGS "-O3")
+  set(CMAKE_CXX_FLAGS "-O3 -fPIC")
 elseif(UNIX)
-  set(CMAKE_CXX_FLAGS "-O3 -std=c++11 -fPIC -Wall")
+  set(CMAKE_CXX_FLAGS "-std=c++11 -fPIC -Wall")
 elseif(WIN32)
   # TODO: compile on windows
 else()
   message( FATAL_ERROR "Operating system not supported." )
 endif()
 
-set(CUDA_NVCC_FLAGS "-O3 -std=c++11
--gencode=arch=compute_52,code=compute_52 -gencode=arch=compute_30,code=compute_30")
+set(CUDA_NVCC_FLAGS "-std=c++11 -gencode=arch=compute_52,code=compute_52 -gencode=arch=compute_30,code=compute_30")
 
 include_directories("include")
 
@@ -49,7 +48,6 @@ set(SOURCES
   "include/backend/backend_pdhg.hpp"
 
   "include/exception.hpp"
-  "include/factory.hpp"
   "include/solver.hpp"
   "include/problem.hpp"
 )

@@ -24,8 +24,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if(nlhs != 3)
     mexErrMsgTxt("Three outputs (result, rowsum, colsum) required.");
 
-  mex_factory::Initialize();
-  
   // read input arguments
   std::shared_ptr<LinearOperator<real> > linop(new LinearOperator<real>());
 

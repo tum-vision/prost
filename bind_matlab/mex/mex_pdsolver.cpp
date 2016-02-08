@@ -34,13 +34,11 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
 
   try 
   {
-    mex_factory::Initialize();
-
-    shared_ptr<Problem<real> > problem = mex_factory::CreateProblem(prhs[0]);
-    shared_ptr<Backend<real> > backend = mex_factory::CreateBackend(prhs[1]);
+    std::shared_ptr<Problem<real> > problem = mex_factory::CreateProblem(prhs[0]);
+    std::shared_ptr<Backend<real> > backend = mex_factory::CreateBackend(prhs[1]);
     typename Solver<real>::Options opts = mex_factory::CreateSolverOptions(prhs[2]);
 
-    shared_ptr<Solver<real> > solver( new Solver<real>(problem, backend) );
+    std::shared_ptr<Solver<real> > solver( new Solver<real>(problem, backend) );
     solver->SetOptions(opts);
     solver->SetIntermCallback(mex_factory::SolverIntermCallback);
     solver->SetStoppingCallback(MexStoppingCallback);

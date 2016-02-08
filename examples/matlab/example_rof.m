@@ -12,7 +12,7 @@ prob.linop = { block_sparse(0, 0, grad) };
 prob.prox_g = { prox_1d(0, N, 'square', 1, f, 1, 0, 0) };
 prob.prox_fstar = { prox_norm2(0, N, 2, false, 'ind_leq0', ...
                                1 / lmb, 1, 1, 0, 0) };
-prob.scaling = 'alpha';
+prob.scaling = 'identity';
 
 % create backend
 backend = pdsolver_backend_pdhg(...
@@ -22,8 +22,6 @@ backend = pdsolver_backend_pdhg(...
 % specify solver options
 opts = pdsolver_options();
 opts.max_iters = 10000;
-opts.tol_abs_primal = -1;
-opts.tol_abs_dual = -1;
 
 % solve problem
 solution = pdsolver(prob, backend, opts);

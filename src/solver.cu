@@ -112,8 +112,10 @@ Solver<T>::Solve()
     bool is_converged = false;
     bool is_stopped = stopping_cb_();
 
-    if((primal_res < (opts_.tol_abs_primal + opts_.tol_rel_primal * pv_norm)) &&
-      (dual_res < (opts_.tol_abs_dual + opts_.tol_rel_dual * dv_norm)))
+    T eps_pri = opts_.tol_abs_primal + opts_.tol_rel_primal * pv_norm;
+    T eps_dua = opts_.tol_abs_dual + opts_.tol_rel_dual * dv_norm;
+
+    if((primal_res < eps_pri) && (dual_res < eps_dua))
     {
       is_converged = true;
     }
@@ -130,7 +132,9 @@ Solver<T>::Solve()
         cout << "It " << std::setw(digits) << (i + 1) << ": " << std::scientific;
         cout.precision(2);
         cout << "Feas_p=" << primal_res;
-        cout << ", Feas_d=" << dual_res << endl;
+        cout << ", Eps_p=" << eps_pri;
+        cout << ", Feas_d=" << dual_res;
+        cout << ", Eps_d=" << eps_dua << endl;
       }
       
       cb_iters.pop_front();

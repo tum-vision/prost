@@ -25,8 +25,6 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if(nlhs != 1)
     mexErrMsgTxt("One outputs required.");
 
-  mex_factory::Initialize();
-  
   // check dimensions
   const mwSize *dims = mxGetDimensions(prhs[1]);
   size_t n = dims[0];
