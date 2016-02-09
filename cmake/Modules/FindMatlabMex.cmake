@@ -2,6 +2,7 @@
 # Defines variables:
 #    Matlab_DIR    - Matlab root dir
 #    Matlab_mex    - path to mex compiler
+#    Matlab_mexext - path to mexext
 
 if(MSVC)
   foreach(__ver "9.30" "7.14" "7.11" "7.10" "7.9" "7.8" "7.7")
@@ -22,14 +23,25 @@ if(APPLE)
 endif()
 
 if(UNIX)
-   execute_process(COMMAND which matlab OUTPUT_STRIP_TRAILING_WHITESPACE
-                   OUTPUT_VARIABLE __out RESULT_VARIABLE __res)
+  # hacky. hardcoded cvpr-intern directory, otherwise this script doesn't find mex
+  foreach(__ver "R2015b" "R2015a" "R2014b" "R2014a" "R2013b" "R2013a" "R2012b" "R2012a" "R2011b" "R2011a" "R2010b" "R2010a")
+    if(EXISTS /usr/local/lehrstuhl/DIR/matlab-${__ver})
+      set(__matlab_root /usr/local/lehrstuhl/DIR/matlab-${__ver})
+      break()
+    endif()
+  endforeach()
 
-   if(__res MATCHES 0) # Suppress `readlink` warning if `which` returned nothing
-     execute_process(COMMAND which matlab  COMMAND xargs readlink
-                     COMMAND xargs dirname COMMAND xargs dirname COMMAND xargs echo -n
-                     OUTPUT_VARIABLE __matlab_root OUTPUT_STRIP_TRAILING_WHITESPACE)
-   endif()
+  # if(NOT __matlab_root)
+  #   execute_process(COMMAND which matlab OUTPUT_STRIP_TRAILING_WHITESPACE
+  #     OUTPUT_VARIABLE __out RESULT_VARIABLE __res)
+
+  #   if(__res MATCHES 0) # Suppress `readlink` warning if `which` returned nothing
+  #     execute_process(COMMAND which matlab  COMMAND xargs readlink
+  #       COMMAND xargs dirname COMMAND xargs dirname COMMAND xargs echo -n
+  #       OUTPUT_VARIABLE __matlab_root OUTPUT_STRIP_TRAILING_WHITESPACE)
+  #   endif()
+  # endif()
+
 endif()
 
 
@@ -40,8 +52,8 @@ find_program(Matlab_mex    NAMES mex    mex.bat    HINTS ${Matlab_DIR} PATH_SUFF
 #find_program(Matlab_mexext NAMES mexext mexext.bat HINTS ${Matlab_DIR} PATH_SUFFIXES bin NO_DEFAULT_PATH)
 
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(MatlabMex DEFAULT_MSG Matlab_mex)# Matlab_mexext)
+find_package_handle_standard_args(MatlabMex DEFAULT_MSG Matlab_mex) # Matlab_mexext)
 
 if(MATLABMEX_FOUND)
-  mark_as_advanced(Matlab_mex)# Matlab_mexext)
+  mark_as_advanced(Matlab_mex) # Matlab_mexext)
 endif()

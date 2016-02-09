@@ -7,8 +7,7 @@
 #include "prost/exception.hpp"
 #include "factory.hpp"
 
-namespace mex {
-
+using namespace mex;
 using namespace prost;
 
 #ifdef __cplusplus
@@ -98,4 +97,3 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   }
 }
 
-} // namespace mex
