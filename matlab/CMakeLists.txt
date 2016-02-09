@@ -15,12 +15,12 @@ set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS) # remove -shared options as mex does 
 set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> -cxx <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -output <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 
 set(SOURCES
-  "${CMAKE_SOURCE_DIR}/matlab/+prost/mex/custom.cpp"
-  "${CMAKE_SOURCE_DIR}/matlab/+prost/mex/factory.cpp"
-  "${CMAKE_SOURCE_DIR}/matlab/+prost/mex/prost.cpp"
+  "${CMAKE_SOURCE_DIR}/matlab/+prost/private/custom.cpp"
+  "${CMAKE_SOURCE_DIR}/matlab/+prost/private/factory.cpp"
+  "${CMAKE_SOURCE_DIR}/matlab/+prost/private/prost.cpp"
 )
 
-set(LIBRARY_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/matlab/+prost/")
+set(LIBRARY_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/matlab/+prost/private")
 add_library( prost_ SHARED ${SOURCES} )
 target_link_libraries( prost_ prost ut cusparse )
 set_property(TARGET prost_ PROPERTY POSITION_INDEPENDENT_CODE False)
