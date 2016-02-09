@@ -351,14 +351,14 @@ BackendPDHG<T>::PerformIteration()
       case BackendPDHG<T>::StepsizeVariant::kPDHGStepsResidualBoyd:
         if( (this->dual_residual_ < eps_dual) && (opts_.arb_tau * iteration_ > arb_l_) )
         {
-          tau_ *= opts_.arb_delta;
-          sigma_ /= opts_.arb_delta;
+          tau_ /= opts_.arb_delta;
+          sigma_ *= opts_.arb_delta;
           arb_u_ = iteration_;
         }
         else if( (this->primal_residual_ < eps_primal) && (opts_.arb_tau * iteration_ > arb_u_) )
         {
-          tau_ /= opts_.arb_delta;
-          sigma_ *= opts_.arb_delta;
+          tau_ *= opts_.arb_delta;
+          sigma_ /= opts_.arb_delta;
           arb_l_ = iteration_;
         }
 

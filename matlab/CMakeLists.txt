@@ -20,7 +20,7 @@ set(SOURCES
   "${CMAKE_SOURCE_DIR}/matlab/+prost/mex/prost.cpp"
 )
 
-set(LIBRARY_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/matlab/+prost/mex/")
+set(LIBRARY_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/matlab/+prost/")
 add_library( prost_ SHARED ${SOURCES} )
 target_link_libraries( prost_ prost ut cusparse )
 set_property(TARGET prost_ PROPERTY POSITION_INDEPENDENT_CODE False)

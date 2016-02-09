@@ -133,16 +133,25 @@ void Problem<T>::Initialize()
     scaling_left_host_ = std::vector<T>(nrows_);
     scaling_right_host_ = std::vector<T>(ncols_);
 
+    T value = 1;
     for(size_t row = 0; row < nrows(); row++)
     {
       T rowsum = linop_->row_sum(row, scaling_alpha_);
-      scaling_left_host_[row] = 1. / ((rowsum > 0) ? rowsum : 1.);
+
+      if(rowsum > 0)
+        value = 1. / rowsum;
+
+      scaling_left_host_[row] = value;
     }
 
     for(size_t col = 0; col < ncols(); col++)
     {
-      T colsum = linop_->col_sum(col, scaling_alpha_);
-      scaling_right_host_[col] = 1. / ((colsum > 0) ? colsum : 1.);
+      T colsum = linop_->col_sum(col, 2. - scaling_alpha_);
+
+      if(colsum > 0)
+        value = 1. / colsum;
+
+      scaling_right_host_[col] = value;
     }
   }
   else if(scaling_type_ == Problem<T>::Scaling::kScalingIdentity)
@@ -274,12 +283,12 @@ struct normest_divide
 };
 
 template<typename T>
-struct normest_multiply_square : public thrust::binary_function<T, T, T>
+struct normest_multiplies_sqrt : public thrust::binary_function<T, T, T>
 {
   __host__ __device__
   T operator()(const T& a, const T& b) const
   {
-    return a*a*b;
+    return sqrt(a)*b;
   }
 };
 
@@ -287,6 +296,7 @@ template<typename T>
 T Problem<T>::normest(T tol, int max_iters)
 {
   thrust::device_vector<T> x(ncols()), Ax(nrows());
+  thrust::device_vector<T> x_temp(ncols()), Ax_temp(nrows());
 
   std::vector<T> x_host(ncols());
   std::generate(x_host.begin(), x_host.end(), []{ return (T)std::rand() / (T)RAND_MAX; } );
@@ -301,33 +311,17 @@ T Problem<T>::normest(T tol, int max_iters)
       scaling_right_.begin(), 
       scaling_right_.end(),
       x.begin(), 
-      x.begin(), 
-      thrust::multiplies<T>());
+      x_temp.begin(), 
+      normest_multiplies_sqrt<T>());
 
-    linop_->Eval(Ax, x);
+    linop_->Eval(Ax_temp, x_temp);
 
     thrust::transform(
       scaling_left_.begin(), 
       scaling_left_.end(),
+      Ax_temp.begin(), 
       Ax.begin(), 
-      Ax.begin(), 
-      normest_multiply_square<T>());
-
-    linop_->EvalAdjoint(x, Ax);
-
-    thrust::transform(
-      scaling_right_.begin(), 
-      scaling_right_.end(),
-      x.begin(), 
-      x.begin(), 
-      thrust::multiplies<T>());
-
-    T norm_x = std::sqrt( thrust::transform_reduce(
-        x.begin(), 
-        x.end(), 
-        normest_square<T>(), 
-        static_cast<T>(0), 
-        thrust::plus<T>()) ); 
+      normest_multiplies_sqrt<T>());
 
     T norm_Ax = std::sqrt( thrust::transform_reduce(
         Ax.begin(), 
@@ -336,11 +330,38 @@ T Problem<T>::normest(T tol, int max_iters)
         static_cast<T>(0), 
         thrust::plus<T>()) ); 
 
-    thrust::transform(x.begin(), x.end(), x.begin(), normest_divide<T>(norm_x));
+    thrust::transform(
+      scaling_left_.begin(), 
+      scaling_left_.end(),
+      Ax.begin(), 
+      Ax_temp.begin(), 
+      normest_multiplies_sqrt<T>());
+
+    linop_->EvalAdjoint(x_temp, Ax_temp);
+
+    thrust::transform(
+      scaling_right_.begin(), 
+      scaling_right_.end(),
+      x_temp.begin(), 
+      x.begin(), 
+      normest_multiplies_sqrt<T>());
+
+    T norm_x = std::sqrt( thrust::transform_reduce(
+        x.begin(), 
+        x.end(), 
+        normest_square<T>(), 
+        static_cast<T>(0), 
+        thrust::plus<T>()) ); 
+
     norm = norm_x / norm_Ax;
 
     if(std::abs(norm_prev - norm) < tol * norm)
+    {
+      std::cout << "converged after " << i << " iterations of normest with norm " << norm << std::endl;
       break;
+    }
+
+    thrust::transform(x.begin(), x.end(), x.begin(), normest_divide<T>(norm_x));
   }
 
   return norm;
