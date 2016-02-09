@@ -1,15 +1,16 @@
-#include "problem.hpp"
-
 #include <algorithm>
 #include <random>
 #include <thrust/transform_reduce.h>
 
-#include "linop/linearoperator.hpp"
-#include "prox/prox.hpp"
-#include "prox/prox_separable_sum.hpp"
-#include "exception.hpp"
+#include "prost/problem.hpp"
+#include "prost/linop/linearoperator.hpp"
+#include "prost/prox/prox.hpp"
+#include "prost/prox/prox_separable_sum.hpp"
+#include "prost/exception.hpp"
 
-// used for sorting prox operators according to their starting index
+namespace prost {
+
+/// \brief Used for sorting prox operators according to their starting index.
 template<typename T>
 struct ProxCompare {
   bool operator()(std::shared_ptr<Prox<T> > const& left, std::shared_ptr<Prox<T> > const& right) {
@@ -20,12 +21,9 @@ struct ProxCompare {
   }
 };
 
-/**
- * @brief Checks whether the whole domain is covered by prox operators.
- */
+/// \brief Checks whether the whole domain is covered by prox operators.
 template<typename T>
-bool CheckDomainProx(const typename Problem<T>::ProxList& proxs, size_t n) 
-{
+bool CheckDomainProx(const typename Problem<T>::ProxList& proxs, size_t n) {
   size_t num_proxs = proxs.size();
 
   if(0 == num_proxs)
@@ -50,15 +48,7 @@ bool CheckDomainProx(const typename Problem<T>::ProxList& proxs, size_t n)
 }
 
 template<typename T>
-Problem<T>::Problem()
-  : linop_(new LinearOperator<T>())
-{
-}
-
-template<typename T>
-Problem<T>::~Problem()
-{
-}
+Problem<T>::Problem() : linop_(new LinearOperator<T>()) { }
 
 template<typename T>
 void Problem<T>::AddBlock(std::shared_ptr<Block<T> > block)
@@ -415,3 +405,5 @@ void Problem<T>::AveragePreconditioners(
 // Explicit template instantiation
 template class Problem<float>;
 template class Problem<double>;
+
+} // namespace prost

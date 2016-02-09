@@ -1,4 +1,6 @@
-#include "prox/prox_zero.hpp"
+#include "prost/prox/prox_zero.hpp"
+
+namespace prost {
 
 template<typename T>
 ProxZero<T>::ProxZero(size_t index, size_t size) :
@@ -25,7 +27,8 @@ void ProxZero<T>::EvalLocal(
   thrust::copy(arg_beg, arg_end, result_beg);
 }
 
-
 // Explicit template instantiation
 template class ProxZero<float>;
 template class ProxZero<double>;
+
+} // namespace prost

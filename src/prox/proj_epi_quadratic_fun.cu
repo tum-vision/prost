@@ -1,14 +1,12 @@
-#include "prox/proj_epi_quadratic_fun.hpp"
-
 #include <iostream>
 #include <sstream>
 
-#include "prox/vector.hpp"
+#include "prost/prox/proj_epi_quadratic_fun.hpp"
+#include "prost/prox/vector.hpp"
+#include "prost/config.hpp"
+#include "prost/exception.hpp"
 
-#include "config.hpp"
-#include "exception.hpp"
-
-
+namespace prost {
 
 template<typename T>
 __global__
@@ -129,3 +127,5 @@ ProjEpiQuadraticFun<T>::Initialize()
 // Explicit template instantiation
 template class ProjEpiQuadraticFun<float>;
 template class ProjEpiQuadraticFun<double>;
+
+}
