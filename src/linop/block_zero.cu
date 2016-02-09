@@ -1,4 +1,6 @@
-#include "linop/block_zero.hpp"
+#include "prost/linop/block_zero.hpp"
+
+namespace prost {
 
 template<typename T>
 BlockZero<T>::BlockZero(size_t row, size_t col, size_t nrows, size_t ncols) 
@@ -34,3 +36,5 @@ void BlockZero<T>::EvalAdjointLocalAdd(
 // Explicit template instantiation
 template class BlockZero<float>;
 template class BlockZero<double>;
+
+} // namespace prost

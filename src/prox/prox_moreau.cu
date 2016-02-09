@@ -1,9 +1,10 @@
-#include "prox/prox_moreau.hpp"
-
 #include <iostream>
 #include <thrust/for_each.h>
 #include <thrust/iterator/zip_iterator.h>
-#include "exception.hpp"
+#include "prost/prox/prox_moreau.hpp"
+#include "prost/exception.hpp"
+
+namespace prost {
 
 template<typename T>
 struct MoreauPrescale 
@@ -118,3 +119,5 @@ size_t ProxMoreau<T>::gpu_mem_amount() const
 // Explicit template instantiation
 template class ProxMoreau<float>;
 template class ProxMoreau<double>;
+
+} // namespace prost

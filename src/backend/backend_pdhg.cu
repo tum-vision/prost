@@ -1,15 +1,16 @@
-#include "backend/backend_pdhg.hpp"
-
 #include <thrust/for_each.h>
 #include <thrust/device_vector.h>
 #include <thrust/transform_reduce.h>
 #include <thrust/iterator/zip_iterator.h>
 
-#include "linop/linearoperator.hpp"
-#include "prox/prox.hpp"
-#include "prox/prox_moreau.hpp"
-#include "exception.hpp"
-#include "problem.hpp"
+#include "prost/backend/backend_pdhg.hpp"
+#include "prost/linop/linearoperator.hpp"
+#include "prost/prox/prox.hpp"
+#include "prost/prox/prox_moreau.hpp"
+#include "prost/exception.hpp"
+#include "prost/problem.hpp"
+
+namespace prost {
 
 /// \brief 
 template<typename T>
@@ -413,3 +414,5 @@ BackendPDHG<T>::gpu_mem_amount() const
 // Explicit template instantiation
 template class BackendPDHG<float>;
 template class BackendPDHG<double>;
+
+} // namespace prost

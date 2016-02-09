@@ -1,4 +1,6 @@
-#include "prox/prox.hpp"
+#include "prost/prox/prox.hpp"
+
+namespace prost {
 
 template<typename T>
 void Prox<T>::Eval(
@@ -39,3 +41,5 @@ void Prox<T>::Eval(
 // Explicit template instantiation
 template class Prox<float>;
 template class Prox<double>;
+
+} // namespace prost

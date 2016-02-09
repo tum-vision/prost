@@ -1,9 +1,11 @@
-#include "linop/linearoperator.hpp"
-#include "exception.hpp"
-
 #include <iostream>
 #include <thrust/device_vector.h>
 #include <thrust/fill.h>
+
+#include "prost/linop/linearoperator.hpp"
+#include "prost/exception.hpp"
+
+namespace prost {
 
 template<typename T>
 bool LinearOperator<T>::RectangleOverlap(
@@ -205,3 +207,5 @@ size_t LinearOperator<T>::gpu_mem_amount() const
 // Explicit template instantiation
 template class LinearOperator<float>;
 template class LinearOperator<double>;
+
+} // namespace prost
