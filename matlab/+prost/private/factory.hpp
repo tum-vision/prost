@@ -43,7 +43,7 @@ shared_ptr<prost::Prox<real> > CreateProx(const mxArray *pm);
 shared_ptr<prost::Block<real> > CreateBlock(const mxArray *pm);
 shared_ptr<prost::Backend<real> > CreateBackend(const mxArray *pm);
 shared_ptr<prost::Problem<real> > CreateProblem(const mxArray *pm);
-typename prost::Solver<real>::Options CreateSolverOptions(const mxArray *pm);
+prost::Solver<real>::Options CreateSolverOptions(const mxArray *pm);
 
 // prox
 prost::ProxMoreau<real>* CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data);   

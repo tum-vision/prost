@@ -187,7 +187,7 @@ CreateBlockSparse(size_t row, size_t col, const mxArray *data)
 BackendPDHG<real>* 
 CreateBackendPDHG(const mxArray *data)
 {
-  typename BackendPDHG<real>::Options opts;
+  BackendPDHG<real>::Options opts;
 
   // read options from data
   opts.tau0 = (real) mxGetScalar(mxGetField(data, 0, "tau0"));
@@ -236,7 +236,7 @@ CreateProx(const mxArray *pm)
   size_t size = (size_t) mxGetScalar(mxGetCell(pm, 2));
   bool diagsteps = (bool) mxGetScalar(mxGetCell(pm, 3));
   mxArray *data = mxGetCell(pm, 4);
-        
+  
   Prox<real> *prox = nullptr;
 
   for(size_t i = 0; prox_reg[i].create_fn != nullptr; i++)
@@ -381,10 +381,10 @@ CreateProblem(const mxArray *pm)
   return std::shared_ptr<Problem<real> >(prob);
 }
 
-typename Solver<real>::Options 
+Solver<real>::Options 
 CreateSolverOptions(const mxArray *pm)
 {
-  typename Solver<real>::Options opts;
+  Solver<real>::Options opts;
 
   opts.tol_rel_primal = (real) mxGetScalar(mxGetField(pm, 0, "tol_rel_primal"));
   opts.tol_rel_dual = (real) mxGetScalar(mxGetField(pm, 0, "tol_rel_dual"));

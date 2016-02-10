@@ -1,3 +1,5 @@
+#include <algorithm>
+
 #include <thrust/for_each.h>
 #include <thrust/device_vector.h>
 #include <thrust/transform_reduce.h>
@@ -169,7 +171,12 @@ BackendPDHG<T>::Initialize()
       throw Exception("Neither prox_g nor prox_gstar specified.");
 
     for(auto& p : this->problem_->prox_gstar())
-      prox_g_.push_back( std::shared_ptr<Prox<T> >(new ProxMoreau<T>(p)) );
+    {
+      Prox<T> *moreau = new ProxMoreau<T>(p);
+      moreau->Initialize(); // inner prox gets initializes twice. should be ok though.
+
+      prox_g_.push_back( std::shared_ptr<Prox<T> >(moreau) );
+    }
   }
   else
     prox_g_ = this->problem_->prox_g();
@@ -180,7 +187,12 @@ BackendPDHG<T>::Initialize()
       throw Exception("Neither prox_f nor prox_fstar specified.");
 
     for(auto& p : this->problem_->prox_f())
-      prox_fstar_.push_back( std::shared_ptr<Prox<T> >(new ProxMoreau<T>(p)) );
+    {
+      Prox<T> *moreau = new ProxMoreau<T>(p);
+      moreau->Initialize(); // inner prox gets initializes twice. should be ok though.
+
+      prox_fstar_.push_back( std::shared_ptr<Prox<T> >(moreau) );
+    }
   }
   else
     prox_fstar_ = this->problem_->prox_fstar();
@@ -195,8 +207,14 @@ BackendPDHG<T>::Initialize()
   {
     T norm = this->problem_->normest();
 
-    tau_ /= norm;
-    sigma_ /= norm;
+    if(std::abs(norm - 1) > 0.01)
+    {
+      tau_ /= norm;
+      sigma_ /= norm;
+
+      if(this->solver_opts_.verbose)
+        cout << "BackendPDHG: |K|=" << norm << " => Rescaled tau=" << tau_ << ", sigma=" << sigma_ << "." << endl; 
+    }
   }
 }
 

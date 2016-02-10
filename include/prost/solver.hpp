@@ -68,7 +68,7 @@ public:
   const vector<T>& cur_dual_sol() const { return cur_dual_sol_; }
   
 protected:
-  Solver<T>::Options opts_;
+  typename Solver<T>::Options opts_;
   shared_ptr<Problem<T>> problem_;
   shared_ptr<Backend<T>> backend_;
 

@@ -15,10 +15,24 @@ prost.init();
 %% create problem description
 prob = prost.problem();
 prob.linop = { prost.block.sparse(0, 0, grad) };
-prob.prox_g = { prost.prox.sum_1d(0, nx * ny * nc, 'square', 1, f, 1, 0, 0) };
-prob.prox_fstar = { prost.prox.sum_norm2(0, nx * ny, 2 * nc, false, 'ind_leq0', ...
-                               1 / lmb, 1, 1, 0, 0) };
-prob.scaling = 'alpha';
+
+%prob.prox_g = { prost.prox.sum_1d(0, nx * ny * nc, 'square', 1, f, 1, 0, 0) };
+%prob.prox_fstar = { prost.prox.sum_norm2(0, nx * ny, 2 * nc, false, 'ind_leq0', ...
+%                               1 / lmb, 1, 1, 0, 0) };
+
+% Moreau tests:
+
+% prob.prox_fstar = { prost.prox.moreau(prost.prox.moreau(prost.prox.moreau(...
+%     prost.prox.sum_norm2(0, nx * ny, 2 * nc, false, 'abs', ...
+%                          1, 0, lmb, 0, 0)))) };
+
+prob.prox_f = { prost.prox.moreau(prost.prox.sum_norm2(0, nx * ny, 2 * nc, false, 'ind_leq0', ...
+                                  1 / lmb, 1, 1, 0, 0)) };
+
+prob.prox_gstar = { prost.prox.moreau(...
+    prost.prox.sum_1d(0, nx * ny * nc, 'square', 1, f, 1, 0, 0)) };
+
+prob.scaling = 'identity';
 
 %% create backend
 backend = prost.backend.pdhg(...
@@ -28,7 +42,7 @@ backend = prost.backend.pdhg(...
 
 %% specify solver options
 opts = prost.options();
-opts.max_iters = 500;
+opts.max_iters = 1000;
 
 %% solve problem
 tic;
