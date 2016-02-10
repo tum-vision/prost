@@ -7,8 +7,8 @@ set(CMAKE_CXX_COMPILER ${Matlab_mex})
 set(CMAKE_C_COMPILER ${Matlab_mex})
 
 # TODO is this even necessary?
-#set(CMAKE_SHARED_LIBRARY_SUFFIX .mexa64)
-#set(CMAKE_SHARED_LIBRARY_PREFIX)
+set(CMAKE_SHARED_LIBRARY_SUFFIX .mexa64)
+set(CMAKE_SHARED_LIBRARY_PREFIX)
 
 set(CMAKE_CXX_FLAGS "-largeArrayDims")
 
