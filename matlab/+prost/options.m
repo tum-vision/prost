@@ -1,4 +1,4 @@
-function [opts] = pdsolver_options(varargin)
+function [opts] = options(varargin)
 
     dummy_cb = @(it, x, y) disp('');
 
