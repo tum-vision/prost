@@ -20,7 +20,7 @@ ProxRegistry prox_reg[] =
 {
   { "moreau",                         CreateProxMoreau                                       },
   { "zero",                           CreateProxZero                                         },
-  { "elem_operation:simplex",         CreateProxElemOperationSimplex                         },
+  { "elem_operation:ind_simplex",     CreateProxElemOperationIndSimplex                      },
   { "elem_operation:1d:zero",         CreateProxElemOperation1D<Function1DZero<real>>        },
   { "elem_operation:1d:abs",          CreateProxElemOperation1D<Function1DAbs<real>>         },
   { "elem_operation:1d:square",       CreateProxElemOperation1D<Function1DSquare<real>>      },
@@ -144,14 +144,14 @@ CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxAr
     idx, count, dim, interleaved, diagsteps, coeffs);   
 }
 
-ProxElemOperation<real, ElemOperationSimplex<real> >* 
-CreateProxElemOperationSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+ProxElemOperation<real, ElemOperationIndSimplex<real> >* 
+CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
 {
   size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
   size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
   bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
 
-  return new ProxElemOperation<real, ElemOperationSimplex<real> >(idx, count, dim, interleaved, diagsteps);   
+  return new ProxElemOperation<real, ElemOperationIndSimplex<real> >(idx, count, dim, interleaved, diagsteps);   
 }
 
 BlockSparse<real>*

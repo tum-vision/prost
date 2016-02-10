@@ -16,7 +16,7 @@
 #include "prost/prox/prox_elem_operation.hpp"
 #include "prost/prox/elemop/elem_operation_1d.hpp"
 #include "prost/prox/elemop/elem_operation_norm2.hpp"
-#include "prost/prox/elemop/elem_operation_simplex.hpp"
+#include "prost/prox/elemop/elem_operation_ind_simplex.hpp"
 #include "prost/prox/elemop/function_1d.hpp"
 
 #include "prost/common.hpp"
@@ -57,8 +57,8 @@ template<class FUN_1D>
 prost::ProxElemOperation<real, prost::ElemOperationNorm2<real, FUN_1D> >*
 CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
-prost::ProxElemOperation<real, prost::ElemOperationSimplex<real> >*
-CreateProxElemOperationSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+prost::ProxElemOperation<real, prost::ElemOperationIndSimplex<real> >*
+CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
 // block
 prost::BlockZero<real>* CreateBlockZero(size_t row, size_t col, const mxArray *data);
