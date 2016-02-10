@@ -1,8 +1,12 @@
+# Broken on mac. Add rpath somewhere?
+
 find_package(MatlabMex REQUIRED)
+find_package(CUDA REQUIRED)
 
 set(CMAKE_CXX_COMPILER ${Matlab_mex})
 set(CMAKE_C_COMPILER ${Matlab_mex})
 
+# TODO is this even necessary?
 set(CMAKE_SHARED_LIBRARY_SUFFIX .mexa64)
 set(CMAKE_SHARED_LIBRARY_PREFIX)
 
@@ -20,6 +24,10 @@ set(SOURCES
   "${CMAKE_SOURCE_DIR}/matlab/+prost/private/prost.cpp"
 )
 
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${CUDA_TOOLKIT_ROOT_DIR}/lib64")
+#set(CMAKE_SKIP_RPATH TRUE)
+
+#include_directories(${CUDA_INCLUDE_DIRS})
 set(LIBRARY_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/matlab/+prost/private")
 add_library( prost_ SHARED ${SOURCES} )
 target_link_libraries( prost_ prost ut cusparse )
