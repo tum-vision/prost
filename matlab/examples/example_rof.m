@@ -10,6 +10,8 @@ f = double(im(:)) / 255.;
 grad = spmat_gradient2d(nx,ny,nc);
 lmb = 1;
 
+prost.init();
+
 %% create problem description
 prob = prost.problem();
 prob.linop = { prost.block.sparse(0, 0, grad) };
@@ -32,6 +34,8 @@ opts.max_iters = 10000;
 tic;
 solution = prost.solve(prob, backend, opts);
 toc;
+
+prost.release();
 
 %% show result
 figure;

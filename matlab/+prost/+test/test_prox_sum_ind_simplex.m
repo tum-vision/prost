@@ -1,4 +1,4 @@
-function [passed] = test_prox_simplex()
+function [passed] = test_prox_sum_ind_simplex()
 
     % generate random points and project them onto the simplex
     N=6000;
@@ -10,7 +10,7 @@ function [passed] = test_prox_simplex()
     tau = 1;
     Tau = ones(N * d, 1);
 
-    Q = pdsolver_eval_prox( prox_simplex(0, N, d, false), P, tau, Tau);
+    Q = prost.eval_prox( prost.prox.sum_ind_simplex(0, N, d, false), P, tau, Tau);
     Q2 = zeros(size(P));
     for i=0:(N-1)
         ind = 1 + i+(0:(d-1))*N;

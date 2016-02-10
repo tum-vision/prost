@@ -1,4 +1,4 @@
-function [passed] = test_prox_norm2()
+function [passed] = test_prox_sum_norm2()
 
     N=6000;
     d=7;
@@ -11,8 +11,8 @@ function [passed] = test_prox_norm2()
 
     % h(x) = c f(ax - b) + dx + 0.5ex^2
 
-    Q = pdsolver_eval_prox( prox_norm2(0, N, d, false, 'ind_leq0', ...
-                                       ones(N,1), 1, ones(N,1), 0, 0, 0, 0), P, tau, Tau);
+    Q = prost.eval_prox( prost.prox.sum_norm2(0, N, d, false, 'ind_leq0', ...
+                                              ones(N,1), 1, ones(N,1), 0, 0, 0, 0), P, tau, Tau);
 
     P = reshape(P, N, d);
     Pnorm = repmat(sqrt(sum(P.^2, 2)), 1, d);
