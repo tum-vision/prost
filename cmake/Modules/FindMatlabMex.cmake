@@ -5,7 +5,7 @@
 #    Matlab_mexext - path to mexext
 
 if(MSVC)
-  foreach(__ver "9.30" "7.14" "7.11" "7.10" "7.9" "7.8" "7.7")
+  foreach(__ver "9.30" "8.6" "7.14" "7.11" "7.10" "7.9" "7.8" "7.7")
     get_filename_component(__matlab_root "[HKEY_LOCAL_MACHINE\\SOFTWARE\\MathWorks\\MATLAB\\${__ver};MATLABROOT]" ABSOLUTE)
     if(__matlab_root)
       break()
