@@ -24,5 +24,5 @@ set(SOURCES
   "problem.cu"
   "solver.cu"
 )
-  
+
 cuda_add_library(prost STATIC ${SOURCES})
