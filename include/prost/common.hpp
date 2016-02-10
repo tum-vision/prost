@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <iostream>
+#include <map>
 #include <memory>
 #include <vector>
 #include <string>
@@ -14,6 +15,7 @@ namespace prost {
 using std::cout;
 using std::endl;
 using std::function;
+using std::map;
 using std::shared_ptr;
 using std::string;
 using std::stringstream;

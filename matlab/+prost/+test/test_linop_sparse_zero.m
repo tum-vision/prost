@@ -1,4 +1,4 @@
-function [passed] = test_linop_sparse()
+function [passed] = test_linop_sparse_zero()
 
     rng(1);
     passed = true;
@@ -22,7 +22,7 @@ function [passed] = test_linop_sparse()
             for j=1:Bx
                 K_mat = sprand(nrows,ncols,0.01);
                 K_row = cat(2, K_row, K_mat);
-                linop{idx, 1} = block_sparse(row, col, K_mat);
+                linop{idx, 1} = prost.block.sparse(row, col, K_mat);
                 idx = idx + 1;
                 col = col + ncols;
             end
@@ -32,7 +32,7 @@ function [passed] = test_linop_sparse()
         end
         
         inp2 = rand(nrows*By, 1);
-        [y,rowsum,colsum] = pdsolver_eval_linop(linop, inp2, true);
+        [y,rowsum,colsum] = prost.eval_linop(linop, inp2, true);
         y_ml = K'*inp2;
 
         if norm(y-y_ml) > 1e-3
@@ -45,7 +45,7 @@ function [passed] = test_linop_sparse()
         end
         
         inp = rand(ncols*Bx, 1);
-        [x,~,~] = pdsolver_eval_linop(linop, inp, false);
+        [x,~,~] = prost.eval_linop(linop, inp, false);
         x_ml = K*inp;
 
         if norm(x-x_ml) > 1e-3
