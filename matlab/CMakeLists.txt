@@ -3,7 +3,7 @@ find_package(MatlabMex REQUIRED)
 set(CMAKE_CXX_COMPILER ${Matlab_mex})
 set(CMAKE_C_COMPILER ${Matlab_mex})
 
-set(CMAKE_SHARED_LIBRARY_SUFFIX .mexa64)
+#set(CMAKE_SHARED_LIBRARY_SUFFIX .mexa64)
 set(CMAKE_SHARED_LIBRARY_PREFIX)
 
 set(CMAKE_CXX_FLAGS "-largeArrayDims")
@@ -19,6 +19,9 @@ set(SOURCES
   "${CMAKE_SOURCE_DIR}/matlab/+prost/private/factory.cpp"
   "${CMAKE_SOURCE_DIR}/matlab/+prost/private/prost.cpp"
 )
+
+set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${CUDA_TOOLKIT_ROOT_DIR}/lib64")
+#set(CMAKE_SKIP_RPATH TRUE)
 
 set(LIBRARY_OUTPUT_PATH "${CMAKE_SOURCE_DIR}/matlab/+prost/private")
 add_library( prost_ SHARED ${SOURCES} )
