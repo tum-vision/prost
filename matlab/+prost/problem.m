@@ -1,4 +1,4 @@
-function [prob] = pdsolver_problem(varargin)
+function [prob] = problem(varargin)
 
     p = inputParser;
     addOptional(p, 'linop', {});
