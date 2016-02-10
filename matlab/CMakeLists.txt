@@ -6,27 +6,17 @@ set(CMAKE_C_COMPILER ${Matlab_mex})
 
 if(MSVC)
   set(CMAKE_SHARED_LIBRARY_SUFFIX .mexw64)
-  add_definitions(-DMATLAB_MEX_FILE)
 endif()
 
-if(APPLE)
-  # TODO
-endif()
+add_definitions(-DMATLAB_MEX_FILE)
 
-# TODO: Broken on mac. Add rpath somewhere? -- Test this!
-set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_RPATH};${CUDA_TOOLKIT_ROOT_DIR}/lib64")
-#set(CMAKE_SKIP_RPATH TRUE)
+set(CMAKE_CXX_FLAGS "-largeArrayDims")
 
 if(UNIX)
   set(CMAKE_SHARED_LIBRARY_SUFFIX .mexa64)
 endif()
 
 set(CMAKE_SHARED_LIBRARY_PREFIX)
-
-# TODO: Could this cause any problems for large matrices on Windows?
-if(APPLE OR UNIX)
-  set(CMAKE_CXX_FLAGS "-largeArrayDims")
-endif()
 
 set(CMAKE_CXX_COMPILE_OBJECT
   "<CMAKE_CXX_COMPILER> <DEFINES> <FLAGS> -outdir <OBJECT_DIR> -c <SOURCE>; mv <OBJECT_DIR>/$$(basename <SOURCE> .cpp).o <OBJECT>")
@@ -43,8 +33,9 @@ set(SOURCES
   "${CMAKE_SOURCE_DIR}/matlab/+prost/private/config.hpp"
 )
 
+include_directories("${CUDA_TOOLKIT_ROOT_DIR}/include")
+
 if(MSVC)
-  include_directories("${CUDA_TOOLKIT_ROOT_DIR}/include")
   include_directories("${Matlab_DIR}/extern/include")
   link_directories("${Matlab_DIR}/extern/lib/win64/microsoft/")
 endif()
@@ -59,6 +50,11 @@ else()
 endif()
 
 set_property(TARGET prost_ PROPERTY POSITION_INDEPENDENT_CODE False)
+
+if(APPLE)
+  set_property(TARGET prost_ PROPERTY MACOSX_RPATH ${CUDA_TOOLKIT_ROOT_DIR}/lib)
+  set(CMAKE_SHARED_LINKER_FLAGS "LDFLAGS='\$LDFLAGS -Wl,-rpath,${CUDA_TOOLKIT_ROOT_DIR}/lib'")
+endif()
 
 # MSVC adds Debug/Release directory, so install to correct location
 if(MSVC)
