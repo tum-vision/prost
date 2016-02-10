@@ -1,5 +1,5 @@
-#ifndef PROST_ELEM_OPERATION_SIMPLEX_HPP_
-#define PROST_ELEM_OPERATION_SIMPLEX_HPP_
+#ifndef PROST_ELEM_OPERATION_IND_SIMPLEX_HPP_
+#define PROST_ELEM_OPERATION_IND_SIMPLEX_HPP_
 
 #include "prost/prox/elemop/elem_operation.hpp"
 
@@ -20,14 +20,14 @@ namespace prost {
 ///        would be much too slow.
 ///
 template<typename T>
-struct ElemOperationSimplex : public ElemOperation<0, 0, T>
+struct ElemOperationIndSimplex : public ElemOperation<0, 0, T>
 {
   struct GetSharedMemCount {
     inline __host__ __device__ size_t operator()(size_t dim) { return dim; }
   };
 
   __device__
-  ElemOperationSimplex(size_t dim, SharedMem<typename ElemOperationSimplex::SharedMemType, typename ElemOperationSimplex::GetSharedMemCount>& shared_mem)
+  ElemOperationIndSimplex(size_t dim, SharedMem<typename ElemOperationIndSimplex::SharedMemType, typename ElemOperationIndSimplex::GetSharedMemCount>& shared_mem)
       : dim_(dim), shared_mem_(shared_mem) { } 
   
   inline __device__
@@ -103,7 +103,7 @@ struct ElemOperationSimplex : public ElemOperation<0, 0, T>
   }
     
  private:
-  SharedMem<typename ElemOperationSimplex::SharedMemType, typename ElemOperationSimplex::GetSharedMemCount>& shared_mem_;
+  SharedMem<typename ElemOperationIndSimplex::SharedMemType, typename ElemOperationIndSimplex::GetSharedMemCount>& shared_mem_;
   size_t dim_;
 };
 

@@ -28,7 +28,7 @@ backend = prost.backend.pdhg(...
 
 %% specify solver options
 opts = prost.options();
-opts.max_iters = 10000;
+opts.max_iters = 500;
 
 %% solve problem
 tic;
