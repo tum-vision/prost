@@ -380,6 +380,8 @@ void Problem<T>::AveragePreconditioners(
   {
     if(!p->diagsteps())
     {
+      p->get_separable_structure(idx_cnt_std);
+/*
       try
       {
         ProxSeparableSum<T> *pss = dynamic_cast<ProxSeparableSum<T> *>(p.get());
@@ -401,6 +403,7 @@ void Problem<T>::AveragePreconditioners(
       {
         idx_cnt_std.push_back( std::tuple<size_t, size_t, size_t>(p->index(), p->size(), 1) );
       }
+*/
     }
   }
 

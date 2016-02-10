@@ -21,6 +21,7 @@ public:
   virtual void Release();
 
   virtual size_t gpu_mem_amount() const;
+  virtual void get_separable_structure(vector<std::tuple<size_t, size_t, size_t> >& sep);
 
 protected:
   shared_ptr<Prox<T>> conjugate_;

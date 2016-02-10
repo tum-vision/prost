@@ -42,6 +42,21 @@ public:
   size_t count() const { return count_; }
   bool interleaved() const { return interleaved_; }
 
+  virtual void get_separable_structure(vector<std::tuple<size_t, size_t, size_t> >& sep) {
+    if(interleaved()) {
+      for(size_t i = 0; i < count(); i++)
+        sep.push_back( 
+          std::tuple<size_t, size_t, size_t>(this->index() + i * dim(), dim(), 1) );
+    }
+    else
+    {
+      for(size_t i = 0; i < count(); i++)
+        sep.push_back( 
+          std::tuple<size_t, size_t, size_t>(this->index() + i, dim(), count()) );
+    }
+  }
+
+
 protected:
   size_t count_; 
   size_t dim_;

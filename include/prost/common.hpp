@@ -21,6 +21,8 @@ using std::string;
 using std::stringstream;
 using std::vector;
 
+string get_version(); 
+
 } // namespace prost
 
 #endif // PROST_COMMON_HPP_

@@ -116,6 +116,14 @@ size_t ProxMoreau<T>::gpu_mem_amount() const
   return this->size_ * sizeof(T) + conjugate_->gpu_mem_amount();
 }
 
+template<typename T>
+void ProxMoreau<T>::get_separable_structure(
+  vector<std::tuple<size_t, size_t, size_t> >& sep)
+{
+  conjugate_->get_separable_structure(sep);
+}
+
+
 // Explicit template instantiation
 template class ProxMoreau<float>;
 template class ProxMoreau<double>;

@@ -2,6 +2,7 @@
 #define PROST_PROX_HPP_
 
 #include <thrust/device_vector.h>
+#include "prost/common.hpp"
 
 namespace prost {
 
@@ -69,6 +70,11 @@ public:
   size_t size() const { return size_; }
   size_t end() const { return index_ + size_ - 1; }
   bool diagsteps() const { return diagsteps_; }
+  
+  /// \brief Returns the separability information of the prox operator. 
+  ///        Needed for averaging the preconditioners
+  virtual void get_separable_structure(
+    vector<std::tuple<size_t, size_t, size_t> >& sep);
   
 protected:
   /// 
