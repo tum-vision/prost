@@ -1,4 +1,4 @@
-function [backend] = pdsolver_backend_pdhg(varargin)
+function [backend] = pdhg(varargin)
 
     dummy_cb = @(it, res_primal, res_dual, tau, sigma) [tau, sigma];
     
