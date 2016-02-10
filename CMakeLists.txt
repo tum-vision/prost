@@ -11,8 +11,9 @@ if(UNIX OR APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall")
 endif()
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 include_directories("include")
+include_directories(${CUDA_SDK_ROOT_DIR}/include)
 
 add_subdirectory(src)
 add_subdirectory(matlab)
