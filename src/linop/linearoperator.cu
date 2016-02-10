@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 #include <thrust/device_vector.h>
 #include <thrust/fill.h>

@@ -11,6 +11,38 @@
 using namespace mex; 
 using namespace prost;
 
+// redirect std::cout to mexPrintf
+class mexstream : public std::streambuf {
+protected:
+	virtual std::streamsize xsputn(const char *s, std::streamsize n) { 
+		mexPrintf("%.*s", n, s);
+
+		return n; 
+	}
+
+	virtual int overflow(int c = EOF) {
+		if (c != EOF) {
+			mexPrintf("%.1s", &c);
+
+			if (c == '\n')
+				mexEvalString("pause(.001);"); // allows MATLAB to flush output
+		}; 
+		return 1;
+	}
+};
+
+class scoped_redirect_cout {
+public:
+	scoped_redirect_cout() { old_buf = std::cout.rdbuf(); std::cout.rdbuf(&mout); }
+	~scoped_redirect_cout() { std::cout.rdbuf(old_buf); }
+
+private:
+	mexstream mout;
+	std::streambuf *old_buf;
+};
+
+scoped_redirect_cout mex_cout_redirect; 
+
 #ifdef __cplusplus
 extern "C" bool utIsInterruptPending();
 extern "C" void utSetInterruptPending(bool);
@@ -35,7 +67,7 @@ static void SolveProblem(MEX_ARGS) {
 
   std::shared_ptr<Problem<real> > problem = CreateProblem(prhs[0]);
   std::shared_ptr<Backend<real> > backend = CreateBackend(prhs[1]);
-  typename Solver<real>::Options opts = CreateSolverOptions(prhs[2]);
+  Solver<real>::Options opts = CreateSolverOptions(prhs[2]);
 
   std::shared_ptr<Solver<real> > solver( new Solver<real>(problem, backend) );
   solver->SetOptions(opts);
