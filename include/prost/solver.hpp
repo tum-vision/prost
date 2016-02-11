@@ -11,7 +11,7 @@ template<typename T> class Backend;
 /// 
 /// \brief Solver for graph-form problems.
 ///
-/// @tparam typename T. Floating point-type
+/// @tparam typename T. Floating point-type.
 /// 
 template<typename T>
 class Solver {

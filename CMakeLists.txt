@@ -8,6 +8,9 @@ if(UNIX OR APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
 endif()
 
+find_package(MatlabMex REQUIRED)
+find_package(CUDA REQUIRED)
+
 include_directories("include")
 
 add_subdirectory(src)

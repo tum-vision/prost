@@ -55,7 +55,6 @@ void Solver<T>::SetIntermCallback(const typename Solver<T>::IntermCallback& cb) 
   interm_cb_ = cb;
 }
 
-
 template<typename T>
 void Solver<T>::Initialize() {
   problem_->Initialize();
@@ -104,8 +103,7 @@ typename Solver<T>::ConvergenceResult Solver<T>::Solve() {
     // check if we should run the intermediate solution callback this iteration
     if(i >= cb_iters.front() || is_converged || is_stopped) {
       backend_->current_solution(cur_primal_sol_, cur_dual_sol_);
-      interm_cb_(i + 1, cur_primal_sol_, cur_dual_sol_);
-
+ 
       if(opts_.verbose) {
         int digits = std::floor(std::log10( (double) opts_.max_iters )) + 1;
         cout << "It " << std::setw(digits) << (i + 1) << ": " << std::scientific;
@@ -113,8 +111,11 @@ typename Solver<T>::ConvergenceResult Solver<T>::Solve() {
         cout << "Feas_p=" << primal_res;
         cout << ", Eps_p=" << eps_pri;
         cout << ", Feas_d=" << dual_res;
-        cout << ", Eps_d=" << eps_dua << endl;
+        cout << ", Eps_d=" << eps_dua << "; ";
       }
+
+      // MATLAB callback
+      interm_cb_(i + 1, cur_primal_sol_, cur_dual_sol_);
       
       cb_iters.pop_front();
     }

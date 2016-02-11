@@ -32,22 +32,24 @@ prob.prox_f = { prost.prox.moreau(prost.prox.sum_norm2(0, nx * ny, 2 * nc, false
 prob.prox_gstar = { prost.prox.moreau(...
     prost.prox.sum_1d(0, nx * ny * nc, 'square', 1, f, 1, 0, 0)) };
 
-prob.scaling = 'identity';
+prob.scaling = 'alpha';
 
 %% create backend
 backend = prost.backend.pdhg(...
     'residual_iter', 10, ...
     'stepsize', 'boyd', ...
+    'alg2_gamma', 0.1 / lmb, ...
     'scale_steps_operator', true);
 
 %% specify solver options
 opts = prost.options();
-opts.max_iters = 1000;
+opts.max_iters = 5000;
+opts.num_cback_calls = 25;
+opts.interm_cb = @(it, x, y) example_rof_energy_cb(...
+    it, x, y, grad, f, lmb, ny, nx, nc);
 
 %% solve problem
-tic;
 solution = prost.solve(prob, backend, opts);
-toc;
 
 prost.release();
 

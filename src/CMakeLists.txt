@@ -1,10 +1,8 @@
-find_package(CUDA REQUIRED)
-
-string(TIMESTAMP VERSION "%H:%M-%Y-%m-%d")
+string(TIMESTAMP VERSION "%Y-%m-%d")
 add_definitions(-DPROST_VERSION="0.0.1-build-${VERSION}")
 
 if(UNIX OR APPLE)
-  list(APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC)
+  list(APPEND CUDA_NVCC_FLAGS -Xcompiler -fPIC -O3)
 endif()
 
 if(UNIX)
