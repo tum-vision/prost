@@ -55,7 +55,7 @@ LinearOperator<T>::~LinearOperator()
 }
 
 template<typename T>
-void LinearOperator<T>::AddBlock(std::shared_ptr<Block<T> > block) 
+void LinearOperator<T>::AddBlock(std::shared_ptr<Block<T>> block) 
 {
   blocks_.push_back(block);
 }
