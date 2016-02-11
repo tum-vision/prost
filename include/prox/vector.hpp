@@ -21,7 +21,7 @@ public:
     interleaved_(interleaved),
     tx_(tx),
     data_(data), 
-    const_data_(nullptr) { }
+    const_data_(data) { }
 
   inline __host__ __device__
   T

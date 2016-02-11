@@ -42,7 +42,8 @@ ProxRegistry prox_reg[] =
   { "elem_operation:norm2:max_pos0",  CreateProxElemOperationNorm2<Function1DMaxPos0<real>>  },
   { "elem_operation:norm2:l0",        CreateProxElemOperationNorm2<Function1DL0<real>>       },
   { "elem_operation:norm2:huber",     CreateProxElemOperationNorm2<Function1DHuber<real>>    },
-
+  { "epi_quadratic_fun",              CreateProjEpiQuadraticFun                              },
+  
   // The end.
   { "END",                            nullptr                                                },
 };
@@ -153,6 +154,42 @@ CreateProxElemOperationSimplex(size_t idx, size_t size, bool diagsteps, const mx
   bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
 
   return new ProxElemOperation<real, ElemOperationSimplex<real> >(idx, count, dim, interleaved, diagsteps);   
+}
+
+ProjEpiQuadraticFun<real>* 
+CreateProjEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+{
+  size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
+  size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
+  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+ 
+  const mxArray *coeffs =  mxGetCell(data, 3);
+  
+  const mwSize *dims = mxGetDimensions(mxGetCell(coeffs, 0));
+    
+  if(dims[0] != 1 && dims[0] != count)
+    throw Exception("Prox: Dimension of coefficient a has to be equal to 1 or count\n");
+        
+  double *val = mxGetPr(mxGetCell(coeffs, 0));
+  std::vector<real> a(val, val + dims[0]);
+  
+  dims = mxGetDimensions(mxGetCell(coeffs, 1));
+    
+  if(dims[0] != count*(dim-1) && dims[0] != dim-1)
+    throw Exception("Prox: Dimension of coefficient b has to be equal to dim-1 or count*(dim-1)\n");
+        
+  val = mxGetPr(mxGetCell(coeffs, 1));
+  std::vector<real> b(val, val + dims[0]);
+  
+  dims = mxGetDimensions(mxGetCell(coeffs, 2));
+    
+  if(dims[0] != 1 && dims[0] != count)
+    throw Exception("Prox: Dimension of coefficient c has to be equal to 1 or count\n");
+        
+  val = mxGetPr(mxGetCell(coeffs, 2));
+  std::vector<real> c(val, val + dims[0]);
+  
+  return new ProjEpiQuadraticFun<real>(idx, count, dim, interleaved, diagsteps, a, b, c);   
 }
 
 BlockSparse<real>*
