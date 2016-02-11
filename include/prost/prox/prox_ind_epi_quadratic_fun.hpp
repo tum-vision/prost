@@ -1,5 +1,5 @@
-#ifndef PROST_PROJ_EPI_QUADRATIC_FUN_HPP_
-#define PROST_PROJ_EPI_QUADRATIC_FUN_HPP_
+#ifndef PROST_PROX_IND_EPI_QUADRATIC_FUN_HPP_
+#define PROST_PROX_IND_EPI_QUADRATIC_FUN_HPP_
 
 #include <array>
 #include <vector>
@@ -15,10 +15,10 @@ namespace prost {
 /// \brief Implements projection onto epigraph of quadratic function s.t. a/2 x^T x + b^T x + c >= y
 ///
 template<typename T>
-class ProjEpiQuadraticFun : public ProxSeparableSum<T> 
+class ProxIndEpiQuadraticFun : public ProxSeparableSum<T> 
 {
 public:    
-  ProjEpiQuadraticFun(
+  ProxIndEpiQuadraticFun(
       size_t index, 
       size_t count, 
       size_t dim, 

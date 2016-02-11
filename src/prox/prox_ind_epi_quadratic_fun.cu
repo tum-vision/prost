@@ -1,12 +1,13 @@
 #include <iostream>
 #include <sstream>
 
-#include "prost/prox/proj_epi_quadratic_fun.hpp"
+#include "prost/prox/prox_ind_epi_quadratic_fun.hpp"
 #include "prost/prox/vector.hpp"
 #include "prost/config.hpp"
 #include "prost/exception.hpp"
 
 namespace prost {
+
 template<typename T>
 struct Coefficients {
   const T* dev_a;
@@ -20,7 +21,7 @@ struct Coefficients {
 
 template<typename T>
 __global__
-void ProjEpiQuadraticFunKernel(
+void ProxIndEpiQuadraticFunKernel(
   T *d_res,
   const T *d_arg,
   size_t count,
@@ -50,7 +51,7 @@ void ProjEpiQuadraticFunKernel(
     }
     
 
-    ProjEpiQuadraticFun<T>::ProjectSimple(x, y0 / a + (0.5 / (a*a)) * sq_norm_b - c / a, 0.5, x, y, dim-1);
+    ProxIndEpiQuadraticFun<T>::ProjectSimple(x, y0 / a + (0.5 / (a*a)) * sq_norm_b - c / a, 0.5, x, y, dim-1);
       
     for(size_t i = 0; i < dim-1; i++) {
       x[i] -= b[i] / a;
@@ -63,7 +64,7 @@ void ProjEpiQuadraticFunKernel(
 
 template<typename T>
 void 
-ProjEpiQuadraticFun<T>::EvalLocal(
+ProxIndEpiQuadraticFun<T>::EvalLocal(
   const typename thrust::device_vector<T>::iterator& result_beg,
   const typename thrust::device_vector<T>::iterator& result_end,
   const typename thrust::device_vector<T>::const_iterator& arg_beg,
@@ -94,7 +95,7 @@ ProjEpiQuadraticFun<T>::EvalLocal(
     coeffs.c = c_[0];
   }
 
-  ProjEpiQuadraticFunKernel<T>
+  ProxIndEpiQuadraticFunKernel<T>
     <<<grid, block>>>(
       thrust::raw_pointer_cast(&(*result_beg)),
       thrust::raw_pointer_cast(&(*arg_beg)),
@@ -116,7 +117,7 @@ ProjEpiQuadraticFun<T>::EvalLocal(
 
 template<typename T>
 void
-ProjEpiQuadraticFun<T>::Initialize() 
+ProxIndEpiQuadraticFun<T>::Initialize() 
 {
     if(a_.size() != this->count_ && a_.size() != 1)
       throw Exception("Wrong input: Coefficient a has to have dimension count or 1!");
@@ -153,7 +154,7 @@ ProjEpiQuadraticFun<T>::Initialize()
 }
 
 // Explicit template instantiation
-template class ProjEpiQuadraticFun<float>;
-template class ProjEpiQuadraticFun<double>;
+template class ProxIndEpiQuadraticFun<float>;
+template class ProxIndEpiQuadraticFun<double>;
 
 }

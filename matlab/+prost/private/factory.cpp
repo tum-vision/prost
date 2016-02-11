@@ -41,7 +41,7 @@ ProxRegistry prox_reg[] =
   { "elem_operation:norm2:max_pos0",  CreateProxElemOperationNorm2<Function1DMaxPos0<real>>  },
   { "elem_operation:norm2:l0",        CreateProxElemOperationNorm2<Function1DL0<real>>       },
   { "elem_operation:norm2:huber",     CreateProxElemOperationNorm2<Function1DHuber<real>>    },
-  { "epi_quadratic_fun",              CreateProjEpiQuadraticFun                              },
+  { "ind_epi_quadratic_fun",          CreateProxIndEpiQuadraticFun                              },
   
   // The end.
   { "END",                            nullptr                                                },
@@ -155,8 +155,8 @@ CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const
   return new ProxElemOperation<real, ElemOperationIndSimplex<real> >(idx, count, dim, interleaved, diagsteps);   
 }
 
-ProjEpiQuadraticFun<real>* 
-CreateProjEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+ProxIndEpiQuadraticFun<real>* 
+CreateProxIndEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
 {
   size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
   size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
@@ -188,7 +188,7 @@ CreateProjEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxArray
   val = mxGetPr(mxGetCell(coeffs, 2));
   std::vector<real> c(val, val + dims[0]);
   
-  return new ProjEpiQuadraticFun<real>(idx, count, dim, interleaved, diagsteps, a, b, c);   
+  return new ProxIndEpiQuadraticFun<real>(idx, count, dim, interleaved, diagsteps, a, b, c);   
 }
 
 BlockSparse<real>*
