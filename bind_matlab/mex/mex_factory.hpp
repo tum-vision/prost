@@ -3,10 +3,6 @@
 
 #include <memory>
 
-#include "prox/prox.hpp"
-#include "prox/prox_moreau.hpp"
-#include "prox/prox_zero.hpp"
-
 #include "linop/linearoperator.hpp"
 #include "linop/block.hpp"
 #include "linop/block_zero.hpp"
@@ -18,10 +14,14 @@
 #include "problem.hpp"
 #include "solver.hpp"
 
+#include "prox/prox.hpp"
+#include "prox/prox_moreau.hpp"
+#include "prox/prox_zero.hpp"
 #include "prox/prox_elem_operation.hpp"
 #include "prox/elemop/elem_operation_1d.hpp"
 #include "prox/elemop/elem_operation_norm2.hpp"
 #include "prox/elemop/elem_operation_simplex.hpp"
+#include "prox/proj_epi_quadratic_fun.hpp"
 
 // has to be included at end, otherwise 
 // some compiler problems with std::printf 
@@ -53,6 +53,9 @@ CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxAr
 
 ProxElemOperation<real, ElemOperationSimplex<real> >*
 CreateProxElemOperationSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+
+ProjEpiQuadraticFun<real>*
+CreateProjEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
 // block
 BlockZero<real>* CreateBlockZero(size_t row, size_t col, const mxArray *data);

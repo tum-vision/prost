@@ -31,6 +31,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   if(dims[1] != 1)
     mexErrMsgTxt("Input to prox should be a vector!");
 
+  
   // init prox
   std::shared_ptr<Prox<real>> prox;
   try 
@@ -43,6 +44,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
     mexErrMsgTxt(e.what());
   }
 
+   
   // read data from matlab
   double *arg = (double *)mxGetPr(prhs[1]);
   double *tau_diag = (double *)mxGetPr(prhs[3]);
