@@ -1,13 +1,14 @@
-#include "prox/prox_elem_operation.hpp"
-
 #include <iostream>
 #include <sstream>
 
-#include "prox/shared_mem.hpp"
-#include "prox/vector.hpp"
+#include "prost/prox/prox_elem_operation.hpp"
+#include "prost/prox/shared_mem.hpp"
+#include "prost/prox/vector.hpp"
 
-#include "config.hpp"
-#include "exception.hpp"
+#include "prost/config.hpp"
+#include "prost/exception.hpp"
+
+namespace prost {
 
 template<typename T, class ELEM_OPERATION>
 struct Coefficients 
@@ -210,11 +211,15 @@ ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<ELEM_OPERATION::kCo
   }
 }
 
-#include "prox/elemop/elem_operation.hpp"
-#include "prox/elemop/elem_operation_1d.hpp"
-#include "prox/elemop/elem_operation_norm2.hpp"
-#include "prox/elemop/elem_operation_simplex.hpp"
-#include "prox/elemop/function_1d.hpp"
+} // namespace prost
+
+#include "prost/prox/elemop/elem_operation.hpp"
+#include "prost/prox/elemop/elem_operation_1d.hpp"
+#include "prost/prox/elemop/elem_operation_norm2.hpp"
+#include "prost/prox/elemop/elem_operation_ind_simplex.hpp"
+#include "prost/prox/elemop/function_1d.hpp"
+
+namespace prost {
 
 // Explicit template instantiation
 
@@ -244,7 +249,7 @@ template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DL0<f
 template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DHuber<float>>>;
 
 // Other
-template class ProxElemOperation<float, ElemOperationSimplex<float>>;
+template class ProxElemOperation<float, ElemOperationIndSimplex<float>>;
 
 // double
 // ElemOperation1D 
@@ -272,4 +277,6 @@ template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DL0
 template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DHuber<double>>>;
 
 // other
-template class ProxElemOperation<double, ElemOperationSimplex<double>>;
+template class ProxElemOperation<double, ElemOperationIndSimplex<double>>;
+
+} // namespace prost

@@ -1,15 +1,18 @@
-#include "backend/backend_pdhg.hpp"
+#include <algorithm>
 
 #include <thrust/for_each.h>
 #include <thrust/device_vector.h>
 #include <thrust/transform_reduce.h>
 #include <thrust/iterator/zip_iterator.h>
 
-#include "linop/linearoperator.hpp"
-#include "prox/prox.hpp"
-#include "prox/prox_moreau.hpp"
-#include "exception.hpp"
-#include "problem.hpp"
+#include "prost/backend/backend_pdhg.hpp"
+#include "prost/linop/linearoperator.hpp"
+#include "prost/prox/prox.hpp"
+#include "prost/prox/prox_moreau.hpp"
+#include "prost/exception.hpp"
+#include "prost/problem.hpp"
+
+namespace prost {
 
 /// \brief 
 template<typename T>
@@ -168,7 +171,12 @@ BackendPDHG<T>::Initialize()
       throw Exception("Neither prox_g nor prox_gstar specified.");
 
     for(auto& p : this->problem_->prox_gstar())
-      prox_g_.push_back( std::shared_ptr<Prox<T> >(new ProxMoreau<T>(p)) );
+    {
+      Prox<T> *moreau = new ProxMoreau<T>(p);
+      moreau->Initialize(); // inner prox gets initializes twice. should be ok though.
+
+      prox_g_.push_back( std::shared_ptr<Prox<T> >(moreau) );
+    }
   }
   else
     prox_g_ = this->problem_->prox_g();
@@ -179,7 +187,12 @@ BackendPDHG<T>::Initialize()
       throw Exception("Neither prox_f nor prox_fstar specified.");
 
     for(auto& p : this->problem_->prox_f())
-      prox_fstar_.push_back( std::shared_ptr<Prox<T> >(new ProxMoreau<T>(p)) );
+    {
+      Prox<T> *moreau = new ProxMoreau<T>(p);
+      moreau->Initialize(); // inner prox gets initializes twice. should be ok though.
+
+      prox_fstar_.push_back( std::shared_ptr<Prox<T> >(moreau) );
+    }
   }
   else
     prox_fstar_ = this->problem_->prox_fstar();
@@ -194,8 +207,14 @@ BackendPDHG<T>::Initialize()
   {
     T norm = this->problem_->normest();
 
-    tau_ /= norm;
-    sigma_ /= norm;
+    if(std::abs(norm - 1) > 0.01)
+    {
+      tau_ /= norm;
+      sigma_ /= norm;
+
+      if(this->solver_opts_.verbose)
+        cout << "BackendPDHG: |K|=" << norm << " => Rescaled tau=" << tau_ << ", sigma=" << sigma_ << "." << endl; 
+    }
   }
 }
 
@@ -350,14 +369,14 @@ BackendPDHG<T>::PerformIteration()
       case BackendPDHG<T>::StepsizeVariant::kPDHGStepsResidualBoyd:
         if( (this->dual_residual_ < eps_dual) && (opts_.arb_tau * iteration_ > arb_l_) )
         {
-          tau_ *= opts_.arb_delta;
-          sigma_ /= opts_.arb_delta;
+          tau_ /= opts_.arb_delta;
+          sigma_ *= opts_.arb_delta;
           arb_u_ = iteration_;
         }
         else if( (this->primal_residual_ < eps_primal) && (opts_.arb_tau * iteration_ > arb_u_) )
         {
-          tau_ /= opts_.arb_delta;
-          sigma_ *= opts_.arb_delta;
+          tau_ *= opts_.arb_delta;
+          sigma_ /= opts_.arb_delta;
           arb_l_ = iteration_;
         }
 
@@ -413,3 +432,5 @@ BackendPDHG<T>::gpu_mem_amount() const
 // Explicit template instantiation
 template class BackendPDHG<float>;
 template class BackendPDHG<double>;
+
+} // namespace prost

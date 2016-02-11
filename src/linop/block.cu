@@ -1,4 +1,6 @@
-#include "linop/block.hpp"
+#include "prost/linop/block.hpp"
+
+namespace prost {
 
 template<typename T>
 Block<T>::Block(size_t row, size_t col, size_t nrows, size_t ncols) 
@@ -48,3 +50,5 @@ void Block<T>::EvalAdjointAdd(
 // Explicit template instantiation
 template class Block<float>;
 template class Block<double>;
+
+} // namespace prost
