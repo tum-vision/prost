@@ -13,7 +13,6 @@ using namespace prost;
 namespace mex 
 {
 
-mxArray *PDHG_stepsize_cb_handle = nullptr;
 mxArray *Solver_interm_cb_handle = nullptr;
 
 ProxRegistry prox_reg[] = 
@@ -65,15 +64,21 @@ BackendRegistry backend_reg[] =
 };
 
 void
-PDHGStepsizeCallback(int iter, double res_primal, double res_dual, double& tau, double &sigma)
-{
-  // TODO: Call MATLAB function PDHG_stepsize_cb_handle
-}
-
-void
 SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vector<real>& dual)
 {
-  // TODO: Call MATLAB function Solver_interm_cb_handle
+  mxArray *cb_rhs[4];
+  cb_rhs[0] = Solver_interm_cb_handle;
+  cb_rhs[1] = mxCreateDoubleScalar(iter);
+  cb_rhs[2] = mxCreateDoubleMatrix(primal.size(), 1, mxREAL); 
+  cb_rhs[3] = mxCreateDoubleMatrix(dual.size(), 1, mxREAL);
+
+  std::copy(primal.begin(), primal.end(), mxGetPr(cb_rhs[2]));
+  std::copy(dual.begin(), dual.end(), mxGetPr(cb_rhs[3]));
+  
+  mexCallMATLAB(0, NULL, 4, cb_rhs, "feval");
+
+  mxDestroyArray(cb_rhs[2]);
+  mxDestroyArray(cb_rhs[3]);
 }
 
 ProxMoreau<real>* 
@@ -250,15 +255,10 @@ CreateBackendPDHG(const mxArray *data)
     opts.stepsize_variant= BackendPDHG<real>::StepsizeVariant::kPDHGStepsResidualGoldstein;
   else if(stepsize_variant == "boyd")
     opts.stepsize_variant= BackendPDHG<real>::StepsizeVariant::kPDHGStepsResidualBoyd;
-  else if(stepsize_variant == "callback")
-    opts.stepsize_variant= BackendPDHG<real>::StepsizeVariant::kPDHGStepsCallback;
   else
     throw Exception("Couldn't recognize step-size variant.");
 
-  PDHG_stepsize_cb_handle = mxGetField(data, 0, "stepsize_callback");
-
   BackendPDHG<real> *backend = new BackendPDHG<real>(opts);
-  backend->SetStepsizeCallback(PDHGStepsizeCallback);
 
   return backend;
 }

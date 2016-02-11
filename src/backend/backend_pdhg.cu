@@ -125,13 +125,6 @@ BackendPDHG<T>::~BackendPDHG()
 
 template<typename T>
 void 
-BackendPDHG<T>::SetStepsizeCallback(const typename BackendPDHG<T>::StepsizeCallback& cb)
-{
-  stepsize_cb_ = cb; 
-}
-
-template<typename T>
-void 
 BackendPDHG<T>::Initialize()
 {
   size_t m = this->problem_->nrows();
@@ -382,16 +375,6 @@ BackendPDHG<T>::PerformIteration()
 
         break;
 
-      case BackendPDHG<T>::StepsizeVariant::kPDHGStepsCallback:
-        {
-          double new_tau = tau_;
-          double new_sigma = sigma_;
-
-          stepsize_cb_(iteration_, this->primal_residual_, this->dual_residual_, new_tau, new_sigma);
-          tau_ = new_tau;
-          sigma_ = new_sigma;
-        } break;
-
       default:
         break;
     }
@@ -399,7 +382,7 @@ BackendPDHG<T>::PerformIteration()
 
   if(opts_.stepsize_variant == BackendPDHG<T>::StepsizeVariant::kPDHGStepsAlg2)
   {
-    theta_ = 1 / sqrt(1 + 2 * opts_.alg2_gamma * tau_);
+    theta_ = 1. / std::sqrt(1. + 2. * opts_.alg2_gamma * tau_);
     tau_ = theta_ * tau_;
     sigma_ = sigma_ / theta_;
   }
