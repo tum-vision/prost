@@ -31,14 +31,7 @@ public:
 
     /// \brief Residual converging scheme from "Fougner, Boyd" paper
     kPDHGStepsResidualBoyd,
-
-    /// \brief User-defined step size scheme via callback function.
-    kPDHGStepsCallback,
   };
-
-  /// \brief Callback function for updating adaptive stepsizes, it has the following signature
-  ///        (iter, res_primal, res_dual, new_tau, new_sigma).
-  typedef function<void(int, double, double, double&, double&)> StepsizeCallback;
 
   /// \brief Detailed options for the primal-dual algorithm.
   struct Options 
@@ -73,8 +66,6 @@ public:
 
   BackendPDHG(const typename BackendPDHG<T>::Options& opts);
   virtual ~BackendPDHG();
-
-  void SetStepsizeCallback(const typename BackendPDHG<T>::StepsizeCallback& cb);
 
   virtual void Initialize();
   virtual void PerformIteration();
@@ -124,9 +115,6 @@ protected:
 
   /// \brief PDHG-specific options.
   typename BackendPDHG<T>::Options opts_;
-
-  /// \brief PDHG stepszie callback
-  typename BackendPDHG<T>::StepsizeCallback stepsize_cb_;
 
   /// \brief Internal iteration counter.
   size_t iteration_;

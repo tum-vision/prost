@@ -20,9 +20,17 @@ function [passed] = test_linop_sparse_zero()
             K_row = [];
             col = 0;
             for j=1:Bx
-                K_mat = sprand(nrows,ncols,0.01);
+                
+                if randi([1,2]) == 1
+                    K_mat = sparse(nrows,ncols);
+                    linop{idx, 1} = prost.block.zero(row, col, nrows, ...
+                                                     ncols);
+                else
+                    K_mat = sprand(nrows,ncols,0.01);
+                    linop{idx, 1} = prost.block.sparse(row, col, K_mat);
+                end
+                
                 K_row = cat(2, K_row, K_mat);
-                linop{idx, 1} = prost.block.sparse(row, col, K_mat);
                 idx = idx + 1;
                 col = col + ncols;
             end
@@ -260,7 +268,7 @@ end
 % idx = 1;
 % row = 0;
 % for i=1:By
-    
+
 %     K_row = [];
 %     col = 0;
 %     for j=1:Bx
@@ -269,13 +277,13 @@ end
 %         offsets = perm(1:Ndiags)' - nrows + 1;
 %         K_row = cat(2, K_row, spdiags(ones(nrows, 1) * factors', offsets, ...
 %                               nrows, ncols));
-        
+
 %         linop{idx, 1} = linop_diags(row, col, nrows, ncols, factors, ...
 %                                     offsets);
 %         idx = idx + 1;
 %         col = col + ncols;
 %     end
-    
+
 %     row = row + nrows;
 %     K = cat(1, K, K_row);
 % end
