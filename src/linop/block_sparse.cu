@@ -1,9 +1,11 @@
-#include "linop/block_sparse.hpp"
-
 #include <thrust/transform_reduce.h>
 #include <iostream>
 #include <sstream>
-#include "exception.hpp"
+
+#include "prost/linop/block_sparse.hpp"
+#include "prost/exception.hpp"
+
+namespace prost {
 
 template<> cusparseHandle_t BlockSparse<float>::cusp_handle_ = nullptr;
 template<> cusparseHandle_t BlockSparse<double>::cusp_handle_ = nullptr;
@@ -290,3 +292,5 @@ void BlockSparse<double>::EvalAdjointLocalAdd(
 // Explicit template instantiation
 template class BlockSparse<float>;
 template class BlockSparse<double>;
+
+} // namespace prost

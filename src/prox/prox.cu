@@ -1,4 +1,6 @@
-#include "prox/prox.hpp"
+#include "prost/prox/prox.hpp"
+
+namespace prost {
 
 template<typename T>
 void Prox<T>::Eval(
@@ -36,6 +38,17 @@ void Prox<T>::Eval(
   thrust::copy(d_res.begin(), d_res.end(), result.begin());
 }
 
+template <typename T>
+void Prox<T>::get_separable_structure(
+    vector<std::tuple<size_t, size_t, size_t> >& sep)
+{
+  sep.push_back( std::tuple<size_t, size_t, size_t> (index_, size_, 1) );
+}
+
+
 // Explicit template instantiation
 template class Prox<float>;
 template class Prox<double>;
+
+} // namespace prost
+
