@@ -17,7 +17,7 @@
 #include "prost/prox/elemop/elem_operation_norm2.hpp"
 #include "prost/prox/elemop/elem_operation_ind_simplex.hpp"
 #include "prost/prox/elemop/function_1d.hpp"
-#include "prox/proj_epi_quadratic_fun.hpp"
+#include "prost/prox/prox_ind_epi_quadratic_fun.hpp"
 
 #include "prost/common.hpp"
 #include "prost/exception.hpp"
@@ -60,8 +60,8 @@ CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxAr
 prost::ProxElemOperation<real, prost::ElemOperationIndSimplex<real> >*
 CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
-prost::ProjEpiQuadraticFun<real>*
-CreateProjEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+prost::ProxIndEpiQuadraticFun<real>*
+CreateProxIndEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
 // block
 prost::BlockZero<real>* CreateBlockZero(size_t row, size_t col, const mxArray *data);

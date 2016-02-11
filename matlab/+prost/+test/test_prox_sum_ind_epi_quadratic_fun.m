@@ -12,7 +12,7 @@ a =1;
 b = [3; 1];
 c = 2;
 
-Q = pdsolver_eval_prox( proj_epi_quadratic_fun(0, N, d, false, repmat(a, N, 1), repmat(b, N, 1), repmat(c, N, 1)), P, tau, Tau);
+Q = prost.eval_prox( prost.prox.sum_ind_epi_quadratic_fun(0, N, d, false, repmat(a, N, 1), repmat(b, N, 1), repmat(c, N, 1)), P, tau, Tau);
 figure;
 [X1,X2] = meshgrid(-5:.2:5, -5:.2:5);
 X3 = 0.5 * a * (X1 .^2 + X2 .^2) + b(1) * X1 + b(2) * X2 + c;
