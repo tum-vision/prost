@@ -4,6 +4,8 @@
 #include "prost/linop/linearoperator.hpp"
 #include "prost/linop/block.hpp"
 #include "prost/linop/block_diags.hpp"
+#include "prost/linop/block_gradient2d.hpp"
+#include "prost/linop/block_gradient3d.hpp"
 #include "prost/linop/block_sparse.hpp"
 #include "prost/linop/block_zero.hpp"
 
@@ -99,6 +101,12 @@ CreateBlockSparse(size_t row, size_t col, const mxArray *data);
 prost::BlockDiags<real>*
 CreateBlockDiags(size_t row, size_t col, const mxArray *pm);
 
+prost::BlockGradient2D<real>*
+CreateBlockGradient2D(size_t row, size_t col, const mxArray *pm);
+
+prost::BlockGradient3D<real>*
+CreateBlockGradient3D(size_t row, size_t col, const mxArray *pm);  
+  
 // other 
 prost::BackendPDHG<real>* 
 CreateBackendPDHG(const mxArray *data);
