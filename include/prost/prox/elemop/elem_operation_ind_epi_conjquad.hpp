@@ -1,5 +1,5 @@
 #ifndef PROST_ELEM_OPERATION_IND_EPI_CONJQUAD_HPP_
-#define PROST_ELEM_OPERATION_IND_EPI_CONJQUAD_HPP__
+#define PROST_ELEM_OPERATION_IND_EPI_CONJQUAD_HPP_
 
 #include "prost/prox/elemop/elem_operation.hpp"
 #include "prost/math_functions.hpp"
@@ -151,4 +151,4 @@ private:
 
 } // namespace prost
 
-#endif // PROST_ELEM_OPERATION_NORM2_HPP_
+#endif // PROST_ELEM_OPERATION_IND_EPI_CONJQUAD_HPP_

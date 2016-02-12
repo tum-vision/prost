@@ -7,10 +7,17 @@ namespace prost {
 
 /// 
 /// \brief Computes orthogonal projection onto the epigraph
-///        of a one-dimensional piecewise linear function.
+///        of a one-dimensional _convex_ piecewise linear function.
 /// 
-///        TODO: comment what is pt_x, pt_y, alpha, beta, count and index.
-/// 
+///        The piecewise linear function is described by a set of points
+///        pt_x, pt_y, beginning slope alpha and ending slope beta. The
+///        variable count_vec indicates the number of points at the pixel
+///        and index_vec specifies the pointer into pt_x, pt_y.
+///
+///        See also right part of Fig. 4 in the paper:
+///        http://arxiv.org/abs/1512.01383
+///
+template<typename T>
 class ProxIndEpiPolyhedral1D : public ProxSeparableSum<T> {
 public:
   ProxIndEpiPolyhedral1D(
@@ -21,8 +28,8 @@ public:
     const vector<T>& pt_y,
     const vector<T>& alpha,
     const vector<T>& beta,
-    const vector<size_t>& count,
-    const vector<size_t>& index);
+    const vector<size_t>& count_vec,
+    const vector<size_t>& index_vec);
 
   virtual ~ProxIndEpiPolyhedral1D() { }
 
@@ -51,111 +58,3 @@ private:
 } // namespace prost
 
 #endif // PROST_PROX_IND_EPI_POLYHEDRAL_1D_HPP_
-
-/*
-#ifndef PROX_EPI_PIECEW_LIN_HPP_
-#define PROX_EPI_PIECEW_LIN_HPP_
-
-#include <vector>
-
-#include "prox.hpp"
-
-template<typename T>
-struct EpiPiecewLinCoeffs {
-    std::vector<T> x, y;
-    std::vector<T> alpha, beta;
-    std::vector<size_t> count;
-    std::vector<size_t> index;    
-};
-
-template<typename T>
-struct EpiPiecewLinCoeffsDevice {
-    T *d_ptr_x;
-    T *d_ptr_y;
-    T *d_ptr_alpha;
-    T *d_ptr_beta;
-    size_t *d_ptr_count;
-    size_t *d_ptr_index;
-};
-
-/// 
-/// \brief Computes orthogonal projection of (u,v) onto the convex set
-///        C = { (x, y) | y >= (ax^2 + bx + c + delta(alpha <= x <= beta))* },
-///        where * denotes the Legendre-Fenchel conjugate.
-///
-template<typename T>
-class ProxEpiPiecewLin : public Prox<T> {
- public:
-  ProxEpiPiecewLin(
-    size_t index,
-    size_t count,
-    bool interleaved,
-    const EpiPiecewLinCoeffs<T>& coeffs,
-    T scaling = 1);
-
-  virtual ~ProxEpiPiecewLin();
-
-  virtual size_t gpu_mem_amount(); 
-
-  virtual bool Init();
-  virtual void Release();
-  
-protected:
-  virtual void EvalLocal(T *d_arg,
-                         T *d_res,
-                         T *d_tau,
-                         T tau,
-                         bool invert_tau);
-  
-  EpiPiecewLinCoeffs<T> coeffs_;
-  EpiPiecewLinCoeffsDevice<T> coeffs_dev_;
-  T scaling_;
-};
-
-#ifdef __CUDACC__
-
-/// 
-/// \brief Computes projection of the d-dimensional vector v onto the
-///        halfspace described by { x | <n, x> <= t }.
-/// 
-template<typename T>
-inline __device__ void ProjectHalfspace(const T *v,
-                                        const T *n,
-                                        const T& t,
-                                        T* result,
-                                        int d)
-{
-  T dot = 0, sq_norm = 0;
-
-  for(int i = 0; i < d; i++) {
-    dot += n[i] * v[i];
-    sq_norm += n[i] * n[i];
-  }
-
-  const T s = (dot - t) / sq_norm;
-  
-  for(int i = 0; i < d; i++) 
-    result[i] = v[i] - s * n[i];
-}
-
-/// 
-/// \brief Checks whether a d-dimensional point v lies within the halfspace
-///        described by a point p and normal n.
-///
-template<typename T>
-inline __device__ bool PointInHalfspace(const T* v,
-                                        const T* p,
-                                        const T* n,
-                                        int d)
-{
-  T dot = 0;
-  for(int i = 0; i < d; i++) 
-    dot += n[i] * (v[i] - p[i]);
-  
-  return dot <= 0.;
-}
-
-#endif
-
-#endif
-*/
