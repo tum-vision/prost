@@ -40,7 +40,7 @@ ProxRegistry prox_reg[] =
   { "elem_operation:norm2:max_pos0",  CreateProxElemOperationNorm2<Function1DMaxPos0<real>>  },
   { "elem_operation:norm2:l0",        CreateProxElemOperationNorm2<Function1DL0<real>>       },
   { "elem_operation:norm2:huber",     CreateProxElemOperationNorm2<Function1DHuber<real>>    },
-  { "ind_epi_quadratic_fun",          CreateProxIndEpiQuadraticFun                              },
+  { "ind_epi_quadratic_fun",          CreateProxIndEpiQuadraticFun                           },
   
   // The end.
   { "END",                            nullptr                                                },
@@ -48,12 +48,14 @@ ProxRegistry prox_reg[] =
 
 BlockRegistry block_reg[] = 
 {
-  { "diags",  CreateBlockDiags  },
-  { "sparse", CreateBlockSparse },
-  { "zero",   CreateBlockZero   },
+  { "diags",      CreateBlockDiags      },
+  { "gradient2d", CreateBlockGradient2D },
+  { "gradient3d", CreateBlockGradient3D },
+  { "sparse",     CreateBlockSparse     },
+  { "zero",       CreateBlockZero       },
 
   // The end.
-  { "END",    nullptr           },
+  { "END",    nullptr                   },
 };
 
 BackendRegistry backend_reg[] = 
@@ -207,6 +209,28 @@ CreateBlockDiags(size_t row, size_t col, const mxArray *pm)
   size_t ndiags = factors.size();
 
   return new BlockDiags<real>(row, col, nrows, ncols, ndiags, offsets, factors);
+}
+
+prost::BlockGradient2D<real>*
+CreateBlockGradient2D(size_t row, size_t col, const mxArray *pm)
+{
+  size_t nx = (size_t) mxGetScalar(mxGetCell(pm, 0));
+  size_t ny = (size_t) mxGetScalar(mxGetCell(pm, 1));
+  size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
+  bool label_first = (bool) mxGetScalar(mxGetCell(pm, 3));
+
+  return new BlockGradient2D<real>(row, col, nx, ny, L, label_first);
+}
+
+prost::BlockGradient3D<real>*
+CreateBlockGradient3D(size_t row, size_t col, const mxArray *pm)
+{
+  size_t nx = (size_t) mxGetScalar(mxGetCell(pm, 0));
+  size_t ny = (size_t) mxGetScalar(mxGetCell(pm, 1));
+  size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
+  bool label_first = (bool) mxGetScalar(mxGetCell(pm, 3));
+
+  return new BlockGradient3D<real>(row, col, nx, ny, L, label_first);
 }
   
 BlockSparse<real>*

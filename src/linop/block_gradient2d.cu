@@ -2,7 +2,7 @@
 
 namespace prost {
 
-  template<typename T, bool label_first>
+template<typename T, bool label_first>
 __global__ void 
 BlockGradient2DKernel(T *d_res,
 		      const T *d_rhs,
@@ -44,8 +44,6 @@ BlockGradient2DKernel(T *d_res,
 
   if(y < ny - 1)
     gy = d_rhs[idx_gy] - val_pt;
-  else
-    gy = static_cast<T>(0);
   
   if(x < nx - 1)
     gx = d_rhs[idx_gx] - val_pt;
@@ -54,7 +52,7 @@ BlockGradient2DKernel(T *d_res,
   d_res[idx + nx * ny * L] += gy;
 }
 
-template<typename T>
+template<typename T, bool label_first>
 __global__ void 
 BlockGradient2DKernelAdjoint(T *d_res,
 			     const T *d_rhs,
@@ -97,16 +95,12 @@ BlockGradient2DKernelAdjoint(T *d_res,
 
   if(y < ny - 1)
     divy = d_rhs[idx_divy];
-  else
-    divy = 0;
   
   if(y > 0)
     divy -= d_rhs[idx_divy_prev];
 
   if(x < nx - 1)
     divx = d_rhs[idx];
-  else
-    divx = 0;
   
   if(x > 0)
     divx -= d_rhs[idx_divx_prev];
@@ -117,8 +111,6 @@ BlockGradient2DKernelAdjoint(T *d_res,
 template<typename T>
 BlockGradient2D<T>::BlockGradient2D(size_t row,
 				    size_t col,
-				    size_t nrows,
-				    size_t ncols,
 				    size_t nx,
 				    size_t ny,
 				    size_t L,
@@ -212,7 +204,6 @@ void BlockGradient2D<T>::EvalAdjointLocalAdd(
 			ny_,
 			L_);
   }
-
 }
   
 // Explicit template instantiation
