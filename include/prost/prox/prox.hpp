@@ -9,6 +9,7 @@ namespace prost {
 using thrust::device_vector;
 
 template<typename T> class ProxMoreau;
+template<typename T> class ProxTransform;
 
 ///
 /// \brief Virtual base class for all proximal operators. 
@@ -16,6 +17,7 @@ template<typename T> class ProxMoreau;
 template<typename T>
 class Prox {
   friend class ProxMoreau<T>;
+  friend class ProxTransform<T>;
   
 public:
   Prox(size_t index, size_t size, bool diagsteps) :

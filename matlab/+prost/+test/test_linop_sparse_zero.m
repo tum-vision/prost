@@ -9,11 +9,11 @@ function [passed] = test_linop_sparse_zero()
         linop = {};
         idx = 1;
         row = 0;
-        nrows = randi(1000);
-        ncols = randi(1000);
+        nrows = randi(500);
+        ncols = randi(500);
 
-        By = randi(25);
-        Bx = randi(25);
+        By = randi(15);
+        Bx = randi(15);
 
         for i=1:By
             

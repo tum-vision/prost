@@ -1,8 +1,8 @@
 function [passed] = test_linop_gradient3d()
     
-    nx = 491;
-    ny = 843;
-    L = 17;
+    nx = 151;
+    ny = 291;
+    L = 7;
 
     linop_3d = { prost.block.gradient3d(0, 0, nx, ny, L) };
     K_3d = spmat_gradient3d(nx, ny, L);

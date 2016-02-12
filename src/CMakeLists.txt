@@ -26,6 +26,7 @@ set(SOURCES
   "prox/prox_elem_operation.cu"
   "prox/prox_ind_epi_quadratic_fun.cu"
   "prox/prox_moreau.cu"
+  "prox/prox_transform.cu"
   "prox/prox_zero.cu"
   
   "backend/backend_pdhg.cu"
@@ -48,12 +49,14 @@ set(SOURCES
   "../include/prost/prox/prox_elem_operation.hpp"
   "../include/prost/prox/prox_ind_epi_quadratic_fun.hpp"
   "../include/prost/prox/prox_moreau.hpp"
+  "../include/prost/prox/prox_transform.hpp"
   "../include/prost/prox/prox_zero.hpp"
   "../include/prost/prox/shared_mem.hpp"
   "../include/prost/prox/vector.hpp"
   "../include/prost/prox/elemop/elem_operation.hpp"
   "../include/prost/prox/elemop/elem_operation_1d.hpp"
   "../include/prost/prox/elemop/elem_operation_norm2.hpp"
+  "../include/prost/prox/elemop/elem_operation_ind_epi_conjquad.hpp"
   "../include/prost/prox/elemop/elem_operation_ind_simplex.hpp"
   "../include/prost/prox/elemop/function_1d.hpp"
 

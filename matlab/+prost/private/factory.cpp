@@ -17,8 +17,6 @@ mxArray *Solver_interm_cb_handle = nullptr;
 
 ProxRegistry prox_reg[] = 
 {
-  { "moreau",                         CreateProxMoreau                                       },
-  { "zero",                           CreateProxZero                                         },
   { "elem_operation:ind_simplex",     CreateProxElemOperationIndSimplex                      },
   { "elem_operation:1d:zero",         CreateProxElemOperation1D<Function1DZero<real>>        },
   { "elem_operation:1d:abs",          CreateProxElemOperation1D<Function1DAbs<real>>         },
@@ -41,6 +39,9 @@ ProxRegistry prox_reg[] =
   { "elem_operation:norm2:l0",        CreateProxElemOperationNorm2<Function1DL0<real>>       },
   { "elem_operation:norm2:huber",     CreateProxElemOperationNorm2<Function1DHuber<real>>    },
   { "ind_epi_quadratic_fun",          CreateProxIndEpiQuadraticFun                           },
+  { "moreau",                         CreateProxMoreau                                       },
+  { "transform",                      CreateProxTransform                                    },
+  { "zero",                           CreateProxZero                                         },
   
   // The end.
   { "END",                            nullptr                                                },
@@ -106,6 +107,17 @@ ProxMoreau<real>*
 CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
 {
   return new ProxMoreau<real>(CreateProx(mxGetCell(data, 0)));
+}
+
+ProxTransform<real>*
+CreateProxTransform(size_t idx, size_t size, bool diagsteps, const mxArray *data)
+{
+  std::array<std::vector<real>, 5> coeffs;
+  GetCoefficients<5>(coeffs, data, size);
+
+  return new ProxTransform<real>(
+    CreateProx(mxGetCell(data, 5)), 
+    coeffs[0], coeffs[1], coeffs[2], coeffs[3], coeffs[4]);
 }
     
 ProxZero<real>* 

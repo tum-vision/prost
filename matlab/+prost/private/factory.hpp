@@ -13,14 +13,15 @@
 #include "prost/backend/backend_pdhg.hpp"
 
 #include "prost/prox/prox.hpp"
-#include "prost/prox/prox_moreau.hpp"
-#include "prost/prox/prox_zero.hpp"
 #include "prost/prox/prox_elem_operation.hpp"
 #include "prost/prox/elemop/elem_operation_1d.hpp"
 #include "prost/prox/elemop/elem_operation_norm2.hpp"
 #include "prost/prox/elemop/elem_operation_ind_simplex.hpp"
 #include "prost/prox/elemop/function_1d.hpp"
 #include "prost/prox/prox_ind_epi_quadratic_fun.hpp"
+#include "prost/prox/prox_moreau.hpp"
+#include "prost/prox/prox_transform.hpp"
+#include "prost/prox/prox_zero.hpp"
 
 #include "prost/common.hpp"
 #include "prost/exception.hpp"
@@ -84,9 +85,12 @@ CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxAr
 template<class FUN_1D>
 prost::ProxElemOperation<real, prost::ElemOperation1D<real, FUN_1D> >*
 CreateProxElemOperation1D(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-  
+ 
 prost::ProxMoreau<real>*
 CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+
+prost::ProxTransform<real>*
+CreateProxTransform(size_t idx, size_t size, bool diagsteps, const mxArray *data);
   
 prost::ProxZero<real>*
 CreateProxZero(size_t idx, size_t size, bool diagsteps, const mxArray *data);

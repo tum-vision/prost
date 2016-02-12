@@ -1,21 +1,29 @@
-#ifndef PROST_PROX_MOREAU_HPP_
-#define PROST_PROX_MOREAU_HPP_
-
-#include <thrust/device_vector.h>
+#ifndef PROST_PROX_TRANSFORM_HPP_
+#define PROST_PROX_TRANSFORM_HPP_
 
 #include "prost/prox/prox.hpp"
-#include "prost/common.hpp"
 
 namespace prost {
 
 /// 
-/// \brief Evaluates the conjugate prox using Moreau's identity.
+/// \brief Computes the proximal operator of the transformed function
+///        h(x) = c f(ax - b) + <d, x> + (e/2) <x, x>,
+///        using the proximal operator of f. 
 /// 
+///        TODO: Add possible orthogonal linear transform.
+///         
 template<typename T>
-class ProxMoreau : public Prox<T> {
+class ProxTransform : public Prox<T> {
 public:
-  ProxMoreau(shared_ptr<Prox<T>> conjugate);
-  virtual ~ProxMoreau();
+  ProxTransform(
+    shared_ptr<Prox<T> > inner_fn,
+    const vector<T>& a,
+    const vector<T>& b,
+    const vector<T>& c,
+    const vector<T>& d,
+    const vector<T>& e);
+
+  virtual ~ProxTransform() { }
 
   virtual void Initialize();
   virtual void Release();
@@ -35,10 +43,15 @@ protected:
     bool invert_tau);
 
 private:
-  shared_ptr<Prox<T>> conjugate_;
+  shared_ptr<Prox<T> > inner_fn_;
   device_vector<T> scaled_arg_;
+  device_vector<T> scaled_tau_;
+
+  vector<T> host_a_, host_b_, host_c_, host_d_, host_e_;
+  device_vector<T> dev_a_, dev_b_, dev_c_, dev_d_, dev_e_;
 };
+
 
 } // namespace prost
 
-#endif // PROST_PROX_MOREAU_HPP_
+#endif // PROST_PROX_TRANSFORM_HPP_

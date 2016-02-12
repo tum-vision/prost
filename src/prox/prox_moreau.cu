@@ -60,7 +60,7 @@ void ProxMoreau<T>::Initialize()
   } 
   catch(std::bad_alloc &e)
   {
-    throw new Exception("Out of memory. ");
+    throw Exception("Out of memory. ");
   }
 
   conjugate_->Initialize();
