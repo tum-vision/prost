@@ -25,6 +25,7 @@ set(SOURCES
   "prox/prox.cu"
   "prox/prox_elem_operation.cu"
   "prox/prox_ind_epi_quadratic_fun.cu"
+  "prox/prox_ind_epi_polyhedral_1d.cu"
   "prox/prox_moreau.cu"
   "prox/prox_transform.cu"
   "prox/prox_zero.cu"
@@ -48,6 +49,7 @@ set(SOURCES
   "../include/prost/prox/prox_separable_sum.hpp"
   "../include/prost/prox/prox_elem_operation.hpp"
   "../include/prost/prox/prox_ind_epi_quadratic_fun.hpp"
+  "../include/prost/prox/prox_ind_epi_polyhedral_1d.hpp"
   "../include/prost/prox/prox_moreau.hpp"
   "../include/prost/prox/prox_transform.hpp"
   "../include/prost/prox/prox_zero.hpp"
@@ -66,6 +68,7 @@ set(SOURCES
   "../include/prost/common.hpp"
   "../include/prost/config.hpp"
   "../include/prost/exception.hpp"
+  "../include/prost/math_functions.hpp"
   "../include/prost/problem.hpp"
   "../include/prost/solver.hpp"
 )

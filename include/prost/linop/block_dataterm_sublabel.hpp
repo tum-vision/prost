@@ -10,6 +10,8 @@ namespace prost {
 ///        the saddle-point problem in the paper:
 ///        http://arxiv.org/abs/1512.01383
 ///
+///        TODO: comment more precisely what this Block does.
+///
 template<typename T>
 class BlockDatatermSublabel : public Block<T> {
 public:
