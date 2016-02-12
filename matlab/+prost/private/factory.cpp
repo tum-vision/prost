@@ -48,8 +48,9 @@ ProxRegistry prox_reg[] =
 
 BlockRegistry block_reg[] = 
 {
-  { "zero",   CreateBlockZero   },
+  { "diags",  CreateBlockDiags  },
   { "sparse", CreateBlockSparse },
+  { "zero",   CreateBlockZero   },
 
   // The end.
   { "END",    nullptr           },
@@ -81,27 +82,6 @@ SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vecto
   mxDestroyArray(cb_rhs[3]);
 }
 
-ProxMoreau<real>* 
-CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
-{
-  return new ProxMoreau<real>(CreateProx(mxGetCell(data, 0)));
-}
-    
-ProxZero<real>* 
-CreateProxZero(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
-{
-  return new ProxZero<real>(idx, size);
-}
-
-BlockZero<real>* 
-CreateBlockZero(size_t row, size_t col, const mxArray *data)
-{
-  size_t nrows = (size_t) mxGetScalar(mxGetCell(data, 0));
-  size_t ncols = (size_t) mxGetScalar(mxGetCell(data, 1));
-  
-  return new BlockZero<real>(row, col, nrows, ncols);
-}
-
 template<size_t COEFFS_COUNT>
 void GetCoefficients(
   std::array<std::vector<real>, COEFFS_COUNT>& coeffs, 
@@ -118,6 +98,18 @@ void GetCoefficients(
     double *val = mxGetPr(mxGetCell(coeffs_mx, i));
     coeffs[i] = std::vector<real>(val, val + dims[0]);
   }
+}
+
+ProxMoreau<real>* 
+CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+{
+  return new ProxMoreau<real>(CreateProx(mxGetCell(data, 0)));
+}
+    
+ProxZero<real>* 
+CreateProxZero(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+{
+  return new ProxZero<real>(idx, size);
 }
 
 template<class FUN_1D> 
@@ -196,6 +188,27 @@ CreateProxIndEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxAr
   return new ProxIndEpiQuadraticFun<real>(idx, count, dim, interleaved, diagsteps, a, b, c);   
 }
 
+BlockDiags<real>*
+CreateBlockDiags(size_t row, size_t col, const mxArray *pm)
+{
+  size_t nrows = (size_t) mxGetScalar(mxGetCell(pm, 0));
+  size_t ncols = (size_t) mxGetScalar(mxGetCell(pm, 1));
+
+  const mwSize *dim_factors = mxGetDimensions(mxGetCell(pm, 2));
+  const mwSize *dim_offsets = mxGetDimensions(mxGetCell(pm, 3));
+  double *val_factors = mxGetPr(mxGetCell(pm, 2));
+  double *val_offsets = mxGetPr(mxGetCell(pm, 3));
+
+  if(dim_factors[0] != dim_offsets[0] || dim_factors[1] != 1 || dim_offsets[1] != 1)
+    throw Exception("BlockDiags mismatch of dim_factors and dim_offsets.");
+
+  std::vector<real> factors(val_factors, val_factors + dim_factors[0]);
+  std::vector<ssize_t> offsets(val_offsets, val_offsets + dim_offsets[0]);
+  size_t ndiags = factors.size();
+
+  return new BlockDiags<real>(row, col, nrows, ncols, ndiags, offsets, factors);
+}
+  
 BlockSparse<real>*
 CreateBlockSparse(size_t row, size_t col, const mxArray *data)
 {
@@ -225,7 +238,16 @@ CreateBlockSparse(size_t row, size_t col, const mxArray *data)
     vec_ptr,
     vec_ind);
 }
-
+  
+BlockZero<real>* 
+CreateBlockZero(size_t row, size_t col, const mxArray *data)
+{
+  size_t nrows = (size_t) mxGetScalar(mxGetCell(data, 0));
+  size_t ncols = (size_t) mxGetScalar(mxGetCell(data, 1));
+  
+  return new BlockZero<real>(row, col, nrows, ncols);
+}
+  
 BackendPDHG<real>* 
 CreateBackendPDHG(const mxArray *data)
 {
