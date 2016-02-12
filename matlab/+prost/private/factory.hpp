@@ -3,8 +3,9 @@
 
 #include "prost/linop/linearoperator.hpp"
 #include "prost/linop/block.hpp"
-#include "prost/linop/block_zero.hpp"
+#include "prost/linop/block_diags.hpp"
 #include "prost/linop/block_sparse.hpp"
+#include "prost/linop/block_zero.hpp"
 
 #include "prost/backend/backend.hpp"
 #include "prost/backend/backend_pdhg.hpp"
@@ -39,36 +40,11 @@ using std::shared_ptr;
 
 void SolverIntermCallback(int iter, const vector<real>& primal, const vector<real>& dual);
      
-shared_ptr<prost::Prox<real> > CreateProx(const mxArray *pm);
-shared_ptr<prost::Block<real> > CreateBlock(const mxArray *pm);
-shared_ptr<prost::Backend<real> > CreateBackend(const mxArray *pm);
-shared_ptr<prost::Problem<real> > CreateProblem(const mxArray *pm);
-prost::Solver<real>::Options CreateSolverOptions(const mxArray *pm);
-
-// prox
-prost::ProxMoreau<real>* CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data);   
-prost::ProxZero<real>* CreateProxZero(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-
-template<class FUN_1D> 
-prost::ProxElemOperation<real, prost::ElemOperation1D<real, FUN_1D> >*
-CreateProxElemOperation1D(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-
-template<class FUN_1D> 
-prost::ProxElemOperation<real, prost::ElemOperationNorm2<real, FUN_1D> >*
-CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-
-prost::ProxElemOperation<real, prost::ElemOperationIndSimplex<real> >*
-CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-
-prost::ProxIndEpiQuadraticFun<real>*
-CreateProxIndEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-
-// block
-prost::BlockZero<real>* CreateBlockZero(size_t row, size_t col, const mxArray *data);
-prost::BlockSparse<real>* CreateBlockSparse(size_t row, size_t col, const mxArray *data);
-
-// backend
-prost::BackendPDHG<real>* CreateBackendPDHG(const mxArray *data);
+shared_ptr<prost::Prox<real>>    CreateProx(const mxArray *pm);
+shared_ptr<prost::Block<real>>   CreateBlock(const mxArray *pm);
+shared_ptr<prost::Backend<real>> CreateBackend(const mxArray *pm);
+shared_ptr<prost::Problem<real>> CreateProblem(const mxArray *pm);
+prost::Solver<real>::Options     CreateSolverOptions(const mxArray *pm);
 
 struct ProxRegistry
 {
@@ -91,6 +67,41 @@ struct BackendRegistry
 // user-defined custom prox operators and blocks
 extern ProxRegistry custom_prox_reg[];
 extern BlockRegistry custom_block_reg[];
+
+// prox operator create functions
+prost::ProxIndEpiQuadraticFun<real>*
+CreateProxIndEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+  
+prost::ProxElemOperation<real, prost::ElemOperationIndSimplex<real> >*
+CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+  
+template<class FUN_1D>
+prost::ProxElemOperation<real, prost::ElemOperationNorm2<real, FUN_1D> >*
+CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+  
+template<class FUN_1D>
+prost::ProxElemOperation<real, prost::ElemOperation1D<real, FUN_1D> >*
+CreateProxElemOperation1D(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+  
+prost::ProxMoreau<real>*
+CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+  
+prost::ProxZero<real>*
+CreateProxZero(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+
+// block create functions
+prost::BlockZero<real>*
+CreateBlockZero(size_t row, size_t col, const mxArray *data);
+  
+prost::BlockSparse<real>*
+CreateBlockSparse(size_t row, size_t col, const mxArray *data);
+  
+prost::BlockDiags<real>*
+CreateBlockDiags(size_t row, size_t col, const mxArray *pm);
+
+// other 
+prost::BackendPDHG<real>* 
+CreateBackendPDHG(const mxArray *data);
 
 } // namespace mex
 
