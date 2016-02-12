@@ -47,8 +47,6 @@ function [passed] = test_linop_sparse_zero()
             fprintf('failed! Reason: norm_diff_adjoint > 1e-3: %f\n', norm(y-y_ml));
             passed = false;
             
-            size(K)
-            
             return;
         end
         

@@ -2,7 +2,11 @@ function run_all_tests()
 
     prost.init();
     
-    unit_tests = { 'linop_sparse_zero'; 'prox_sum_ind_simplex'; 'prox_sum_norm2' };
+    unit_tests = { 
+        'linop_diags'; ...
+        'linop_sparse_zero'; ...
+        'prox_sum_ind_simplex'; ...
+        'prox_sum_norm2' };
 
     num_passed = 0;
     for i=1:size(unit_tests,1)

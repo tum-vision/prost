@@ -1,5 +1,7 @@
 #include "factory.hpp"
 
+#include "prost/linop/block_dataterm_sublabel.hpp"
+
 namespace mex
 {
 
