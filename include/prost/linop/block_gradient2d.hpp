@@ -17,10 +17,9 @@ namespace prost {
 template<typename T>
 class BlockGradient2D : public Block<T>
 {
+public:
   BlockGradient2D(size_t row,
 		  size_t col,
-		  size_t nrows,
-		  size_t ncols,
 		  size_t nx,
 		  size_t ny,
 		  size_t L,
