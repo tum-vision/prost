@@ -42,6 +42,8 @@ public:
   /// \brief Computes the orthogonal projection of (x0, y0) onto the epigraph of
   ///        the parabola y >= \alpha ||x||^2 with \alpha > 0.
   ///
+  /// TODO: Move this to math_functions.hpp?!
+  /// 
   inline __device__ 
   static void ProjectSimple(
     const Vector<T>& x0, const T y0, const T alpha, Vector<T>& x, T& y, size_t dim)
@@ -120,13 +122,13 @@ protected:
     bool invert_tau);
   
 private:    
-  std::vector<T> a_;
   thrust::device_vector<T> d_a_;
- 
-  std::vector<T> b_;
   thrust::device_vector<T> d_b_;
-  std::vector<T> c_;
   thrust::device_vector<T> d_c_;  
+ 
+  std::vector<T> a_;
+  std::vector<T> b_;
+  std::vector<T> c_;
 };
 
 } // namespace prost
