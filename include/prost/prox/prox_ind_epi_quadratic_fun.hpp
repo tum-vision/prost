@@ -39,7 +39,7 @@ public:
   #ifdef __CUDACC__
 
   ///
-  /// @brief Computes the orthogonal projection of (x0, y0) onto the epigraph of
+  /// \brief Computes the orthogonal projection of (x0, y0) onto the epigraph of
   ///        the parabola y >= \alpha ||x||^2 with \alpha > 0.
   ///
   inline __device__ 

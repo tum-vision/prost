@@ -217,6 +217,7 @@ ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<ELEM_OPERATION::kCo
 #include "prost/prox/elemop/elem_operation_1d.hpp"
 #include "prost/prox/elemop/elem_operation_norm2.hpp"
 #include "prost/prox/elemop/elem_operation_ind_simplex.hpp"
+#include "prost/prox/elemop/elem_operation_ind_epi_conjquad.hpp"
 #include "prost/prox/elemop/function_1d.hpp"
 
 namespace prost {
@@ -250,6 +251,7 @@ template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DHube
 
 // Other
 template class ProxElemOperation<float, ElemOperationIndSimplex<float>>;
+template class ProxElemOperation<float, ElemOperationIndEpiConjQuad<float>>;
 
 // double
 // ElemOperation1D 
@@ -278,5 +280,6 @@ template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DHu
 
 // other
 template class ProxElemOperation<double, ElemOperationIndSimplex<double>>;
+template class ProxElemOperation<double, ElemOperationIndEpiConjQuad<double>>;
 
 } // namespace prost

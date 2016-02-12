@@ -54,4 +54,3 @@ private:
 }
 
 #endif // PROST_BLOCK_GRADIENT2D_HPP_
-  
