@@ -12,8 +12,12 @@ endif()
 set(SOURCES
 
   "linop/block.cu"
-  "linop/block_zero.cu"
+  "linop/block_dataterm_sublabel.cu"
+  "linop/block_diags.cu"
+  "linop/block_gradient2d.cu"
+  "linop/block_gradient3d.cu"
   "linop/block_sparse.cu"
+  "linop/block_zero.cu"
   "linop/linearoperator.cu"
   
   "prox/prox.cu"
@@ -29,8 +33,12 @@ set(SOURCES
   "solver.cu"
 
   "../include/prost/linop/block.hpp"
-  "../include/prost/linop/block_zero.hpp"
+  "../include/prost/linop/block_dataterm_sublabel.hpp"
+  "../include/prost/linop/block_diags.hpp"
+  "../include/prost/linop/block_gradient2d.hpp"
+  "../include/prost/linop/block_gradient3d.hpp"
   "../include/prost/linop/block_sparse.hpp"
+  "../include/prost/linop/block_zero.hpp"
   "../include/prost/linop/linearoperator.hpp"
 
   "../include/prost/prox/prox.hpp"

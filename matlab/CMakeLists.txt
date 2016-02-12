@@ -44,7 +44,7 @@ endif()
 
 if(APPLE)
   set(CMAKE_MACOSX_RPATH 1)
-  set(CMAKE_SHARED_LINKER_FLAGS "LDFLAGS='\$LDFLAGS -Wl,-rpath,${CUDA_TOOLKIT_ROOT_DIR}/lib'") # add manually
+  set(CMAKE_SHARED_LINKER_FLAGS "LDFLAGS='\$LDFLAGS -Wl,-rpath,${CUDA_TOOLKIT_ROOT_DIR}/lib'") 
 endif()
 
 add_library( prost_ SHARED ${SOURCES} )
