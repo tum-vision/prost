@@ -4,6 +4,10 @@ project(prost C CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+if(EXISTS "cmake/CustomSources.cmake")
+  include(cmake/CustomSources.cmake)
+endif()
+
 if(UNIX OR APPLE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -O3")
 endif()

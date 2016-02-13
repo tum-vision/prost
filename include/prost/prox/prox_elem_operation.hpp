@@ -82,6 +82,14 @@ private:
   std::array<thrust::device_vector<T>, ELEM_OPERATION::kCoeffsCount> d_coeffs_;  
 };
 
+template<typename T, class ELEM_OPERATION>
+struct ElemOpCoefficients 
+{
+  T* dev_p[ELEM_OPERATION::kCoeffsCount];
+  T val[ELEM_OPERATION::kCoeffsCount];
+};
+
+
 } // namespace prost
 
 #endif // PROST_PROX_ELEM_OPERATION_HPP_

@@ -14,7 +14,6 @@ endif()
 set(SOURCES
 
   "linop/block.cu"
-  "linop/block_dataterm_sublabel.cu"
   "linop/block_diags.cu"
   "linop/block_gradient2d.cu"
   "linop/block_gradient3d.cu"
@@ -25,7 +24,6 @@ set(SOURCES
   "prox/prox.cu"
   "prox/prox_elem_operation.cu"
   "prox/prox_ind_epi_quadratic_fun.cu"
-  "prox/prox_ind_epi_polyhedral_1d.cu"
   "prox/prox_moreau.cu"
   "prox/prox_transform.cu"
   "prox/prox_zero.cu"
@@ -37,7 +35,6 @@ set(SOURCES
   "solver.cu"
 
   "../include/prost/linop/block.hpp"
-  "../include/prost/linop/block_dataterm_sublabel.hpp"
   "../include/prost/linop/block_diags.hpp"
   "../include/prost/linop/block_gradient2d.hpp"
   "../include/prost/linop/block_gradient3d.hpp"
@@ -49,7 +46,6 @@ set(SOURCES
   "../include/prost/prox/prox_separable_sum.hpp"
   "../include/prost/prox/prox_elem_operation.hpp"
   "../include/prost/prox/prox_ind_epi_quadratic_fun.hpp"
-  "../include/prost/prox/prox_ind_epi_polyhedral_1d.hpp"
   "../include/prost/prox/prox_moreau.hpp"
   "../include/prost/prox/prox_transform.hpp"
   "../include/prost/prox/prox_zero.hpp"
@@ -58,7 +54,6 @@ set(SOURCES
   "../include/prost/prox/elemop/elem_operation.hpp"
   "../include/prost/prox/elemop/elem_operation_1d.hpp"
   "../include/prost/prox/elemop/elem_operation_norm2.hpp"
-  "../include/prost/prox/elemop/elem_operation_ind_epi_conjquad.hpp"
   "../include/prost/prox/elemop/elem_operation_ind_simplex.hpp"
   "../include/prost/prox/elemop/function_1d.hpp"
 
@@ -73,4 +68,4 @@ set(SOURCES
   "../include/prost/solver.hpp"
 )
 
-cuda_add_library(prost STATIC ${SOURCES})
+cuda_add_library(prost STATIC ${SOURCES} ${PROST_CUSTOM_SOURCES})
