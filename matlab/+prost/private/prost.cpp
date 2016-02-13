@@ -8,7 +8,7 @@
 #include "prost/exception.hpp"
 #include "factory.hpp"
 
-using namespace mex; 
+using namespace matlab; 
 using namespace prost;
 
 // redirect std::cout to mexPrintf

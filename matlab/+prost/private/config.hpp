@@ -1,11 +1,11 @@
-#ifndef MEX_CONFIG_HPP_
-#define MEX_CONFIG_HPP_
+#ifndef MATLAB_CONFIG_HPP_
+#define MATLAB_CONFIG_HPP_
 
-namespace mex {
+namespace matlab {
 
 typedef float real;
 //typedef double real;
 
-} // mex
+} // namespace matlab
 
-#endif // MEX_CONFIG_HPP_
+#endif // MATLAB_CONFIG_HPP_

@@ -27,15 +27,14 @@ else()
   set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> -cxx <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -output <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 endif()
 
-# TODO: make this more pretty
 set(SOURCES
-  "${CMAKE_SOURCE_DIR}/matlab/+prost/private/custom.cpp"
   "${CMAKE_SOURCE_DIR}/matlab/+prost/private/factory.cpp"
   "${CMAKE_SOURCE_DIR}/matlab/+prost/private/prost.cpp"
 )
 
 include_directories("${CMAKE_SOURCE_DIR}/include")
 include_directories("${CUDA_TOOLKIT_ROOT_DIR}/include")
+include_directories("${CMAKE_SOURCE_DIR}/matlab/+prost/private")
 
 if(MSVC)
   include_directories("${Matlab_DIR}/extern/include")
@@ -47,7 +46,7 @@ if(APPLE)
   set(CMAKE_SHARED_LINKER_FLAGS "LDFLAGS='\$LDFLAGS -Wl,-rpath,${CUDA_TOOLKIT_ROOT_DIR}/lib'") 
 endif()
 
-add_library( prost_ SHARED ${SOURCES} )
+add_library( prost_ SHARED ${SOURCES} ${MATLAB_CUSTOM_SOURCES})
 
 if(MSVC)
   target_link_libraries( prost_ prost libmex libmx libut ${CUDA_cusparse_LIBRARY} )

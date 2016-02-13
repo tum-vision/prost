@@ -1,5 +1,5 @@
-#ifndef MEX_FACTORY_HPP_
-#define MEX_FACTORY_HPP_
+#ifndef MATLAB_FACTORY_HPP_
+#define MATLAB_FACTORY_HPP_
 
 #include "prost/linop/linearoperator.hpp"
 #include "prost/linop/block.hpp"
@@ -33,13 +33,14 @@
 #include "mex.h"
 #include "config.hpp"
 
-namespace mex
+namespace matlab
 {
 
 using std::vector;
 using std::string;
 using std::function;
 using std::shared_ptr;
+using std::map;
 
 void SolverIntermCallback(int iter, const vector<real>& primal, const vector<real>& dual);
      
@@ -49,27 +50,8 @@ shared_ptr<prost::Backend<real>> CreateBackend(const mxArray *pm);
 shared_ptr<prost::Problem<real>> CreateProblem(const mxArray *pm);
 prost::Solver<real>::Options     CreateSolverOptions(const mxArray *pm);
 
-struct ProxRegistry
-{
-  string name;
-  function<prost::Prox<real>*(size_t, size_t, bool, const mxArray*)> create_fn;
-};
-
-struct BlockRegistry
-{
-  string name;
-  function<prost::Block<real>*(size_t, size_t, const mxArray*)> create_fn;
-};
-
-struct BackendRegistry
-{
-  string name;
-  function<prost::Backend<real>*(const mxArray*)> create_fn;
-};
-
-// user-defined custom prox operators and blocks
-extern ProxRegistry custom_prox_reg[];
-extern BlockRegistry custom_block_reg[];
+map<string, function<prost::Prox<real>*(size_t, size_t, bool, const mxArray*)>>& get_prox_reg();
+map<string, function<prost::Block<real>*(size_t, size_t, const mxArray*)>>& get_block_reg();
 
 // prox operator create functions
 prost::ProxIndEpiQuadraticFun<real>*
@@ -115,6 +97,6 @@ CreateBlockGradient3D(size_t row, size_t col, const mxArray *pm);
 prost::BackendPDHG<real>* 
 CreateBackendPDHG(const mxArray *data);
 
-} // namespace mex
+} // namespace matlab
 
-#endif // MEX_FACTORY_HPP_
+#endif // MATLAB_FACTORY_HPP_

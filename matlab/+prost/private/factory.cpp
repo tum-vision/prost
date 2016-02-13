@@ -10,13 +10,12 @@
 
 using namespace prost;
 
-namespace mex 
+namespace matlab
 {
 
 mxArray *Solver_interm_cb_handle = nullptr;
 
-ProxRegistry prox_reg[] = 
-{
+static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> default_prox_reg = {
   { "elem_operation:ind_simplex",     CreateProxElemOperationIndSimplex                      },
   { "elem_operation:1d:zero",         CreateProxElemOperation1D<Function1DZero<real>>        },
   { "elem_operation:1d:abs",          CreateProxElemOperation1D<Function1DAbs<real>>         },
@@ -42,29 +41,18 @@ ProxRegistry prox_reg[] =
   { "moreau",                         CreateProxMoreau                                       },
   { "transform",                      CreateProxTransform                                    },
   { "zero",                           CreateProxZero                                         },
-  
-  // The end.
-  { "END",                            nullptr                                                },
 };
 
-BlockRegistry block_reg[] = 
-{
+static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>> default_block_reg = {
   { "diags",      CreateBlockDiags      },
   { "gradient2d", CreateBlockGradient2D },
   { "gradient3d", CreateBlockGradient3D },
   { "sparse",     CreateBlockSparse     },
   { "zero",       CreateBlockZero       },
-
-  // The end.
-  { "END",    nullptr                   },
 };
 
-BackendRegistry backend_reg[] = 
-{
+map<string, function<Backend<real>*(const mxArray*)>> default_backend_reg = {
   { "pdhg", CreateBackendPDHG },
-
-  // The end.
-  { "END",  nullptr           },
 };
 
 void
@@ -334,14 +322,9 @@ CreateProx(const mxArray *pm)
   
   Prox<real> *prox = nullptr;
 
-  for(size_t i = 0; prox_reg[i].create_fn != nullptr; i++)
-    if(prox_reg[i].name.compare(name) == 0)
-      prox = prox_reg[i].create_fn(idx, size, diagsteps, data);
-
-  if(!prox) // prox not found -> look in custom registry
-    for(size_t i = 0; custom_prox_reg[i].create_fn != nullptr; i++)
-      if(custom_prox_reg[i].name.compare(name) == 0)
-        prox = custom_prox_reg[i].create_fn(idx, size, diagsteps, data);
+  for(auto& p : get_prox_reg())
+    if(p.first.compare(name) == 0)
+      prox = p.second(idx, size, diagsteps, data);
 
   if(!prox) // prox with that name does not exist
   {
@@ -366,14 +349,9 @@ CreateBlock(const mxArray *pm)
 
   Block<real> *block = nullptr;
 
-  for(size_t i = 0; block_reg[i].create_fn != nullptr; i++)
-    if(block_reg[i].name.compare(name) == 0)
-      block = block_reg[i].create_fn(row, col, data);
-
-  if(!block) // block not found -> look in custom registry
-    for(size_t i = 0; custom_block_reg[i].create_fn != nullptr; i++)
-      if(custom_block_reg[i].name.compare(name) == 0)
-        block = custom_block_reg[i].create_fn(row, col, data);
+  for(auto& b : get_block_reg())
+    if(b.first.compare(name) == 0)
+      block = b.second(row, col, data);
 
   if(!block) // block with that name does not exist
   {
@@ -394,9 +372,9 @@ CreateBackend(const mxArray *pm)
 
   Backend<real> *backend = nullptr;
 
-  for(size_t i = 0; backend_reg[i].create_fn != nullptr; i++)
-    if(backend_reg[i].name.compare(name) == 0)
-      backend = backend_reg[i].create_fn(mxGetCell(pm, 1));
+  for(auto& b : default_backend_reg)
+    if(b.first.compare(name) == 0)
+      backend = b.second(mxGetCell(pm, 1));
 
   if(!backend)
   {
@@ -494,4 +472,27 @@ CreateSolverOptions(const mxArray *pm)
   return opts;
 }
 
-} // namespace mex
+map<string, function<prost::Prox<real>*(size_t, size_t, bool, const mxArray*)>>& get_prox_reg()
+{
+  static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> prox_reg;
+
+  return prox_reg;
+}
+  
+map<string, function<prost::Block<real>*(size_t, size_t, const mxArray*)>>& get_block_reg()
+{
+  static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>> block_reg;
+
+  return block_reg;
+}
+
+struct InitRegistries {
+  InitRegistries() {
+    get_prox_reg().insert(default_prox_reg.begin(), default_prox_reg.end());
+    get_block_reg().insert(default_block_reg.begin(), default_block_reg.end());
+  }
+};
+
+InitRegistries initRegistries;
+
+} // namespace matlab
