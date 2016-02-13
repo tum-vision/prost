@@ -1,8 +1,9 @@
 #include <iostream>
 #include <sstream>
 
-#include "prost/prox/prox_ind_epi_quadratic_fun.hpp"
+#include "prost/prox/prox_ind_epi_quad.hpp"
 #include "prost/prox/vector.hpp"
+#include "prost/prox/helper.hpp"
 #include "prost/config.hpp"
 #include "prost/exception.hpp"
 
@@ -21,7 +22,7 @@ struct Coefficients {
 
 template<typename T>
 __global__
-void ProxIndEpiQuadraticFunKernel(
+void ProxIndEpiQuadKernel(
   T *d_res,
   const T *d_arg,
   size_t count,
@@ -34,12 +35,12 @@ void ProxIndEpiQuadraticFunKernel(
   {
 
     Vector<T> x(count, dim-1, true, tx, d_res);
-    const Vector<T> x0(count, dim-1, true, tx, d_arg);
+    const Vector<const T> x0(count, dim-1, true, tx, d_arg);
     T& y = d_res[count * (dim-1) + tx];
     const T y0 = d_arg[count * (dim-1) + tx];
 
     const T a = coeffs.dev_a == nullptr ? coeffs.a : coeffs.dev_a[tx];
-    const Vector<T> b(coeffs.dev_b == nullptr ? 1 : count, dim-1, true, coeffs.dev_b == nullptr ? 0 : tx, coeffs.dev_b);
+    const Vector<const T> b(coeffs.dev_b == nullptr ? 1 : count, dim-1, true, coeffs.dev_b == nullptr ? 0 : tx, coeffs.dev_b);
     const T c = coeffs.dev_c == nullptr ? coeffs.c : coeffs.dev_c[tx];
 
 
@@ -51,7 +52,7 @@ void ProxIndEpiQuadraticFunKernel(
     }
     
 
-    ProxIndEpiQuadraticFun<T>::ProjectSimple(x, y0 / a + (0.5 / (a*a)) * sq_norm_b - c / a, 0.5, x, y, dim-1);
+    helper::ProjectEpiQuadNd<T>(x, y0 / a + (0.5 / (a*a)) * sq_norm_b - c / a, 0.5, x, y, dim-1);
       
     for(size_t i = 0; i < dim-1; i++) {
       x[i] -= b[i] / a;
@@ -64,7 +65,7 @@ void ProxIndEpiQuadraticFunKernel(
 
 template<typename T>
 void 
-ProxIndEpiQuadraticFun<T>::EvalLocal(
+ProxIndEpiQuad<T>::EvalLocal(
   const typename thrust::device_vector<T>::iterator& result_beg,
   const typename thrust::device_vector<T>::iterator& result_end,
   const typename thrust::device_vector<T>::const_iterator& arg_beg,
@@ -95,7 +96,7 @@ ProxIndEpiQuadraticFun<T>::EvalLocal(
     coeffs.c = c_[0];
   }
 
-  ProxIndEpiQuadraticFunKernel<T>
+  ProxIndEpiQuadKernel<T>
     <<<grid, block>>>(
       thrust::raw_pointer_cast(&(*result_beg)),
       thrust::raw_pointer_cast(&(*arg_beg)),
@@ -117,7 +118,7 @@ ProxIndEpiQuadraticFun<T>::EvalLocal(
 
 template<typename T>
 void
-ProxIndEpiQuadraticFun<T>::Initialize() 
+ProxIndEpiQuad<T>::Initialize() 
 {
     if(a_.size() != this->count_ && a_.size() != 1)
       throw Exception("Wrong input: Coefficient a has to have dimension count or 1!");
@@ -154,7 +155,7 @@ ProxIndEpiQuadraticFun<T>::Initialize()
 }
 
 // Explicit template instantiation
-template class ProxIndEpiQuadraticFun<float>;
-template class ProxIndEpiQuadraticFun<double>;
+template class ProxIndEpiQuad<float>;
+template class ProxIndEpiQuad<double>;
 
 }

@@ -16,7 +16,7 @@ endif()
 set(CMAKE_SHARED_LIBRARY_PREFIX)
 
 set(CMAKE_CXX_COMPILE_OBJECT
-  "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -outdir <OBJECT_DIR> -c <SOURCE>; mv <OBJECT_DIR>/$$(basename <SOURCE> .cpp).o <OBJECT>")
+  "<CMAKE_CXX_COMPILER> <DEFINES> <FLAGS> -outdir <OBJECT_DIR> -c <SOURCE>; mv <OBJECT_DIR>/$$(basename <SOURCE> .cpp).o <OBJECT>")
 
 set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS) # remove -shared options as mex does not accept it
 

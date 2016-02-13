@@ -37,7 +37,7 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
   { "elem_operation:norm2:max_pos0",  CreateProxElemOperationNorm2<Function1DMaxPos0<real>>  },
   { "elem_operation:norm2:l0",        CreateProxElemOperationNorm2<Function1DL0<real>>       },
   { "elem_operation:norm2:huber",     CreateProxElemOperationNorm2<Function1DHuber<real>>    },
-  { "ind_epi_quadratic_fun",          CreateProxIndEpiQuadraticFun                           },
+  { "ind_epi_quad",                   CreateProxIndEpiQuad                                   },
   { "moreau",                         CreateProxMoreau                                       },
   { "transform",                      CreateProxTransform                                    },
   { "zero",                           CreateProxZero                                         },
@@ -154,8 +154,8 @@ CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const
   return new ProxElemOperation<real, ElemOperationIndSimplex<real> >(idx, count, dim, interleaved, diagsteps);   
 }
 
-ProxIndEpiQuadraticFun<real>* 
-CreateProxIndEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+ProxIndEpiQuad<real>* 
+CreateProxIndEpiQuad(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
 {
   size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
   size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
@@ -187,7 +187,7 @@ CreateProxIndEpiQuadraticFun(size_t idx, size_t size, bool diagsteps, const mxAr
   val = mxGetPr(mxGetCell(coeffs, 2));
   std::vector<real> c(val, val + dims[0]);
   
-  return new ProxIndEpiQuadraticFun<real>(idx, count, dim, interleaved, diagsteps, a, b, c);   
+  return new ProxIndEpiQuad<real>(idx, count, dim, interleaved, diagsteps, a, b, c);   
 }
 
 BlockDiags<real>*
