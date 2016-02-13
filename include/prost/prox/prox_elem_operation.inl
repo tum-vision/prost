@@ -26,8 +26,8 @@ void ProxElemOperationKernel(
   if(tx < count) 
   {
     Vector<T> res(count, dim, interleaved, tx, d_res);
-    Vector<T> arg(count, dim, interleaved, tx, d_arg);
-    Vector<T> tau_diag(count, dim, interleaved, tx, d_tau);
+    const Vector<const T> arg(count, dim, interleaved, tx, d_arg);
+    const Vector<const T> tau_diag(count, dim, interleaved, tx, d_tau);
 
     SharedMem<typename ELEM_OPERATION::SharedMemType, typename ELEM_OPERATION::GetSharedMemCount> sh_mem(dim, threadIdx.x);
 
@@ -54,8 +54,8 @@ void ProxElemOperationKernel(
   if(tx < count)
   {
     Vector<T> res(count, dim, interleaved, tx, d_res);
-    Vector<T> arg(count, dim, interleaved, tx, d_arg);
-    Vector<T> tau_diag(count, dim, interleaved, tx, d_tau);
+    const Vector<const T> arg(count, dim, interleaved, tx, d_arg);
+    const Vector<const T> tau_diag(count, dim, interleaved, tx, d_tau);
 
     SharedMem<typename ELEM_OPERATION::SharedMemType, typename ELEM_OPERATION::GetSharedMemCount> sh_mem(dim, threadIdx.x);
 
