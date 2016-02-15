@@ -34,8 +34,8 @@ struct ElemOperationIndSimplex : public ElemOperation<0, 0, T>
   void
   operator()(
     Vector<T>& res,
-    const Vector<T>& arg,
-    const Vector<T>& tau_diag,
+    const Vector<const T>& arg,
+    const Vector<const T>& tau_diag,
     T tau_scal,
     bool invert_tau) 
   {

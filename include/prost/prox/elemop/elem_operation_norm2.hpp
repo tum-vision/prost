@@ -19,8 +19,8 @@ struct ElemOperationNorm2 : public ElemOperation<0, 7>
  inline __host__ __device__ 
  void operator()(
      Vector<T>& res, 
-     const Vector<T>& arg, 
-     const Vector<T>& tau_diag, 
+     const Vector<const T>& arg, 
+     const Vector<const T>& tau_diag, 
      T tau_scal, 
      bool invert_tau) 
   {
