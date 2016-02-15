@@ -94,8 +94,11 @@ typename Solver<T>::ConvergenceResult Solver<T>::Solve() {
     bool is_converged = false;
     bool is_stopped = stopping_cb_();
 
-    T eps_pri = opts_.tol_abs_primal + opts_.tol_rel_primal * pv_norm;
-    T eps_dua = opts_.tol_abs_dual + opts_.tol_rel_dual * dv_norm;
+    T eps_pri = std::sqrt(problem_->nrows()) * opts_.tol_abs_primal +
+      opts_.tol_rel_primal * pv_norm;
+    
+    T eps_dua = std::sqrt(problem_->ncols()) * opts_.tol_abs_dual +
+      opts_.tol_rel_dual * dv_norm;
 
     if((primal_res < eps_pri) && (dual_res < eps_dua))
       is_converged = true;

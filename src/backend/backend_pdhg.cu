@@ -200,7 +200,7 @@ BackendPDHG<T>::Initialize()
   {
     T norm = this->problem_->normest();
 
-    if(std::abs(norm - 1) > 0.01)
+    if(std::abs(norm - 1) > 0.1)
     {
       tau_ /= norm;
       sigma_ /= norm;
@@ -274,6 +274,10 @@ BackendPDHG<T>::PerformIteration()
     for(auto& p : prox_fstar_)
       p->Eval(y_, temp_, this->problem_->scaling_left(), sigma_);
 
+    UpdateResidualsAndStepsizes();
+
+    iteration_++;
+
     // remember K^T y^k
     kty_.swap(kty_prev_);
 
@@ -286,6 +290,13 @@ BackendPDHG<T>::PerformIteration()
     throw Exception("PDHG with overrelaxation on the dual variables is not implemented yet!");
   }
 
+  iteration_++;
+}
+
+template<typename T>
+void
+BackendPDHG<T>::UpdateResidualsAndStepsizes()
+{
   // compute residuals every "opts_.residual_iter" iterations and
   // adapt stepsizes for residual base adaptive schemes
   if(iteration_ == 0 || (iteration_ % opts_.residual_iter) == 0)
@@ -331,33 +342,38 @@ BackendPDHG<T>::PerformIteration()
         dual_residual_transform<T>(tau_),
         thrust::tuple<T, T>(0, 0),
         residual_tuple_sum<T>());
-    
+
     this->primal_residual_ = std::sqrt(thrust::get<0>(primal));
     this->primal_var_norm_ = std::sqrt(thrust::get<1>(primal));
     this->dual_residual_ = std::sqrt(thrust::get<0>(dual));
     this->dual_var_norm_ = std::sqrt(thrust::get<1>(dual));
 
-    T eps_primal = this->solver_opts_.tol_abs_primal + this->solver_opts_.tol_rel_primal * this->primal_var_norm_;
-    T eps_dual = this->solver_opts_.tol_abs_dual + this->solver_opts_.tol_rel_dual * this->dual_var_norm_;
+    T eps_primal = std::sqrt(this->problem_->nrows()) * this->solver_opts_.tol_abs_primal +
+      this->solver_opts_.tol_rel_primal * this->primal_var_norm_;
+    
+    T eps_dual = std::sqrt(this->problem_->ncols()) * this->solver_opts_.tol_abs_dual +
+      this->solver_opts_.tol_rel_dual * this->dual_var_norm_;
 
     switch(opts_.stepsize_variant)
-    {
-      case BackendPDHG<T>::StepsizeVariant::kPDHGStepsResidualGoldstein:
-        if( this->dual_residual_ > (this->primal_residual_ * opts_.arg_delta) )
-        {
-          tau_ = tau_ / (1 - arg_alpha_);
-          sigma_ = sigma_ * (1 - arg_alpha_);
-          arg_alpha_ = arg_alpha_ * opts_.arg_nu;
-        }
+    {      
+    case BackendPDHG<T>::StepsizeVariant::kPDHGStepsResidualGoldstein: {
+      T scale = eps_dual / eps_primal;
+	
+      if( this->dual_residual_ > (scale * this->primal_residual_ * opts_.arg_delta) )
+      {
+        tau_ = tau_ / (1 - arg_alpha_);
+        sigma_ = sigma_ * (1 - arg_alpha_);
+        arg_alpha_ = arg_alpha_ * opts_.arg_nu;
+      }
 
-        if( this->dual_residual_ < (this->primal_residual_ / opts_.arg_delta) )
-        {
-          tau_ = tau_ * (1 - arg_alpha_);
-          sigma_ = sigma_ / (1 - arg_alpha_);
-          arg_alpha_ = arg_alpha_ * opts_.arg_nu;
-        }
+      if( this->dual_residual_ < (scale * this->primal_residual_ / opts_.arg_delta) )
+      {
+        tau_ = tau_ * (1 - arg_alpha_);
+        sigma_ = sigma_ / (1 - arg_alpha_);
+        arg_alpha_ = arg_alpha_ * opts_.arg_nu;
+      }
       
-        break;
+    } break;
 
       case BackendPDHG<T>::StepsizeVariant::kPDHGStepsResidualBoyd:
         if( (this->dual_residual_ < eps_dual) && (opts_.arb_tau * iteration_ > arb_l_) )
@@ -386,8 +402,6 @@ BackendPDHG<T>::PerformIteration()
     tau_ = theta_ * tau_;
     sigma_ = sigma_ / theta_;
   }
-
-  iteration_++;
 }
 
 template<typename T>

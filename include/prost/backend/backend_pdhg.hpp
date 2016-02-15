@@ -76,7 +76,10 @@ public:
   /// \brief Returns amount of gpu memory required in bytes.
   virtual size_t gpu_mem_amount() const;
 
-protected:
+private:
+  void UpdateResidualsAndStepsizes();
+  
+private:
   // \brief Primal variable x^k.
   thrust::device_vector<T> x_; 
 

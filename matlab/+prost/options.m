@@ -1,10 +1,10 @@
 function [opts] = options(varargin)
 
-    dummy_cb = @(it, x, y) disp('');
+    dummy_cb = @(it, x, y) fprintf('\n');
 
     p = inputParser;
-    addOptional(p, 'tol_rel_primal', 1e-2);
-    addOptional(p, 'tol_rel_dual', 1e-2);
+    addOptional(p, 'tol_rel_primal', 1e-4);
+    addOptional(p, 'tol_rel_dual', 1e-4);
     addOptional(p, 'tol_abs_primal', 1e-4);
     addOptional(p, 'tol_abs_dual', 1e-4);
     addOptional(p, 'max_iters', 1000);

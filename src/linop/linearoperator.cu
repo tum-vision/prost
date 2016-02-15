@@ -93,10 +93,10 @@ void LinearOperator<T>::Initialize()
   }
 
   if(overlap) 
-    throw new Exception("Blocks are overlapping inside the linear operator. Recheck the indices.");
+    throw Exception("Blocks are overlapping inside the linear operator. Recheck the indices.");
 
   if(area != nrows_ * ncols_)  
-    throw new Exception("There's empty space between the blocks inside the linear operator. Recheck the indicies.");
+    throw Exception("There's empty space between the blocks inside the linear operator. Recheck the indicies.");
 
   for(auto& block : blocks_)
     block->Initialize();

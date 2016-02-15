@@ -1,20 +1,17 @@
 # Instructions for adding custom prox operators and blocks:
 #
-# 1) Rename this file to CustomSources.cmake
+# 1) Copy this file to CustomSources.cmake
 #
-# 2) Uncomment the line "include(cmake/CustomSources.cmake)" in the top most
-#    CMakeLists.txt
-#
-# 3) Add your custom files below, like this:
+# 2) Add your custom files below, e.g., like this:
 #
 #    set(PROST_CUSTOM_SOURCES
 #      ../../preciserelaxation/src/cvpr16/prost/block_dataterm_sublabel.cu
 #      ../../preciserelaxation/src/cvpr16/prost/prox_ind_epi_polyhedral_1d.cu
-#      ../../preciserelaxation/src/cvpr16/prost/prox_ind_epi_conjquad.cu
+#      ../../preciserelaxation/src/cvpr16/prost/prox_ind_epi_conjquad_1d.cu
 #
 #      ../../preciserelaxation/src/cvpr16/prost/block_dataterm_sublabel.hpp
 #      ../../preciserelaxation/src/cvpr16/prost/prox_ind_epi_polyhedral_1d.hpp
-#      ../../preciserelaxation/src/cvpr16/prost/prox_ind_epi_conjquad.hpp
+#      ../../preciserelaxation/src/cvpr16/prost/prox_ind_epi_conjquad_1d.hpp
 #      )
 #
 #    set(MATLAB_CUSTOM_SOURCES
