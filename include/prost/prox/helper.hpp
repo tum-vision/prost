@@ -126,12 +126,41 @@ inline __host__ __device__ void ProjectEpiQuad1d(
     y = alpha * x * x;
   }
 }
+
+/// 
+/// \brief Computes orthogonal projection of (x0, y0) onto the epigraph of the
+///        parabola y >= p * x^2 + q * x + r.
+/// 
+template<typename T>
+inline __host__ __device__ void ProjectEpiQuadGeneral1d(
+  const T& x0,
+  const T& y0,
+  const T& p,
+  const T& q,
+  const T& r,
+  T& x,
+  T& y)
+{
+  T tildex;
+  T tildey;
+  
+  helper::ProjectEpiQuad1d<T>(
+    x0 + q / (2. * p),
+    y0 + q * q / (4. * p) - r,
+    p,
+    tildex,
+    tildey);
+
+  x = tildex - q / (2. * p);
+  y = tildey - q * q / (4. * p) + r;
+}
+  
 /// 
 /// \brief Computes projection of the d-dimensional vector v onto the
 ///        halfspace described by { x | <n, x> <= t }.
 /// 
 template<typename T>
-inline __device__ void ProjectHalfspace(
+inline __host__ __device__ void ProjectHalfspace(
   const Vector<const T>& v,
   const Vector<const T>& n,
   T t,
@@ -156,10 +185,53 @@ inline __device__ void ProjectHalfspace(
 ///        described by a point p and normal n.
 /// 
 template<typename T>
-inline __device__ bool IsPointInHalfspace(
+inline __host__ __device__ bool IsPointInHalfspace(
   const Vector<const T>& v,
   const Vector<const T>& p,
   const Vector<const T>& n,
+  int dim)
+{
+  T dot = 0;
+  for(int i = 0; i < dim; i++) 
+    dot += n[i] * (v[i] - p[i]);
+  
+  return dot <= 0.;
+}
+
+/// 
+/// \brief Computes projection of the d-dimensional vector v onto the
+///        halfspace described by { x | <n, x> <= t }.
+/// 
+template<typename T>
+inline __host__ __device__ void ProjectHalfspace(
+  const T *v,
+  const T *n,
+  T t,
+  T *result,
+  int dim)
+{
+  T dot = 0, sq_norm = 0;
+
+  for(int i = 0; i < dim; i++) {
+    dot += n[i] * v[i];
+    sq_norm += n[i] * n[i];
+  }
+
+  const T s = (dot - t) / sq_norm;
+  
+  for(int i = 0; i < dim; i++) 
+    result[i] = v[i] - s * n[i];
+}
+
+/// 
+/// \brief Checks whether a d-dimensional point v lies within the halfspace
+///        described by a point p and normal n.
+/// 
+template<typename T>
+inline __host__ __device__ bool IsPointInHalfspace(
+  const T *v,
+  const T *p,
+  const T *n,
   int dim)
 {
   T dot = 0;
