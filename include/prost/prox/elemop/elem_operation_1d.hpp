@@ -14,7 +14,7 @@ struct ElemOperation1D : public ElemOperation<1, 7>
   ElemOperation1D(T* coeffs, size_t dim, SharedMem<SharedMemType, GetSharedMemCount>& shared_mem) : coeffs_(coeffs) { } 
   
   inline __host__ __device__
-  void operator()(Vector<T>& res, const Vector<T>& arg, const Vector<T>& tau_diag, T tau_scal, bool invert_tau)
+  void operator()(Vector<T>& res, const Vector<const T>& arg, const Vector<const T>& tau_diag, T tau_scal, bool invert_tau)
   {
     if(coeffs_[2] == 0) // c == 0 -> prox_zero -> return argument
       res[0] = arg[0];
