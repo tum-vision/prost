@@ -357,7 +357,6 @@ T Problem<T>::normest(T tol, int max_iters)
 
     if(std::abs(norm_prev - norm) < tol * norm)
     {
-      std::cout << "converged after " << i << " iterations of normest with norm " << norm << std::endl;
       break;
     }
 

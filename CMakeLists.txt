@@ -4,7 +4,7 @@ project(prost C CXX)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
-if(EXISTS "cmake/CustomSources.cmake")
+if(EXISTS "${CMAKE_SOURCE_DIR}/cmake/CustomSources.cmake")
   include(cmake/CustomSources.cmake)
 endif()
 

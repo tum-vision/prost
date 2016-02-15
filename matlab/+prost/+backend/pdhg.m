@@ -6,7 +6,7 @@ function [backend] = pdhg(varargin)
     addOptional(p, 'tau0', 1);
     addOptional(p, 'sigma0', 1);
     addOptional(p, 'solve_dual', false);
-    addOptional(p, 'residual_iter', 25);
+    addOptional(p, 'residual_iter', 3);
     addOptional(p, 'scale_steps_operator', true);
     addOptional(p, 'alg2_gamma', 0);
     addOptional(p, 'arg_alpha0', 0.5);

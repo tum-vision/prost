@@ -493,6 +493,6 @@ struct InitRegistries {
   }
 };
 
-InitRegistries initRegistries;
+static InitRegistries initRegistries;
 
 } // namespace matlab
