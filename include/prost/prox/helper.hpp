@@ -159,12 +159,12 @@ inline __host__ __device__ void ProjectEpiQuadGeneral1d(
 /// \brief Computes projection of the d-dimensional vector v onto the
 ///        halfspace described by { x | <n, x> <= t }.
 /// 
-template<typename T>
+template<typename T, typename ARRAY, typename CONST_ARRAY>
 inline __host__ __device__ void ProjectHalfspace(
-  const Vector<const T>& v,
-  const Vector<const T>& n,
+  CONST_ARRAY const& v,
+  CONST_ARRAY const& n,
   T t,
-  Vector<T>& result,
+  ARRAY& result, // TODO: this should be a const-reference, but doesn't compile. Why?
   int dim)
 {
   T dot = 0, sq_norm = 0;
@@ -184,11 +184,11 @@ inline __host__ __device__ void ProjectHalfspace(
 /// \brief Checks whether a d-dimensional point v lies within the halfspace
 ///        described by a point p and normal n.
 /// 
-template<typename T>
+template<typename T, typename CONST_ARRAY>
 inline __host__ __device__ bool IsPointInHalfspace(
-  const Vector<const T>& v,
-  const Vector<const T>& p,
-  const Vector<const T>& n,
+  CONST_ARRAY const& v,
+  CONST_ARRAY const& p,
+  CONST_ARRAY const& n,
   int dim)
 {
   T dot = 0;
@@ -198,48 +198,48 @@ inline __host__ __device__ bool IsPointInHalfspace(
   return dot <= 0.;
 }
 
-/// 
-/// \brief Computes projection of the d-dimensional vector v onto the
-///        halfspace described by { x | <n, x> <= t }.
-/// 
+// partial function template specialization not allowed by C++ standard
+// => use overloading instead.
 template<typename T>
-inline __host__ __device__ void ProjectHalfspace(
-  const T *v,
-  const T *n,
-  T t,
-  T *result,
-  int dim)
+inline __host__ __device__ void ProjectHalfspace(Vector<const T> const& v,
+                                                 Vector<const T> const& n,
+                                                 T t,
+                                                 const Vector<T>& result,
+                                                 int dim)
 {
-  T dot = 0, sq_norm = 0;
-
-  for(int i = 0; i < dim; i++) {
-    dot += n[i] * v[i];
-    sq_norm += n[i] * n[i];
-  }
-
-  const T s = (dot - t) / sq_norm;
-  
-  for(int i = 0; i < dim; i++) 
-    result[i] = v[i] - s * n[i];
+  ProjectHalfspace<T, Vector<T>, Vector<const T>>(v, n, t, result, dim);
 }
 
-/// 
-/// \brief Checks whether a d-dimensional point v lies within the halfspace
-///        described by a point p and normal n.
-/// 
+template<typename T>
+inline __host__ __device__ void ProjectHalfspace(const T* const& v,
+                                                 const T* const& n,
+                                                 T t,
+                                                 T* const& result,
+                                                 int dim)
+{
+  ProjectHalfspace<T, T*, const T*>(v, n, t, result, dim);
+}
+
 template<typename T>
 inline __host__ __device__ bool IsPointInHalfspace(
-  const T *v,
-  const T *p,
-  const T *n,
-  int dim)
+    Vector<const T> const& v,
+    Vector<const T> const& p,
+    Vector<const T> const& n,
+    int dim)
 {
-  T dot = 0;
-  for(int i = 0; i < dim; i++) 
-    dot += n[i] * (v[i] - p[i]);
-  
-  return dot <= 0.;
+  return IsPointInHalfspace<T, Vector<const T>>(v, p, n, dim);
 }
+
+template<typename T>
+inline __host__ __device__ bool IsPointInHalfspace(
+    const T* const& v,
+    const T* const& p,
+    const T* const& n,
+    int dim)
+{
+  return IsPointInHalfspace<T, const T*>(v, p, n, dim);
+}
+
 
 } // namespace helper
 } // namespace prost 

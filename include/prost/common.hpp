@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <iostream>
+#include <list>
 #include <map>
 #include <memory>
 #include <vector>
@@ -15,6 +16,7 @@ namespace prost {
 using std::cout;
 using std::endl;
 using std::function;
+using std::list;
 using std::map;
 using std::shared_ptr;
 using std::string;
@@ -22,6 +24,7 @@ using std::stringstream;
 using std::vector;
 
 string get_version(); 
+template<typename T> list<double> linspace(T start_in, T end_in, int num_in);
 
 #if defined(_MSC_VER)
 #include <BaseTsd.h>

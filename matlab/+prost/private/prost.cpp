@@ -55,10 +55,10 @@ extern void utSetInterruptPending(bool);
 
 static bool MexStoppingCallback() {
   if(utIsInterruptPending())
-  {
-    utSetInterruptPending(false);
-    return true;
-  }
+    {
+      utSetInterruptPending(false);
+      return true;
+    }
   
   return false;
 }
@@ -90,27 +90,27 @@ static void SolveProblem(MEX_ARGS) {
   mxArray *result_string;
 
   switch(result)
-  {
-  case Solver<real>::ConvergenceResult::kConverged:
-    result_string = mxCreateString("Converged.");
-    break;
+    {
+    case Solver<real>::ConvergenceResult::kConverged:
+      result_string = mxCreateString("Converged.");
+      break;
 
-  case Solver<real>::ConvergenceResult::kStoppedMaxIters:
-    result_string = mxCreateString("Reached maximum iterations.");
-    break;
+    case Solver<real>::ConvergenceResult::kStoppedMaxIters:
+      result_string = mxCreateString("Reached maximum iterations.");
+      break;
 
-  case Solver<real>::ConvergenceResult::kStoppedUser:
-    result_string = mxCreateString("Stopped by user.");
-    break;
-  }
+    case Solver<real>::ConvergenceResult::kStoppedUser:
+      result_string = mxCreateString("Stopped by user.");
+      break;
+    }
 
   std::copy(solver->cur_dual_sol().begin(),
-    solver->cur_dual_sol().end(),
-    (double *)mxGetPr(mex_dual_sol));
+	    solver->cur_dual_sol().end(),
+	    (double *)mxGetPr(mex_dual_sol));
 
   std::copy(solver->cur_primal_sol().begin(),
-    solver->cur_primal_sol().end(),
-    (double *)mxGetPr(mex_primal_sol));
+	    solver->cur_primal_sol().end(),
+	    (double *)mxGetPr(mex_primal_sol));
 
   const char *fieldnames[3] = {
     "x",
@@ -255,24 +255,24 @@ void mexFunction(MEX_ARGS) {
   bool executed = false;
   
   try 
-  {
-    for(size_t i = 0; cmd_reg[i].fn_handle != nullptr; i++) {
-      if(cmd_reg[i].cmd.compare(cmd) == 0) {
-        cmd_reg[i].fn_handle(nlhs, plhs, nrhs - 1, prhs + 1);
-        executed = true;
-        break;
+    {
+      for(size_t i = 0; cmd_reg[i].fn_handle != nullptr; i++) {
+	if(cmd_reg[i].cmd.compare(cmd) == 0) {
+	  cmd_reg[i].fn_handle(nlhs, plhs, nrhs - 1, prhs + 1);
+	  executed = true;
+	  break;
+	}
+      }
+
+      if(!executed) {
+	stringstream msg;
+	msg << "Unknown command '" << cmd << "'.";
+	throw Exception(msg.str());
       }
     }
-
-    if(!executed) {
-      stringstream msg;
-      msg << "Unknown command '" << cmd << "'.";
-      throw Exception(msg.str());
-    }
-  }
   catch(const Exception& e)
-  {
-    mexErrMsgTxt(e.what());
-    Release(nlhs, plhs, nrhs - 1, prhs + 1);
-  }
+    {
+      mexErrMsgTxt(e.what());
+      Release(nlhs, plhs, nrhs - 1, prhs + 1);
+    }
 }

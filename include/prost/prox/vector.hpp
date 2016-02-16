@@ -17,21 +17,13 @@ public:
     data_(data) { }
 
   inline __host__ __device__
-  T
-  operator[](size_t i) const 
-  {
-    size_t index = interleaved_ ? (tx_ * dim_ + i) : (tx_ + count_ * i);
-    return data_[index];
-  }
-
-  inline __host__ __device__
   T&
-  operator[](size_t i) 
+  operator[](size_t i) const
   {
     size_t index = interleaved_ ? (tx_ * dim_ + i) : (tx_ + count_ * i);
     return data_[index];
   }
-
+  
 private:
   size_t count_;
   size_t dim_;

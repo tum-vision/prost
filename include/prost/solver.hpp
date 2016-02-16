@@ -38,6 +38,15 @@ public:
 
     /// \brief output various debug information
     bool verbose;
+
+    /// \brief Initial primal solution
+    vector<T> x0;
+
+    /// \brief Initial dual solution
+    vector<T> y0;
+
+    /// \brief Solve the dual or primal problem?
+    bool solve_dual_problem;
   };
 
   enum ConvergenceResult {
@@ -64,8 +73,8 @@ public:
   void SetStoppingCallback(const typename Solver<T>::StoppingCallback& cb);
   void SetIntermCallback(const typename Solver<T>::IntermCallback& cb);
 
-  const vector<T>& cur_primal_sol() const { return cur_primal_sol_; }
-  const vector<T>& cur_dual_sol() const { return cur_dual_sol_; }
+  const vector<T>& cur_primal_sol() const; 
+  const vector<T>& cur_dual_sol() const; 
   
 protected:
   typename Solver<T>::Options opts_;
