@@ -16,6 +16,6 @@ find_package(MatlabMex REQUIRED)
 find_package(CUDA REQUIRED)
 
 include_directories("include")
-
+	
 add_subdirectory(src)
 add_subdirectory(matlab)
