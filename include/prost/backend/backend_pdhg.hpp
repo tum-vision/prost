@@ -21,7 +21,7 @@ public:
   enum StepsizeVariant 
   {
     /// \brief Constant steps.
-    kPDHGStepsAlg1,
+    kPDHGStepsAlg1 = 1,
 
     /// \brief Variable steps for strongly convex problems.
     kPDHGStepsAlg2,

@@ -1,6 +1,6 @@
 string(TIMESTAMP VERSION "%Y-%m-%d")
 
-set(PROST_VERSION "0.0.1-build-${VERSION}")
+set(PROST_VERSION "0.1-build-${VERSION}")
 add_definitions(-DPROST_VERSION=${PROST_VERSION})
 
 if(UNIX OR APPLE)
