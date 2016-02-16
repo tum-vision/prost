@@ -120,7 +120,7 @@ CreateProxElemOperation1D(size_t idx, size_t size, bool diagsteps, const mxArray
 {
   size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
   size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
-  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+  bool interleaved = mxGetScalar(mxGetCell(data, 2)) > 0;
 
   std::array<std::vector<real>, 7> coeffs;
   GetCoefficients<7>(coeffs, mxGetCell(data, 3), size);
@@ -135,7 +135,7 @@ CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxAr
 {
   size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
   size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
-  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+  bool interleaved = mxGetScalar(mxGetCell(data, 2)) > 0;
 
   std::array<std::vector<real>, 7> coeffs;
   GetCoefficients<7>(coeffs, mxGetCell(data, 3), count);
@@ -149,7 +149,7 @@ CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const
 {
   size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
   size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
-  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+  bool interleaved = (mxGetScalar(mxGetCell(data, 2)) > 0);
 
   return new ProxElemOperation<real, ElemOperationIndSimplex<real> >(idx, count, dim, interleaved, diagsteps);   
 }
@@ -159,7 +159,7 @@ CreateProxIndEpiQuad(size_t idx, size_t size, bool diagsteps, const mxArray *dat
 {
   size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
   size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
-  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+  bool interleaved = (mxGetScalar(mxGetCell(data, 2)) > 0);
  
   const mxArray *coeffs =  mxGetCell(data, 3);
   
@@ -217,7 +217,7 @@ CreateBlockGradient2D(size_t row, size_t col, const mxArray *pm)
   size_t nx = (size_t) mxGetScalar(mxGetCell(pm, 0));
   size_t ny = (size_t) mxGetScalar(mxGetCell(pm, 1));
   size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
-  bool label_first = (bool) mxGetScalar(mxGetCell(pm, 3));
+  bool label_first = mxGetScalar(mxGetCell(pm, 3)) > 0;
 
   return new BlockGradient2D<real>(row, col, nx, ny, L, label_first);
 }
@@ -228,7 +228,7 @@ CreateBlockGradient3D(size_t row, size_t col, const mxArray *pm)
   size_t nx = (size_t) mxGetScalar(mxGetCell(pm, 0));
   size_t ny = (size_t) mxGetScalar(mxGetCell(pm, 1));
   size_t L = (size_t) mxGetScalar(mxGetCell(pm, 2));
-  bool label_first = (bool) mxGetScalar(mxGetCell(pm, 3));
+  bool label_first = mxGetScalar(mxGetCell(pm, 3)) > 0;
 
   return new BlockGradient3D<real>(row, col, nx, ny, L, label_first);
 }
@@ -280,9 +280,9 @@ CreateBackendPDHG(const mxArray *data)
   // read options from data
   opts.tau0 = (real) mxGetScalar(mxGetField(data, 0, "tau0"));
   opts.sigma0 = (real) mxGetScalar(mxGetField(data, 0, "sigma0"));
-  opts.solve_dual_problem = (real) mxGetScalar(mxGetField(data, 0, "solve_dual"));
+  opts.solve_dual_problem = mxGetScalar(mxGetField(data, 0, "solve_dual")) > 0;
   opts.residual_iter = (int) mxGetScalar(mxGetField(data, 0, "residual_iter"));
-  opts.scale_steps_operator = (bool) mxGetScalar(mxGetField(data, 0, "scale_steps_operator"));;
+  opts.scale_steps_operator = mxGetScalar(mxGetField(data, 0, "scale_steps_operator")) > 0;
   opts.alg2_gamma = (real) mxGetScalar(mxGetField(data, 0, "alg2_gamma"));
   opts.arg_alpha0 = (real) mxGetScalar(mxGetField(data, 0, "arg_alpha0"));
   opts.arg_nu = (real) mxGetScalar(mxGetField(data, 0, "arg_nu"));
@@ -317,7 +317,7 @@ CreateProx(const mxArray *pm)
   
   size_t idx = (size_t) mxGetScalar(mxGetCell(pm, 1));
   size_t size = (size_t) mxGetScalar(mxGetCell(pm, 2));
-  bool diagsteps = (bool) mxGetScalar(mxGetCell(pm, 3));
+  bool diagsteps = mxGetScalar(mxGetCell(pm, 3)) > 0;
   mxArray *data = mxGetCell(pm, 4);
   
   Prox<real> *prox = nullptr;
@@ -465,7 +465,7 @@ CreateSolverOptions(const mxArray *pm)
   opts.tol_abs_dual = (real) mxGetScalar(mxGetField(pm, 0, "tol_abs_dual"));
   opts.max_iters = (int) mxGetScalar(mxGetField(pm, 0, "max_iters"));
   opts.num_cback_calls = (int) mxGetScalar(mxGetField(pm, 0, "num_cback_calls"));
-  opts.verbose = (bool) mxGetScalar(mxGetField(pm, 0, "verbose"));
+  opts.verbose = mxGetScalar(mxGetField(pm, 0, "verbose")) > 0;
 
   Solver_interm_cb_handle = mxGetField(pm, 0, "interm_cb");
 

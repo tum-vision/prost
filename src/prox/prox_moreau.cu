@@ -58,9 +58,12 @@ void ProxMoreau<T>::Initialize()
   {
     scaled_arg_.resize(this->size_);
   } 
-  catch(std::bad_alloc &e)
+  catch(const std::bad_alloc &e)
   {
-    throw Exception("Out of memory. ");
+	std::stringstream ss;
+	ss << "Out of memory: " << e.what();
+
+    throw Exception(ss.str());
   }
 
   conjugate_->Initialize();

@@ -23,6 +23,11 @@ using std::vector;
 
 string get_version(); 
 
+#if defined(_MSC_VER)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#endif
+
 } // namespace prost
 
 #endif // PROST_COMMON_HPP_
