@@ -11,6 +11,9 @@ function [opts] = options(varargin)
     addOptional(p, 'num_cback_calls', 10);
     addOptional(p, 'verbose', true);
     addOptional(p, 'interm_cb', dummy_cb);
+    addOptional(p, 'x0', []);
+    addOptional(p, 'y0', []);
+    addOptional(p, 'solve_dual', false);
 
     p.parse(varargin{:});
     

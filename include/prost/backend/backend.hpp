@@ -1,6 +1,7 @@
 #ifndef PROST_BACKEND_HPP_
 #define PROST_BACKEND_HPP_
 
+#include <cmath>
 #include "prost/common.hpp"
 #include "prost/solver.hpp"
 
@@ -39,6 +40,12 @@ public:
 
   /// \brief Returns norm of the dual variable "w", used for stopping criterion.
   virtual T dual_var_norm() const { return dual_var_norm_; }
+
+  /// \brief Returns primal stopping epsilon.
+  virtual T eps_primal() const { return std::sqrt(problem_->nrows()) * solver_opts_.tol_abs_primal + solver_opts_.tol_rel_primal * primal_var_norm(); } 
+  
+  /// \brief Returns dual stopping epsilon.
+  virtual T eps_dual() const { return std::sqrt(problem_->ncols()) * solver_opts_.tol_abs_dual + solver_opts_.tol_rel_dual * dual_var_norm(); } 
 
   // returns amount of gpu memory required in bytes
   virtual size_t gpu_mem_amount() const = 0;

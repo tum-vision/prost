@@ -146,8 +146,8 @@ BackendPDHG<T>::Initialize()
   }
   catch(std::bad_alloc& e)
   {
-	std::stringstream ss;
-	ss << "Out of memory: " << e.what();
+    std::stringstream ss;
+    ss << "Out of memory: " << e.what();
     throw Exception(ss.str());
   }
 
@@ -208,8 +208,30 @@ BackendPDHG<T>::Initialize()
       sigma_ /= norm;
 
       if(this->solver_opts_.verbose)
-        cout << "BackendPDHG: |K|=" << norm << " => Rescaled tau=" << tau_ << ", sigma=" << sigma_ << "." << endl; 
+        cout << "|K|=" << norm << " => Rescaled tau=" << tau_ << ", sigma=" << sigma_ << "." << endl; 
     }
+  }
+
+  if(this->solver_opts_.x0.size() > 0)
+  {
+    if(this->solver_opts_.x0.size() == n)
+    {
+      x_ = this->solver_opts_.x0;
+      x_prev_ = this->solver_opts_.x0;
+    }
+    else
+      throw Exception("Initial primal solution has wrong size.");
+  }
+
+  if(this->solver_opts_.y0.size() > 0)
+  {
+    if(this->solver_opts_.y0.size() == m)
+    {
+      y_ = this->solver_opts_.y0;
+      y_prev_ = this->solver_opts_.y0;
+    }
+    else
+      throw Exception("Initial dual solution has wrong size.");
   }
 }
 
@@ -217,82 +239,72 @@ template<typename T>
 void 
 BackendPDHG<T>::PerformIteration()
 {
-  if(!opts_.solve_dual_problem)
-  {
-    // compute primal prox arg into temp_
-    // thrust::get<3>(t) = thrust::get<0>(t) - tau_ * thrust::get<1>(t) * thrust::get<2>(t);
-    thrust::for_each(
+  // compute primal prox arg into temp_
+  // thrust::get<3>(t) = thrust::get<0>(t) - tau_ * thrust::get<1>(t) * thrust::get<2>(t);
+  thrust::for_each(
 
-        thrust::make_zip_iterator(thrust::make_tuple(
-            x_.begin(), 
-            this->problem_->scaling_right().begin(), 
-            kty_.begin(), 
-            temp_.begin())),
+      thrust::make_zip_iterator(thrust::make_tuple(
+          x_.begin(), 
+          this->problem_->scaling_right().begin(), 
+          kty_.begin(), 
+          temp_.begin())),
 
-        thrust::make_zip_iterator(thrust::make_tuple(
-            x_.end(), 
-            this->problem_->scaling_right().end(), 
-            kty_.end(), 
-            temp_.end())),
+      thrust::make_zip_iterator(thrust::make_tuple(
+          x_.end(), 
+          this->problem_->scaling_right().end(), 
+          kty_.end(), 
+          temp_.end())),
 
-        primal_proxarg_functor<T>(tau_));
+      primal_proxarg_functor<T>(tau_));
 
-    // remember previous primal iterate
-    x_.swap(x_prev_);
+  // remember previous primal iterate
+  x_.swap(x_prev_);
 
-    // apply prox_g
-    for(auto& p : prox_g_)
-      p->Eval(x_, temp_, this->problem_->scaling_right(), tau_);
+  // apply prox_g
+  for(auto& p : prox_g_)
+    p->Eval(x_, temp_, this->problem_->scaling_right(), tau_);
 
-    // remember Kx^k
-    kx_.swap(kx_prev_);
+  // remember Kx^k
+  kx_.swap(kx_prev_);
 
-    // compute Kx^{k+1}
-    this->problem_->linop()->Eval(kx_, x_);
+  // compute Kx^{k+1}
+  this->problem_->linop()->Eval(kx_, x_);
 
-    // compute dual prox arg
-    // thrust::get<4>(t) = thrust::get<0>(t) + sigma_ * thrust::get<1>(t) * 
-    //                     ((1 + theta_) * thrust::get<2>(t) - theta_ * thrust::get<3>(t));
-    thrust::for_each(
-        thrust::make_zip_iterator(thrust::make_tuple(
-            y_.begin(),
-            this->problem_->scaling_left().begin(),
-            kx_.begin(),
-            kx_prev_.begin(),
-            temp_.begin())),
+  // compute dual prox arg
+  // thrust::get<4>(t) = thrust::get<0>(t) + sigma_ * thrust::get<1>(t) * 
+  //                     ((1 + theta_) * thrust::get<2>(t) - theta_ * thrust::get<3>(t));
+  thrust::for_each(
+      thrust::make_zip_iterator(thrust::make_tuple(
+          y_.begin(),
+          this->problem_->scaling_left().begin(),
+          kx_.begin(),
+          kx_prev_.begin(),
+          temp_.begin())),
 
-        thrust::make_zip_iterator(thrust::make_tuple(
-            y_.end(),
-            this->problem_->scaling_left().end(),
-            kx_.end(),
-            kx_prev_.end(),
-            temp_.end())),
+      thrust::make_zip_iterator(thrust::make_tuple(
+          y_.end(),
+          this->problem_->scaling_left().end(),
+          kx_.end(),
+          kx_prev_.end(),
+          temp_.end())),
 
-        dual_proxarg_functor<T>(sigma_, theta_));
+      dual_proxarg_functor<T>(sigma_, theta_));
 
-    y_.swap(y_prev_);
+  y_.swap(y_prev_);
     
-    // apply prox_fstar
-    for(auto& p : prox_fstar_)
-      p->Eval(y_, temp_, this->problem_->scaling_left(), sigma_);
+  // apply prox_fstar
+  for(auto& p : prox_fstar_)
+    p->Eval(y_, temp_, this->problem_->scaling_left(), sigma_);
 
-    UpdateResidualsAndStepsizes();
-
-    iteration_++;
-
-    // remember K^T y^k
-    kty_.swap(kty_prev_);
-
-    // compute K^T y^{k+1}
-    this->problem_->linop()->EvalAdjoint(kty_, y_);
-  }
-  else
-  {
-    // TODO: implement
-    throw Exception("PDHG with overrelaxation on the dual variables is not implemented yet!");
-  }
+  UpdateResidualsAndStepsizes();
 
   iteration_++;
+
+  // remember K^T y^k
+  kty_.swap(kty_prev_);
+
+  // compute K^T y^{k+1}
+  this->problem_->linop()->EvalAdjoint(kty_, y_);
 }
 
 template<typename T>
@@ -350,11 +362,8 @@ BackendPDHG<T>::UpdateResidualsAndStepsizes()
     this->dual_residual_ = std::sqrt(thrust::get<0>(dual));
     this->dual_var_norm_ = std::sqrt(thrust::get<1>(dual));
 
-    T eps_primal = std::sqrt(this->problem_->nrows()) * this->solver_opts_.tol_abs_primal +
-      this->solver_opts_.tol_rel_primal * this->primal_var_norm_;
-    
-    T eps_dual = std::sqrt(this->problem_->ncols()) * this->solver_opts_.tol_abs_dual +
-      this->solver_opts_.tol_rel_dual * this->dual_var_norm_;
+    T eps_primal = this->eps_primal();
+    T eps_dual = this->eps_dual();
 
     switch(opts_.stepsize_variant)
     {      

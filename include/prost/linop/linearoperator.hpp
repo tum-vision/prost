@@ -7,11 +7,15 @@
 
 namespace prost {
 
+template<typename T> class DualLinearOperator;
+
 ///
 /// \brief Linear operator built out of blocks.
 /// 
 template<typename T>
 class LinearOperator {
+  friend class DualLinearOperator<T>;
+  
 public:
   LinearOperator();
   virtual ~LinearOperator();
@@ -21,34 +25,34 @@ public:
   void Initialize();
   void Release();
 
-  void Eval(
+  virtual void Eval(
     device_vector<T>& result, 
     const device_vector<T>& rhs);
 
-  void EvalAdjoint(
+  virtual void EvalAdjoint(
     device_vector<T>& result, 
     const device_vector<T>& rhs);
 
-  /// \brief For debugging/testing purposes. 
+  /// \brief For debugging/testing purposes. Not overwritten in DualLinearOperator.
   void Eval(
     vector<T>& result,
     const vector<T>& rhs);
 
-  /// \brief For debugging/testing purposes. 
+  /// \brief For debugging/testing purposes. Not overwritten in DualLinearOperator.
   void EvalAdjoint(
     vector<T>& result,
     const vector<T>& rhs);
 
   /// \brief Returns \sum_{col=1}^{ncols} |K_{row,col}|^{\alpha}.
-  T row_sum(size_t row, T alpha) const;
+  virtual T row_sum(size_t row, T alpha) const;
 
   /// \brief Returns \sum_{row=1}^{nrows} |K_{row,col}|^{\alpha}.
-  T col_sum(size_t col, T alpha) const;
+  virtual T col_sum(size_t col, T alpha) const;
 
-  size_t nrows() const { return nrows_; }
-  size_t ncols() const { return ncols_; } 
+  virtual size_t nrows() const { return nrows_; }
+  virtual size_t ncols() const { return ncols_; }
 
-  size_t gpu_mem_amount() const;
+  virtual size_t gpu_mem_amount() const;
   
 protected:
   vector<shared_ptr<Block<T>>> blocks_;

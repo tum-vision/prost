@@ -14,6 +14,7 @@ using thrust::device_ptr;
 template<typename T> class Prox;
 template<typename T> class Block;
 template<typename T> class LinearOperator;
+template<typename T> class DualLinearOperator;
 
 /// @brief Contains all information describing the graph form problem
 /// 
@@ -83,12 +84,20 @@ public:
 
   /// \brief Estimates the norm of the scaled linear operator via power iteration.
   T normest(T tol = 1e-6, int max_iters = 100);
+
+  /// \brief Dualizes the problem by doing the following swappings:
+  ///        Swap g <-> f*, f <-> g*, K <-> -K^T
+  ///        Should be called after Initialize(). 
+  void Dualize();
   
 protected:
   size_t nrows_, ncols_; // problem size
 
   /// \brief matrix K
-  shared_ptr<LinearOperator<T> > linop_;
+  shared_ptr<LinearOperator<T>> linop_;
+
+  /// \brief matrix -K^T
+  shared_ptr<LinearOperator<T>> dual_linop_;
 
   typename Problem<T>::Scaling scaling_type_;
 

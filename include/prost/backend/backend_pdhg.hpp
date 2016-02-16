@@ -42,9 +42,6 @@ public:
     /// \brief Initial dual step size.
     double sigma0; 
 
-    /// \brief Perform overrelaxation on dual variables?
-    bool solve_dual_problem; 
-
     /// \brief Every how many iterations to compute the residuals?
     int residual_iter;
 

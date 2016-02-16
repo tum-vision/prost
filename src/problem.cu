@@ -4,6 +4,7 @@
 
 #include "prost/problem.hpp"
 #include "prost/linop/linearoperator.hpp"
+#include "prost/linop/dual_linearoperator.hpp"
 #include "prost/prox/prox.hpp"
 #include "prost/prox/prox_separable_sum.hpp"
 #include "prost/exception.hpp"
@@ -187,6 +188,8 @@ void Problem<T>::Initialize()
     scaling_right_host_.begin(), 
     scaling_right_host_.end(), 
     scaling_right_.begin());
+
+  dual_linop_ = shared_ptr<LinearOperator<T>>(new DualLinearOperator<T>(linop_));
 }
 
 template<typename T>
@@ -380,29 +383,6 @@ void Problem<T>::AveragePreconditioners(
     if(!p->diagsteps())
     {
       p->get_separable_structure(idx_cnt_std);
-/*
-      try
-      {
-        ProxSeparableSum<T> *pss = dynamic_cast<ProxSeparableSum<T> *>(p.get());
-
-        if(pss->interleaved())
-        {
-          for(size_t i = 0; i < pss->count(); i++)
-            idx_cnt_std.push_back( 
-              std::tuple<size_t, size_t, size_t>(pss->index() + i * pss->dim(), pss->dim(), 1) );
-        }
-        else
-        {
-          for(size_t i = 0; i < pss->count(); i++)
-            idx_cnt_std.push_back( 
-              std::tuple<size_t, size_t, size_t>(pss->index() + i, pss->dim(), pss->count()) );
-        }
-      }
-      catch(const std::bad_cast& e)
-      {
-        idx_cnt_std.push_back( std::tuple<size_t, size_t, size_t>(p->index(), p->size(), 1) );
-      }
-*/
     }
   }
 
@@ -423,6 +403,17 @@ void Problem<T>::AveragePreconditioners(
     for(size_t c = 0; c < cnt; c++)
       precond[idx + c * std] = avg;
   }
+}
+
+template<typename T>
+void Problem<T>::Dualize()
+{
+  prox_g_.swap(prox_fstar_);
+  prox_gstar_.swap(prox_f_);
+  std::swap(nrows_, ncols_);
+  std::swap(linop_, dual_linop_);
+  scaling_left_.swap(scaling_right_); // TODO: does this work?
+  std::swap(scaling_left_host_, scaling_right_host_);
 }
 
 // Explicit template instantiation

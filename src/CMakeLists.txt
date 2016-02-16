@@ -19,6 +19,7 @@ set(SOURCES
   "linop/block_gradient3d.cu"
   "linop/block_sparse.cu"
   "linop/block_zero.cu"
+  "linop/dual_linearoperator.cu"
   "linop/linearoperator.cu"
   
   "prox/prox.cu"
@@ -40,6 +41,7 @@ set(SOURCES
   "../include/prost/linop/block_gradient3d.hpp"
   "../include/prost/linop/block_sparse.hpp"
   "../include/prost/linop/block_zero.hpp"
+  "../include/prost/linop/dual_linearoperator.hpp"
   "../include/prost/linop/linearoperator.hpp"
 
   "../include/prost/prox/prox.hpp"
