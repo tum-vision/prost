@@ -146,7 +146,7 @@ static void EvalLinOp(MEX_ARGS) {
     linop->AddBlock( std::shared_ptr<Block<real> >(CreateBlock(mxGetCell(cell_linop, i))) );
 
   std::vector<real> rhs;
-  bool transpose = static_cast<bool>(mxGetScalar(prhs[2]));
+  bool transpose = (mxGetScalar(prhs[2]) > 0);
   const mwSize *dims = mxGetDimensions(prhs[1]);
 
   if(dims[1] != 1)

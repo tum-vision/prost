@@ -5,17 +5,17 @@
 # 2) Add your custom files below, e.g., like this:
 #
 #    set(PROST_CUSTOM_SOURCES
-#      ../../preciserelaxation/src/cvpr16/prost/block_dataterm_sublabel.cu
-#      ../../preciserelaxation/src/cvpr16/prost/prox_ind_epi_polyhedral_1d.cu
-#      ../../preciserelaxation/src/cvpr16/prost/prox_ind_epi_conjquad_1d.cu
+#      ../../preciserelaxation/src/cvpr2016/prost/block_dataterm_sublabel.cu
+#      ../../preciserelaxation/src/cvpr2016/prost/prox_ind_epi_polyhedral_1d.cu
+#      ../../preciserelaxation/src/cvpr2016/prost/prox_ind_epi_conjquad_1d.cu
 #
-#      ../../preciserelaxation/src/cvpr16/prost/block_dataterm_sublabel.hpp
-#      ../../preciserelaxation/src/cvpr16/prost/prox_ind_epi_polyhedral_1d.hpp
-#      ../../preciserelaxation/src/cvpr16/prost/prox_ind_epi_conjquad_1d.hpp
+#      ../../preciserelaxation/src/cvpr2016/prost/block_dataterm_sublabel.hpp
+#      ../../preciserelaxation/src/cvpr2016/prost/prox_ind_epi_polyhedral_1d.hpp
+#      ../../preciserelaxation/src/cvpr2016/prost/prox_ind_epi_conjquad_1d.hpp
 #      )
 #
 #    set(MATLAB_CUSTOM_SOURCES
-#      ../../preciserelaxation/src/cvpr16/prost/custom.cpp
+#      ../../preciserelaxation/src/cvpr2016/prost/custom.cpp
 #      )
 #
 
