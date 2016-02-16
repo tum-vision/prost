@@ -109,7 +109,7 @@ T BlockDiags<T>::row_sum(size_t row, T alpha) const
     if(col < 0)
       continue;
 
-    if(col >= this->ncols())
+    if(static_cast<size_t>(col) >= this->ncols()) // cast allowed, since col >= 0
       break;
 
     sum += std::pow(std::abs(factors_[i]), alpha);
