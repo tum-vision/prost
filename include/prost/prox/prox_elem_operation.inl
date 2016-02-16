@@ -187,8 +187,7 @@ ProxElemOperation<T, ELEM_OPERATION, typename std::enable_if<ELEM_OPERATION::kCo
     {
       if(coeffs_[i].size() > 1)
       {
-        d_coeffs_[i].resize(coeffs_[i].size());
-        thrust::copy(coeffs_[i].begin(), coeffs_[i].end(), d_coeffs_[i].begin());
+        d_coeffs_[i] = coeffs_[i];
       }
     }
     catch(std::bad_alloc &e)

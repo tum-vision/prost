@@ -16,13 +16,13 @@ struct ElemOperation1D : public ElemOperation<1, 7>
   inline __host__ __device__
   void operator()(Vector<T>& res, const Vector<const T>& arg, const Vector<const T>& tau_diag, T tau_scal, bool invert_tau)
   {
-    if(coeffs_[2] == 0) // c == 0 -> prox_zero -> return argument
-      res[0] = arg[0];
-    else
-    {
-      // compute step-size
-      T tau = invert_tau ? (1. / (tau_scal * tau_diag[0])) : (tau_scal * tau_diag[0]);
+    // compute step-size
+    T tau = invert_tau ? (1. / (tau_scal * tau_diag[0])) : (tau_scal * tau_diag[0]);
 
+    if(coeffs_[0] == 0 || coeffs_[2] == 0) {
+      res[0] = (arg[0] - tau * coeffs_[3]) / (1 + tau * coeffs_[4]);
+    }
+    else {
       // compute scaled prox argument and step 
       const T prox_arg = ((coeffs_[0] * (arg[0] - coeffs_[3] * tau)) /
         (1. + tau * coeffs_[4])) - coeffs_[1];
