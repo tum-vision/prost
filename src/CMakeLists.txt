@@ -56,7 +56,9 @@ set(SOURCES
   "../include/prost/prox/elemop/elem_operation_1d.hpp"
   "../include/prost/prox/elemop/elem_operation_norm2.hpp"
   "../include/prost/prox/elemop/elem_operation_ind_simplex.hpp"
+  "../include/prost/prox/elemop/elem_operation_singular_3x2.hpp"
   "../include/prost/prox/elemop/function_1d.hpp"
+  "../include/prost/prox/elemop/function_2d.hpp"
 
   "../include/prost/backend/backend.hpp"
   "../include/prost/backend/backend_pdhg.hpp"
