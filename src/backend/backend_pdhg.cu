@@ -146,7 +146,9 @@ BackendPDHG<T>::Initialize()
   }
   catch(std::bad_alloc& e)
   {
-    throw Exception("BackendPDHG: out of memory.");
+	std::stringstream ss;
+	ss << "Out of memory: " << e.what();
+    throw Exception(ss.str());
   }
 
   iteration_ = 0;
