@@ -7,7 +7,11 @@ endif()
 
 add_definitions(-DMATLAB_MEX_FILE)
 
-set(CMAKE_CXX_FLAGS "-largeArrayDims")
+if(MSVC)
+  # is largeArrayDims needed? since cuSparse cannot handle 64-bit indices anyways.
+else()
+  set(CMAKE_CXX_FLAGS "-largeArrayDims")
+endif()
 
 if(UNIX)
   set(CMAKE_SHARED_LIBRARY_SUFFIX .mexa64)
@@ -56,6 +60,7 @@ add_library( prost_ SHARED ${SOURCES} ${MATLAB_CUSTOM_SOURCES})
 if(MSVC)
   target_link_libraries( prost_ prost libmex libmx libut ${CUDA_cusparse_LIBRARY} )
   set_property(TARGET prost_ PROPERTY LINK_FLAGS "/export:mexFunction")
+  set_property(TARGET prost_ PROPERTY  _CRT_SECURE_NO_WARNINGS )
 else()
   target_link_libraries( prost_ prost ut cusparse )
   add_dependencies( prost_ prost ) #required.

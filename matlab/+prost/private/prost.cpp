@@ -146,7 +146,7 @@ static void EvalLinOp(MEX_ARGS) {
     linop->AddBlock( std::shared_ptr<Block<real> >(CreateBlock(mxGetCell(cell_linop, i))) );
 
   std::vector<real> rhs;
-  bool transpose = static_cast<bool>(mxGetScalar(prhs[2]));
+  bool transpose = (mxGetScalar(prhs[2]) > 0);
   const mwSize *dims = mxGetDimensions(prhs[1]);
 
   if(dims[1] != 1)
@@ -223,11 +223,13 @@ static void EvalProx(MEX_ARGS) {
 }
 
 static void Init(MEX_ARGS) {
-  mexLock(); 
+  cudaDeviceReset();
+  //mexLock(); 
 }
 
 static void Release(MEX_ARGS) {
-  mexUnlock(); 
+  //mexUnlock(); 
+  cudaDeviceReset();
 }
 
 struct command_registry {
@@ -271,5 +273,6 @@ void mexFunction(MEX_ARGS) {
   catch(const Exception& e)
   {
     mexErrMsgTxt(e.what());
+    Release(nlhs, plhs, nrhs - 1, prhs + 1);
   }
 }

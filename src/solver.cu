@@ -63,17 +63,21 @@ void Solver<T>::Initialize() {
   backend_->SetOptions(opts_);
   backend_->Initialize();
 
+	if (opts_.verbose) {
+		size_t mem = problem_->gpu_mem_amount() + backend_->gpu_mem_amount();
+		size_t mem_avail, mem_total;
+		cudaMemGetInfo(&mem_avail, &mem_total);
+		mem_avail /= 1024 * 1024;
+		mem_total /= 1024 * 1024;
+
+		std::cout << "Initialized solver successfully. Problem dimension:" << std::endl;
+		std::cout << "# primal variables: " << problem_->ncols() << std::endl;
+		std::cout << "# dual variables: " << problem_->nrows() << std::endl;
+		std::cout << "Memory requirements: " << mem / (1024 * 1024) << "MB (" << mem_avail << "/" << mem_total << "MB available)." << std::endl;
+	}
+
   cur_primal_sol_.resize( problem_->ncols() );
   cur_dual_sol_.resize( problem_->nrows() );
-
-  if(opts_.verbose) {
-    size_t mem = problem_->gpu_mem_amount() + backend_->gpu_mem_amount();
-    
-    std::cout << "Initialized solver successfully. Problem dimension:" << std::endl;
-    std::cout << "# primal variables: " << problem_->ncols() << std::endl;
-    std::cout << "# dual variables: " << problem_->nrows() << std::endl;
-    std::cout << "Memory requirements: " << mem / (1024 * 1024) << "MB." << std::endl;
-  }
 }
 
 template<typename T>
