@@ -17,7 +17,7 @@ prob = prost.problem();
 prob.linop = { prost.block.sparse(0, 0, grad) };
 
 prob.prox_g = { prost.prox.sum_1d(0, nx * ny * nc, 'square', 1, f, 1, 0, 0) };
-prob.prox_fstar = { prost.prox.sum_norm2(0, nx * ny, 2 * nc, false, 'ind_leq0', ...
+prob.prox_fstar = { prost.prox.sum_singular_3x2(0, nx * ny, false, 'sum_1d:abs', ...
                                1 / lmb, 1, 1, 0, 0) };
 
 % Moreau tests:

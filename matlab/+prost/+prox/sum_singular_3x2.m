@@ -2,10 +2,10 @@ function [prox] = sum_singular_3x2(idx, count, interleaved, fun, a, ...
                              b, c, d, e, alpha, beta)
                          
 switch nargin
-  case 11
+  case 10
     beta = 0;
     
-  case 10
+  case 9
     alpha = 0;
     beta = 0;
 end
