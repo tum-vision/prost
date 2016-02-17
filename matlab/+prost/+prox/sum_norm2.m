@@ -3,7 +3,7 @@ function [prox] = sum_norm2(idx, count, dim, interleaved, fun, a, ...
 % computes prox of general class of functions
 % sum_{i=1}^{count} h(||x||_2), where ||.||_2 denotes the dim-dimensional
 % euclidean norm. h is given as h(x) = c f(ax - b) + dx + 0.5ex^2 
-% fn is a string describing the 1d function f
+% fun is a string describing the 1d function f
 
 switch nargin
   case 11
