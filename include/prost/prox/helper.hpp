@@ -204,7 +204,7 @@ template<typename T>
 inline __host__ __device__ void ProjectHalfspace(Vector<const T> const& v,
                                                  Vector<const T> const& n,
                                                  T t,
-                                                 const Vector<T>& result,
+                                                 Vector<T>& result,
                                                  int dim)
 {
   ProjectHalfspace<T, Vector<T>, Vector<const T>>(v, n, t, result, dim);
@@ -214,7 +214,7 @@ template<typename T>
 inline __host__ __device__ void ProjectHalfspace(const T* const& v,
                                                  const T* const& n,
                                                  T t,
-                                                 T* const& result,
+                                                 T*& result,
                                                  int dim)
 {
   ProjectHalfspace<T, T*, const T*>(v, n, t, result, dim);
