@@ -214,7 +214,7 @@ template<typename T>
 inline __host__ __device__ void ProjectHalfspace(const T* const& v,
                                                  const T* const& n,
                                                  T t,
-                                                 T*& result,
+                                                 T* & result,
                                                  int dim)
 {
   ProjectHalfspace<T, T*, const T*>(v, n, t, result, dim);
