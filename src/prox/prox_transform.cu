@@ -89,6 +89,8 @@ void ProxTransform<T>::Initialize()
     if(a == 0)
       throw Exception("ProxTransform: Vector 'a' isn't allowed to contain zero element. (Division by zero)");
 
+  // TODO check for allowed dimensions and throw exceptions if necessary
+
   try 
   {
     if(host_a_.size() > 1) dev_a_ = host_a_;

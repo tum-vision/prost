@@ -16,31 +16,43 @@ namespace matlab
 mxArray *Solver_interm_cb_handle = nullptr;
 
 static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> default_prox_reg = {
-  { "elem_operation:ind_simplex",     CreateProxElemOperationIndSimplex                      },
-  { "elem_operation:1d:zero",         CreateProxElemOperation1D<Function1DZero<real>>        },
-  { "elem_operation:1d:abs",          CreateProxElemOperation1D<Function1DAbs<real>>         },
-  { "elem_operation:1d:square",       CreateProxElemOperation1D<Function1DSquare<real>>      },
-  { "elem_operation:1d:ind_leq0",     CreateProxElemOperation1D<Function1DIndLeq0<real>>     },
-  { "elem_operation:1d:ind_geq0",     CreateProxElemOperation1D<Function1DIndGeq0<real>>     },
-  { "elem_operation:1d:ind_eq0",      CreateProxElemOperation1D<Function1DIndEq0<real>>      },
-  { "elem_operation:1d:ind_box01",    CreateProxElemOperation1D<Function1DIndBox01<real>>    },
-  { "elem_operation:1d:max_pos0",     CreateProxElemOperation1D<Function1DMaxPos0<real>>     },
-  { "elem_operation:1d:l0",           CreateProxElemOperation1D<Function1DL0<real>>          },
-  { "elem_operation:1d:huber",        CreateProxElemOperation1D<Function1DHuber<real>>       },
-  { "elem_operation:norm2:zero",      CreateProxElemOperationNorm2<Function1DZero<real>>     },
-  { "elem_operation:norm2:abs",       CreateProxElemOperationNorm2<Function1DAbs<real>>      },
-  { "elem_operation:norm2:square",    CreateProxElemOperationNorm2<Function1DSquare<real>>   },
-  { "elem_operation:norm2:ind_leq0",  CreateProxElemOperationNorm2<Function1DIndLeq0<real>>  },
-  { "elem_operation:norm2:ind_geq0",  CreateProxElemOperationNorm2<Function1DIndGeq0<real>>  },
-  { "elem_operation:norm2:ind_eq0",   CreateProxElemOperationNorm2<Function1DIndEq0<real>>   },
-  { "elem_operation:norm2:ind_box01", CreateProxElemOperationNorm2<Function1DIndBox01<real>> },
-  { "elem_operation:norm2:max_pos0",  CreateProxElemOperationNorm2<Function1DMaxPos0<real>>  },
-  { "elem_operation:norm2:l0",        CreateProxElemOperationNorm2<Function1DL0<real>>       },
-  { "elem_operation:norm2:huber",     CreateProxElemOperationNorm2<Function1DHuber<real>>    },
-  { "ind_epi_quad",                   CreateProxIndEpiQuad                                   },
-  { "moreau",                         CreateProxMoreau                                       },
-  { "transform",                      CreateProxTransform                                    },
-  { "zero",                           CreateProxZero                                         },
+  { "elem_operation:ind_simplex",                     CreateProxElemOperationIndSimplex                                                     },
+  { "elem_operation:1d:zero",                         CreateProxElemOperation1D<Function1DZero<real>>                                       },
+  { "elem_operation:1d:abs",                          CreateProxElemOperation1D<Function1DAbs<real>>                                        },
+  { "elem_operation:1d:square",                       CreateProxElemOperation1D<Function1DSquare<real>>                                     },
+  { "elem_operation:1d:ind_leq0",                     CreateProxElemOperation1D<Function1DIndLeq0<real>>                                    },
+  { "elem_operation:1d:ind_geq0",                     CreateProxElemOperation1D<Function1DIndGeq0<real>>                                    },
+  { "elem_operation:1d:ind_eq0",                      CreateProxElemOperation1D<Function1DIndEq0<real>>                                     },
+  { "elem_operation:1d:ind_box01",                    CreateProxElemOperation1D<Function1DIndBox01<real>>                                   },
+  { "elem_operation:1d:max_pos0",                     CreateProxElemOperation1D<Function1DMaxPos0<real>>                                    },
+  { "elem_operation:1d:l0",                           CreateProxElemOperation1D<Function1DL0<real>>                                         },
+  { "elem_operation:1d:huber",                        CreateProxElemOperation1D<Function1DHuber<real>>                                      },
+  { "elem_operation:norm2:zero",                      CreateProxElemOperationNorm2<Function1DZero<real>>                                    },
+  { "elem_operation:norm2:abs",                       CreateProxElemOperationNorm2<Function1DAbs<real>>                                     },
+  { "elem_operation:norm2:square",                    CreateProxElemOperationNorm2<Function1DSquare<real>>                                  },
+  { "elem_operation:norm2:ind_leq0",                  CreateProxElemOperationNorm2<Function1DIndLeq0<real>>                                 },
+  { "elem_operation:norm2:ind_geq0",                  CreateProxElemOperationNorm2<Function1DIndGeq0<real>>                                 },
+  { "elem_operation:norm2:ind_eq0",                   CreateProxElemOperationNorm2<Function1DIndEq0<real>>                                  },
+  { "elem_operation:norm2:ind_box01",                 CreateProxElemOperationNorm2<Function1DIndBox01<real>>                                },
+  { "elem_operation:norm2:max_pos0",                  CreateProxElemOperationNorm2<Function1DMaxPos0<real>>                                 },
+  { "elem_operation:norm2:l0",                        CreateProxElemOperationNorm2<Function1DL0<real>>                                      },
+  { "elem_operation:norm2:huber",                     CreateProxElemOperationNorm2<Function1DHuber<real>>                                   },
+  { "elem_operation:singular_3x2:sum_1d:zero",        CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DZero<real>>>       },
+  { "elem_operation:singular_3x2:sum_1d:abs",         CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DAbs<real>>>        },
+  { "elem_operation:singular_3x2:sum_1d:square",      CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DSquare<real>>>     },
+  { "elem_operation:singular_3x2:sum_1d:ind_leq0",    CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DIndLeq0<real>>>    },
+  { "elem_operation:singular_3x2:sum_1d:ind_geq0",    CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DIndGeq0<real>>>    },
+  { "elem_operation:singular_3x2:sum_1d:ind_eq0",     CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DIndEq0<real>>>     },
+  { "elem_operation:singular_3x2:sum_1d:ind_box01",   CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DIndBox01<real>>>   },
+  { "elem_operation:singular_3x2:sum_1d:max_pos0",    CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DMaxPos0<real>>>    },
+  { "elem_operation:singular_3x2:sum_1d:l0",          CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DL0<real>>>         },
+  { "elem_operation:singular_3x2:sum_1d:huber",       CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DHuber<real>>>      },
+  { "elem_operation:singular_3x2:ind_l1_ball",        CreateProxElemOperationSingular3x2<Function2DIndL1Ball<real>>                         },
+  { "elem_operation:singular_3x2:moreau:ind_l1_ball", CreateProxElemOperationSingular3x2<Function2DMoreau<real, Function2DIndL1Ball<real>>> },
+  { "ind_epi_quad",                                   CreateProxIndEpiQuad                                                                  },
+  { "moreau",                                         CreateProxMoreau                                                                      },
+  { "transform",                                      CreateProxTransform                                                                   },
+  { "zero",                                           CreateProxZero                                                                        },
 };
 
 static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>> default_block_reg = {
@@ -238,6 +250,21 @@ CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxAr
     idx, count, dim, interleaved, diagsteps, coeffs);   
 }
 
+template<class FUN_2D>
+ProxElemOperation<real, ElemOperationSingular3x2<real, FUN_2D> >*
+CreateProxElemOperationSingular3x2(size_t idx, size_t size, bool diagsteps, const mxArray *data) {
+  size_t count = GetScalarFromCellArray<size_t>(data, 0);
+  size_t dim = GetScalarFromCellArray<size_t>(data, 1);
+  bool interleaved = GetScalarFromCellArray<bool>(data, 2);
+
+  std::array<std::vector<real>, 7> coeffs;
+  GetCoefficients<7>(coeffs, mxGetCell(data, 3), count);
+  
+  return new ProxElemOperation<real, ElemOperationSingular3x2<real, FUN_2D> >(
+    idx, count, dim, interleaved, diagsteps, coeffs);   
+}
+
+
 ProxElemOperation<real, ElemOperationIndSimplex<real> >* 
 CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
 {
@@ -259,15 +286,6 @@ CreateProxIndEpiQuad(size_t idx, size_t size, bool diagsteps, const mxArray *dat
   std::vector<real> a = GetVector<real>(mxGetCell(coeffs, 0));
   std::vector<real> b = GetVector<real>(mxGetCell(coeffs, 1));
   std::vector<real> c = GetVector<real>(mxGetCell(coeffs, 2));
-
-  if(a.size() != 1 && a.size() != count)
-    throw Exception("Dimension of coefficient a has to be equal to 1 or count\n");
-
-  if(b.size() != (dim - 1) && b.size() != count * (dim - 1))
-    throw Exception("Dimension of coefficient b has to be equal to dim-1 or count*(dim-1)\n");
-
-  if(c.size() != 1 && c.size() != count)
-    throw Exception("Dimension of coefficient c has to be equal to 1 or count\n");
   
   return new ProxIndEpiQuad<real>(idx, count, dim, interleaved, diagsteps, a, b, c);   
 }
