@@ -15,7 +15,7 @@ namespace matlab
 
 mxArray *Solver_interm_cb_handle = nullptr;
 
-static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> default_prox_reg = {
+const static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> default_prox_reg = {
   { "elem_operation:ind_simplex",     CreateProxElemOperationIndSimplex                      },
   { "elem_operation:1d:zero",         CreateProxElemOperation1D<Function1DZero<real>>        },
   { "elem_operation:1d:abs",          CreateProxElemOperation1D<Function1DAbs<real>>         },
@@ -43,7 +43,7 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
   { "zero",                           CreateProxZero                                         },
 };
 
-static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>> default_block_reg = {
+const static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>> default_block_reg = {
   { "diags",      CreateBlockDiags      },
   { "gradient2d", CreateBlockGradient2D },
   { "gradient3d", CreateBlockGradient3D },
@@ -51,7 +51,7 @@ static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>> defau
   { "zero",       CreateBlockZero       },
 };
 
-map<string, function<Backend<real>*(const mxArray*)>> default_backend_reg = {
+const static map<string, function<Backend<real>*(const mxArray*)>> default_backend_reg = {
   { "pdhg", CreateBackendPDHG },
 };
 

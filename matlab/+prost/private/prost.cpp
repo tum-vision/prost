@@ -231,7 +231,7 @@ static void Release(MEX_ARGS) {
   cudaDeviceReset();
 }
 
-static map<string, function<void(MEX_ARGS)>> cmd_reg = {
+const static map<string, function<void(MEX_ARGS)>> cmd_reg = {
   { "init",          Init         },
   { "release",       Release      },
   { "solve_problem", SolveProblem },
