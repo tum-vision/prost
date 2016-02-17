@@ -2,12 +2,12 @@
 #define PROST_VECTOR_HPP_
 
 namespace prost {
-
 ///
 /// \brief Helper class for proximal operators which abstracts away the
 ///        different access patterns to global memory / the variables.
 ///      
 template<typename T>
+//TODO rename deviceVectorView
 class Vector
 {
 public:

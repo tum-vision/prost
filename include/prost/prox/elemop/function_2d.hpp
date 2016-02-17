@@ -26,21 +26,23 @@ struct Function2DIndL1Ball
   void
   operator()(T y1, T y2, T& x1, T& x2, T tau, T alpha, T beta) const
   {
-    if(abs(y1) + abs(y2) <= alpha) {
+    T v1 = abs(y1);
+    T v2 = abs(y2);
+
+    if(v1 + v2 <= alpha) {
       x1 = y1;
       x2 = y2;
       return;
     }
 
-
-    T mu1 = abs(y1);
-    T mu2 = abs(y2);
-
-    // Project (mu1, mu2) onto the unit 2d-unit-simplex
-    if(mu1 > mu2) {
-      x1 = mu1;
-      mu1 = mu2;
-      mu2 = x1;
+    // Project (v1, v2) onto the unit 2d-unit-simplex
+    T mu1, mu2;
+    if(v1 < v2) {
+      mu1 = v2;
+      mu2 = v1;
+    } else {
+      mu1 = v1;
+      mu2 = v2;
     }
 
     T l = 0.5 * (mu2 - mu1 + alpha);
@@ -48,16 +50,18 @@ struct Function2DIndL1Ball
     if(l <= 0.)
       rho = 1;
 
-    T theta = (1/rho) * (mu1 + (rho == 2 ? mu2 : 0.) - alpha);
-    
-    mu1 = max(mu1 - theta, 0.);
-    mu2 = max(mu2 - theta, 0.);
+    T theta = (1./rho) * (mu1 + (rho == 2 ? mu2 : 0.) - alpha);
+
+
+    mu1 = max(v1 - theta, 0.);
+    mu2 = max(v2 - theta, 0.);
 
     // recover sign
-    y1 = ((T(0) < y1) - (y1 < T(0))) * mu1;
-    y2 = ((T(0) < y2) - (y2 < T(0))) * mu2;
+    x1 = ((T(0) < y1) - (y1 < T(0))) * mu1;
+    x2 = ((T(0) < y2) - (y2 < T(0))) * mu2;
   }
 };
+
 
 template<typename T, class OTHER_FUN_2D>
 struct Function2DMoreau
@@ -70,11 +74,12 @@ struct Function2DMoreau
     T r1;
     T r2;
     other_fun(y1/tau, y2/tau, r1, r2, 1/tau, alpha, beta);
-    
+
     x1 = y1 - tau * r1;
     x2 = y2 - tau * r2;
   }
 };
+
 
 } // namespace prost
 

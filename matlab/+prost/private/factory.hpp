@@ -17,7 +17,9 @@
 #include "prost/prox/elemop/elem_operation_1d.hpp"
 #include "prost/prox/elemop/elem_operation_norm2.hpp"
 #include "prost/prox/elemop/elem_operation_ind_simplex.hpp"
+#include "prost/prox/elemop/elem_operation_singular_3x2.hpp"
 #include "prost/prox/elemop/function_1d.hpp"
+#include "prost/prox/elemop/function_2d.hpp"
 #include "prost/prox/prox_ind_epi_quad.hpp"
 #include "prost/prox/prox_moreau.hpp"
 #include "prost/prox/prox_transform.hpp"
@@ -56,10 +58,14 @@ map<string, function<prost::Block<real>*(size_t, size_t, const mxArray*)>>& get_
 // prox operator create functions
 prost::ProxIndEpiQuad<real>*
 CreateProxIndEpiQuad(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-  
+
 prost::ProxElemOperation<real, prost::ElemOperationIndSimplex<real> >*
 CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-  
+
+template<class FUN_2D>
+prost::ProxElemOperation<real, prost::ElemOperationSingular3x2<real, FUN_2D> >*
+CreateProxElemOperationSingular3x2(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+
 template<class FUN_1D>
 prost::ProxElemOperation<real, prost::ElemOperationNorm2<real, FUN_1D> >*
 CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxArray *data);
