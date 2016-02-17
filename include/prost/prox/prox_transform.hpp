@@ -11,7 +11,7 @@ namespace prost {
 ///        using the proximal operator of f. 
 /// 
 ///        TODO: Add possible orthogonal linear transform.
-///         
+///        TODO: BUG: doesnt work with Moreua -> fix invert_tau!!!
 template<typename T>
 class ProxTransform : public Prox<T> {
 public:
