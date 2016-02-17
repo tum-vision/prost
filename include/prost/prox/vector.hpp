@@ -3,7 +3,10 @@
 
 namespace prost {
 
-// TODO: comment me
+///
+/// \brief Helper class for proximal operators which abstracts away the
+///        different access patterns to global memory / the variables.
+///      
 template<typename T>
 class Vector
 {

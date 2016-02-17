@@ -1,8 +1,6 @@
 #ifndef PROST_FUNCTION_1D_HPP_
 #define PROST_FUNCTION_1D_HPP_
 
-// TODO: rename to Prox1D? not really a function.
-
 namespace prost {
 
 // implementation of 1D prox operators
@@ -84,7 +82,8 @@ struct Function1DIndEq0
 };
 
 template<typename T>
-struct Function1DIndBox01 {
+struct Function1DIndBox01
+{
   inline __host__ __device__
   T
   operator()(T x0, T tau, T alpha, T beta) const
@@ -136,11 +135,51 @@ struct Function1DHuber
   T
   operator()(T x0, T tau, T alpha, T beta) const
   {
-    T result = (x0 / tau) / (static_cast<T>(1) + alpha / tau);
+    T result = (x0 / tau) / (1. + alpha / tau);
     result /= max(static_cast<T>(1), abs(result));  
     return x0 - tau * result;
   }
 };
+
+template<typename T>
+struct Function1DLq
+{
+  // |x|^alpha for any alpha > 0.
+  inline __host__ __device__
+  T
+  operator()(T x0, T tau, T alpha, T beta) const
+  {
+    return 0.; // TODO: Implementation
+  }
+};
+
+template<typename T>
+struct Function1DTruncQuad
+{
+  // Truncated quadratic function, min(|x|^2, alpha)
+  inline __host__ __device__
+  T
+  operator()(T x0, T tau, T alpha, T beta) const
+  {
+    return 0; // TODO: Implementation
+  }
+};
+
+template<typename T>
+struct Function1DTruncLinear
+{
+  // Truncated linear function, min(|x|, alpha)
+  inline __host__ __device__
+  T
+  operator()(T x0, T tau, T alpha, T beta) const
+  {
+    return 0; // TODO: Implementation
+  }
+};
+
+// TODO: Implement the following prox-Functions
+// identity,-log(x),xlog(x),log(1+exp(x)),1/x,exp(x),max(0,-x)
+// max(0,x)
 
 } // namespace prost
 

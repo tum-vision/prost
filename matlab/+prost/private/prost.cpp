@@ -13,7 +13,7 @@ using namespace prost;
 
 // redirect std::cout to mexPrintf
 class mexstream : public std::streambuf {
-protected:
+ protected:
   virtual std::streamsize xsputn(const char *s, std::streamsize n) { 
     mexPrintf("%.*s", n, s);
 
@@ -32,11 +32,11 @@ protected:
 };
 
 class scoped_redirect_cout {
-public:
+ public:
   scoped_redirect_cout() { old_buf = std::cout.rdbuf(); std::cout.rdbuf(&mout); }
   ~scoped_redirect_cout() { std::cout.rdbuf(old_buf); }
 
-private:
+ private:
   mexstream mout;
   std::streambuf *old_buf;
 };
@@ -55,10 +55,10 @@ extern void utSetInterruptPending(bool);
 
 static bool MexStoppingCallback() {
   if(utIsInterruptPending())
-    {
-      utSetInterruptPending(false);
-      return true;
-    }
+  {
+    utSetInterruptPending(false);
+    return true;
+  }
   
   return false;
 }
@@ -71,8 +71,7 @@ static void SolveProblem(MEX_ARGS) {
   Solver<real>::Options opts = CreateSolverOptions(prhs[2]);
 
   if(opts.verbose) {
-    mexPrintf("prost v%s\n", prost::get_version().c_str());
-    mexEvalString("pause(.001);");
+    std::cout << "prost v" << prost::get_version().c_str() << std::endl;
   }
 
   std::shared_ptr<Solver<real> > solver( new Solver<real>(problem, backend) );
@@ -90,7 +89,7 @@ static void SolveProblem(MEX_ARGS) {
   mxArray *result_string;
 
   switch(result)
-    {
+  {
     case Solver<real>::ConvergenceResult::kConverged:
       result_string = mxCreateString("Converged.");
       break;
@@ -102,7 +101,7 @@ static void SolveProblem(MEX_ARGS) {
     case Solver<real>::ConvergenceResult::kStoppedUser:
       result_string = mxCreateString("Stopped by user.");
       break;
-    }
+  }
 
   std::copy(solver->cur_dual_sol().begin(),
 	    solver->cur_dual_sol().end(),
@@ -232,22 +231,16 @@ static void Release(MEX_ARGS) {
   cudaDeviceReset();
 }
 
-struct command_registry {
-  string cmd;
-  function<void(MEX_ARGS)> fn_handle;
-};
-
-static command_registry cmd_reg[] = {
+static map<string, function<void(MEX_ARGS)>> cmd_reg = {
   { "init",          Init         },
   { "release",       Release      },
   { "solve_problem", SolveProblem },
   { "eval_linop",    EvalLinOp    },
   { "eval_prox",     EvalProx     },
-  // The end.
-  { "END",           nullptr      },
 };
 
-void mexFunction(MEX_ARGS) {
+void mexFunction(MEX_ARGS)
+{
   if(nrhs == 0)
     mexErrMsgTxt("Usage: prost_(command, arg1, arg2, ...);");
 
@@ -255,24 +248,28 @@ void mexFunction(MEX_ARGS) {
   bool executed = false;
   
   try 
+  {
+    for(auto& c : cmd_reg)
     {
-      for(size_t i = 0; cmd_reg[i].fn_handle != nullptr; i++) {
-	if(cmd_reg[i].cmd.compare(cmd) == 0) {
-	  cmd_reg[i].fn_handle(nlhs, plhs, nrhs - 1, prhs + 1);
-	  executed = true;
-	  break;
-	}
+      if(c.first.compare(cmd) == 0)
+      {
+        c.second(nlhs, plhs, nrhs - 1, prhs + 1);
+        executed = true;
+        break;
       }
+    }
 
-      if(!executed) {
-	stringstream msg;
-	msg << "Unknown command '" << cmd << "'.";
-	throw Exception(msg.str());
-      }
-    }
-  catch(const Exception& e)
+    if(!executed)
     {
-      mexErrMsgTxt(e.what());
-      Release(nlhs, plhs, nrhs - 1, prhs + 1);
+      stringstream msg;
+      msg << "Unknown command '" << cmd << "'.";
+      throw Exception(msg.str());
     }
-}
+  }
+  catch(const Exception& e)
+  {
+    mexErrMsgTxt(e.what());
+    Release(nlhs, plhs, nrhs - 1, prhs + 1);
+  }
+
+} 

@@ -76,7 +76,8 @@ SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vecto
 // Reads a vector from matlab and converts it to std::vector of
 // the specified type.
 template<typename T>
-std::vector<T> GetVector(const mxArray *p) {
+std::vector<T> GetVector(const mxArray *p)
+{
   const mwSize *dims = mxGetDimensions(p);
   double *val = mxGetPr(p);
 
@@ -126,7 +127,8 @@ std::vector<const mxArray*> GetCellArray(const mxArray *cell_array)
   const mwSize *dims = mxGetDimensions(cell_array);
   
   std::vector<const mxArray*> cells;
-  for(int i = 0; i < dims[0] * dims[1]; i++) {
+  for(int i = 0; i < dims[0] * dims[1]; i++)
+  {
     cells.push_back(mxGetCell(cell_array, i));
   }
 
@@ -135,7 +137,8 @@ std::vector<const mxArray*> GetCellArray(const mxArray *cell_array)
 
 // Helper function for reading scalars
 template<typename T>
-T GetScalarFromCellArray(const mxArray *p, size_t index) {
+T GetScalarFromCellArray(const mxArray *p, size_t index)
+{
   const mwSize *dims = mxGetDimensions(p);
 
   if(index >= dims[0] * dims[1])
@@ -145,7 +148,8 @@ T GetScalarFromCellArray(const mxArray *p, size_t index) {
 }
 
 template<>
-bool GetScalarFromCellArray(const mxArray *p, size_t index) {
+bool GetScalarFromCellArray(const mxArray *p, size_t index)
+{
   const mwSize *dims = mxGetDimensions(p);
 
   if(index >= dims[0] * dims[1])
@@ -155,7 +159,8 @@ bool GetScalarFromCellArray(const mxArray *p, size_t index) {
 }
 
 template<typename T>
-T GetScalarFromField(const mxArray *p, const std::string& name) {
+T GetScalarFromField(const mxArray *p, const std::string& name)
+{
   const mxArray *f = mxGetField(p, 0, name.c_str());
   if(f == nullptr) {
     std::stringstream ss;
@@ -408,10 +413,10 @@ CreateProx(const mxArray *pm)
   {
     std::ostringstream ss;
     ss << "Creating prox with ID '" << name << "' failed. Reason: Name not registered in ProxFactory.";
-    ss << "Available prox are: {";
+    ss << " Available prox are: { ";
     for(auto& b : get_prox_reg())
-      ss << b.first << ",";
-    ss.seekp(-1, ss.cur); ss << "}." << std::endl;
+      ss << b.first << ", ";
+    ss.seekp(-2, ss.cur); ss << " }." << std::endl;
 
     throw Exception(ss.str());
   }
@@ -446,11 +451,11 @@ CreateBlock(const mxArray *pm)
   if(!block) // block with that name does not exist
   {
     std::ostringstream ss;
-    ss << "Creating block with ID '" << name << "' failed. Reason: Name not registered in BlockFactory." << std::endl;
-    ss << "Available blocks are: {";
+    ss << "Creating block with ID '" << name << "' failed. Reason: Name not registered in BlockFactory.";
+    ss << " Available blocks are: { ";
     for(auto& b : get_block_reg())
-      ss << b.first << ",";
-    ss.seekp(-1, ss.cur); ss << "}." << std::endl;
+      ss << b.first << ", ";
+    ss.seekp(-2, ss.cur); ss << " }." << std::endl;
 
     throw Exception(ss.str());
   }
@@ -483,10 +488,10 @@ CreateBackend(const mxArray *pm)
   {
     std::ostringstream ss;
     ss << "Creating backend with ID '" << name << "' failed. Reason: Name not registered in BackendFactory.";
-    ss << "Available backends are: {";
+    ss << " Available backends are: { ";
     for(auto& b : default_backend_reg)
-      ss << b.first << ",";
-    ss.seekp(-1, ss.cur); ss << "}." << std::endl;
+      ss << b.first << ", ";
+    ss.seekp(-2, ss.cur); ss << " }." << std::endl;
 
     throw Exception(ss.str());
   }
