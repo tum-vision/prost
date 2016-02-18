@@ -49,6 +49,7 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
   { "elem_operation:singular_3x2:sum_1d:huber",       CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DHuber<real>>>      },
   { "elem_operation:singular_3x2:ind_l1_ball",        CreateProxElemOperationSingular3x2<Function2DIndL1Ball<real>>                         },
   { "elem_operation:singular_3x2:moreau:ind_l1_ball", CreateProxElemOperationSingular3x2<Function2DMoreau<real, Function2DIndL1Ball<real>>> },
+  { "ind_epi_polyhedral",                             CreateProxIndEpiPolyhedral                                                            },  
   { "ind_epi_quad",                                   CreateProxIndEpiQuad                                                                  },
   { "moreau",                                         CreateProxMoreau                                                                      },
   { "transform",                                      CreateProxTransform                                                                   },
@@ -577,6 +578,23 @@ CreateSolverOptions(const mxArray *pm)
   Solver_interm_cb_handle = mxGetField(pm, 0, "interm_cb");
 
   return opts;
+}
+
+ProxIndEpiPolyhedral<real>*
+CreateProxIndEpiPolyhedral(size_t idx, size_t size, bool diagsteps, const mxArray *data)
+{
+  size_t count = (size_t) mxGetScalar(mxGetCell(data, 0));
+  size_t dim = (size_t) mxGetScalar(mxGetCell(data, 1));
+  bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
+  const mxArray *mx_coeffs = mxGetCell(data, 3);
+
+  std::vector<real> coeffs_a = GetVector<real>(mxGetCell(mx_coeffs, 0));
+  std::vector<real> coeffs_b = GetVector<real>(mxGetCell(mx_coeffs, 1));
+  std::vector<size_t> count_vec = GetVector<size_t>(mxGetCell(mx_coeffs, 2));
+  std::vector<size_t> index_vec = GetVector<size_t>(mxGetCell(mx_coeffs, 3));
+  
+  return new ProxIndEpiPolyhedral<real>(idx, count, dim,
+    coeffs_a, coeffs_b, count_vec, index_vec);
 }
 
 map<string, function<prost::Prox<real>*(size_t, size_t, bool, const mxArray*)>>& get_prox_reg()
