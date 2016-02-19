@@ -60,16 +60,16 @@ void ProxIndEpiPolyhedralKernel(
   size_t dim)
 {
   // TODO: optimize over hyperparameters (grid-search)
-  T barrier_t = 1;
-  const T barrier_mu = 5;
-  const T barrier_eps = 1e-4;
-  const int barrier_max_iter = 25;
+  T barrier_t = 10;
+  const T barrier_mu = 3;
+  const T barrier_eps = 2e-6;
+  const int barrier_max_iter = 100;
 
-  const T newton_eps = 10;
-  const T newton_alpha = 0.05;
-  const T newton_beta = 0.1;
-  const int newton_max_iter = 5;
-  const int line_search_max_iter = 5;
+  const T newton_eps = 1e-5;
+  const T newton_alpha = 0.2;
+  const T newton_beta = 0.8;
+  const int newton_max_iter = 25;
+  const int line_search_max_iter = 10;
 
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
@@ -110,13 +110,15 @@ void ProxIndEpiPolyhedralKernel(
 
       if(current_sol[dim - 1] < ieq)
       {
-        current_sol[dim - 1] = ieq + 1;
+        current_sol[dim - 1] = ieq;
         was_feasible = false;
       }
     }
 
     if(!was_feasible)
     {
+      current_sol[dim - 1] += 10;
+
       // project onto polyhedral epigraph using barrier method
       for(int it_b = 0; it_b < barrier_max_iter; it_b++) 
       {
@@ -142,7 +144,7 @@ void ProxIndEpiPolyhedralKernel(
           // add terms to negative gradient and hessian
           for(int k = 0; k < coeff_count; k++)
           {
-            T factor = -d_coeffs_b[coeff_index + k];
+            double factor = -d_coeffs_b[coeff_index + k];
 
             // compute factor
             for(int i = 0; i < dim - 1; i++) 
@@ -152,12 +154,13 @@ void ProxIndEpiPolyhedralKernel(
             }
 
             factor += current_sol[dim - 1];
-
-            if(abs(factor) < 1e-5)
-              factor = factor > 0 ? 1e-5 : -1e-5;
+/*
+            if(abs(factor) < 1e-6)
+              factor = factor > 0 ? 1e-6 : -1e-6;
+*/
 
             factor = 1 / factor;            
-            const T factor_sq = factor * factor;
+            const double factor_sq = factor * factor;
 
             // TODO: combine with factor calculation -> less read from a
             // update gradient and hessian
@@ -199,7 +202,8 @@ void ProxIndEpiPolyhedralKernel(
           // optimization: E(x) can be computed only once here.
           // perform line-search to determine newton step size t
           T t = 1;
-          T en1, en2;
+          double en1, en2;
+          bool terminated = false;
           for(int it_l = 0; it_l < line_search_max_iter; it_l++)
           {
             en1 = 0;  // E(x + t * newton_step)
@@ -239,31 +243,39 @@ void ProxIndEpiPolyhedralKernel(
 
               iprod1 -= current_sol[dim - 1];
               iprod2 -= current_sol[dim - 1] + t * newton_step[dim - 1];
-
+/*
               if(iprod1 > -1e-6 || iprod2 > -1e-6) 
               {
                 en1 = 1e10;
                 en2 = 0;
                 break;
               }
+*/
 
               en1 -= log(-iprod1); 
               en2 -= log(-iprod2); 
             }
 
-            if(en1 <= en2 - newton_alpha * t * lambda) 
+            if(en1 < en2 - newton_alpha * t * lambda) 
             {
               //printf("line-search terminated after %d iters.\n", it_l);
+              terminated = true;
               break;
             }
 
             t *= newton_beta;
           }
 
-          //printf("it_barrier=%d, it_newton=%d, linesearch_t=%f, en1=%f, en2=%f, lambda=%f\n", it_b, it_n, t, en1, en2, lambda);
+          if(!terminated)
+          {
+            //printf("line-search didn't terminate! -> increasing penalty parameter\n");
+            break;
+          }
 
+          //printf("it_barrier=%d, it_newton=%d, linesearch_t=%f, en1=%f, en2=%f, lambda=%f\n", it_b, it_n, t, en1, en2, lambda);
           for(int i = 0; i < dim; i++)
             current_sol[i] += t * newton_step[i];
+
         }
 
         if( static_cast<T>(coeff_count) / barrier_t < barrier_eps )
@@ -347,7 +359,7 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
   T tau,
   bool invert_tau)
 {
-  static const size_t kBlockSize = 128;
+  static const size_t kBlockSize = 256;
 
   dim3 block(kBlockSize, 1, 1);
   dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
