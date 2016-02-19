@@ -1,5 +1,9 @@
-function [result] = eval_prox(prox, arg, tau, Tau)
+function [result] = eval_prox(prox, arg, tau, Tau, verbose)
     
-    result = prost_('eval_prox', prox, arg, tau, Tau);
+    if nargin < 5
+        verbose = false
+    end
+    
+    result = prost_('eval_prox', prox, arg, tau, Tau, verbose);
     
 end
