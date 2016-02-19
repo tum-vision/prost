@@ -21,12 +21,12 @@ prob.prox_g = { prost.prox.sum_1d(0, nx * ny * nc, 'square', 1, f, ...
                                    1, 0, 0) };
 
 % Frobenius TV
-prob.prox_f = { prost.prox.sum_norm2(0, nx * ny, 2 * nc, false, 'abs', ...
-                                            1, 0, 1, 0, 0) };
+%prob.prox_f = { prost.prox.sum_norm2(0, nx * ny, 2 * nc, false, 'abs', ...
+%                                            1, 0, 1, 0, 0) };
 
 % Nuclear norm TV, assumes nc = 3
-% prob.prox_f = { prost.prox.sum_singular_3x2(0, nx * ny, false, 'sum_1d:abs', ...
-%                                             1, 0, 1, 0, 0) };
+ prob.prox_f = { prost.prox.sum_singular_nx2(0, nx * ny, 6, false, 'sum_1d:abs', ...
+                                             1, 0, 1, 0, 0) };
 
 prob.scaling = 'alpha';
 
