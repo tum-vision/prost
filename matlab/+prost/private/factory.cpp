@@ -37,18 +37,18 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
   { "elem_operation:norm2:max_pos0",                  CreateProxElemOperationNorm2<Function1DMaxPos0<real>>                                 },
   { "elem_operation:norm2:l0",                        CreateProxElemOperationNorm2<Function1DL0<real>>                                      },
   { "elem_operation:norm2:huber",                     CreateProxElemOperationNorm2<Function1DHuber<real>>                                   },
-  { "elem_operation:singular_3x2:sum_1d:zero",        CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DZero<real>>>       },
-  { "elem_operation:singular_3x2:sum_1d:abs",         CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DAbs<real>>>        },
-  { "elem_operation:singular_3x2:sum_1d:square",      CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DSquare<real>>>     },
-  { "elem_operation:singular_3x2:sum_1d:ind_leq0",    CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DIndLeq0<real>>>    },
-  { "elem_operation:singular_3x2:sum_1d:ind_geq0",    CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DIndGeq0<real>>>    },
-  { "elem_operation:singular_3x2:sum_1d:ind_eq0",     CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DIndEq0<real>>>     },
-  { "elem_operation:singular_3x2:sum_1d:ind_box01",   CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DIndBox01<real>>>   },
-  { "elem_operation:singular_3x2:sum_1d:max_pos0",    CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DMaxPos0<real>>>    },
-  { "elem_operation:singular_3x2:sum_1d:l0",          CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DL0<real>>>         },
-  { "elem_operation:singular_3x2:sum_1d:huber",       CreateProxElemOperationSingular3x2<Function2DSum1D<real, Function1DHuber<real>>>      },
-  { "elem_operation:singular_3x2:ind_l1_ball",        CreateProxElemOperationSingular3x2<Function2DIndL1Ball<real>>                         },
-  { "elem_operation:singular_3x2:moreau:ind_l1_ball", CreateProxElemOperationSingular3x2<Function2DMoreau<real, Function2DIndL1Ball<real>>> },
+  { "elem_operation:singular_nx2:sum_1d:zero",        CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DZero<real>>>       },
+  { "elem_operation:singular_nx2:sum_1d:abs",         CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DAbs<real>>>        },
+  { "elem_operation:singular_nx2:sum_1d:square",      CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DSquare<real>>>     },
+  { "elem_operation:singular_nx2:sum_1d:ind_leq0",    CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DIndLeq0<real>>>    },
+  { "elem_operation:singular_nx2:sum_1d:ind_geq0",    CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DIndGeq0<real>>>    },
+  { "elem_operation:singular_nx2:sum_1d:ind_eq0",     CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DIndEq0<real>>>     },
+  { "elem_operation:singular_nx2:sum_1d:ind_box01",   CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DIndBox01<real>>>   },
+  { "elem_operation:singular_nx2:sum_1d:max_pos0",    CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DMaxPos0<real>>>    },
+  { "elem_operation:singular_nx2:sum_1d:l0",          CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DL0<real>>>         },
+  { "elem_operation:singular_nx2:sum_1d:huber",       CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DHuber<real>>>      },
+  { "elem_operation:singular_nx2:ind_l1_ball",        CreateProxElemOperationSingularNx2<Function2DIndL1Ball<real>>                         },
+  { "elem_operation:singular_nx2:moreau:ind_l1_ball", CreateProxElemOperationSingularNx2<Function2DMoreau<real, Function2DIndL1Ball<real>>> },
   { "ind_epi_quad",                                   CreateProxIndEpiQuad                                                                  },
   { "moreau",                                         CreateProxMoreau                                                                      },
   { "transform",                                      CreateProxTransform                                                                   },
@@ -251,8 +251,8 @@ CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxAr
 }
 
 template<class FUN_2D>
-ProxElemOperation<real, ElemOperationSingular3x2<real, FUN_2D> >*
-CreateProxElemOperationSingular3x2(size_t idx, size_t size, bool diagsteps, const mxArray *data) {
+ProxElemOperation<real, ElemOperationSingularNx2<real, FUN_2D> >*
+CreateProxElemOperationSingularNx2(size_t idx, size_t size, bool diagsteps, const mxArray *data) {
   size_t count = GetScalarFromCellArray<size_t>(data, 0);
   size_t dim = GetScalarFromCellArray<size_t>(data, 1);
   bool interleaved = GetScalarFromCellArray<bool>(data, 2);
@@ -260,7 +260,7 @@ CreateProxElemOperationSingular3x2(size_t idx, size_t size, bool diagsteps, cons
   std::array<std::vector<real>, 7> coeffs;
   GetCoefficients<7>(coeffs, mxGetCell(data, 3), count);
   
-  return new ProxElemOperation<real, ElemOperationSingular3x2<real, FUN_2D> >(
+  return new ProxElemOperation<real, ElemOperationSingularNx2<real, FUN_2D> >(
     idx, count, dim, interleaved, diagsteps, coeffs);   
 }
 

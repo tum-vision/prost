@@ -1,20 +1,20 @@
-#ifndef PROST_ELEM_OPERATION_SINGULAR_3X2_HPP_
-#define PROST_ELEM_OPERATION_SINGULAR_3X2_HPP_
+#ifndef PROST_ELEM_OPERATION_SINGULAR_NX2_HPP_
+#define PROST_ELEM_OPERATION_SINGULAR_NX2_HPP_
 
 #include "prost/prox/elemop/elem_operation.hpp"
 
 namespace prost {
 
 /// 
-/// \brief Provides proximal operator for singular values of a 3x2 matrix, 
+/// \brief Provides proximal operator for singular values of a Nx2 matrix, 
 ///        with a lower semicontinuous function FunctionNd applied to the singular values.
 /// 
 template<typename T, class FUN_2D>
-struct ElemOperationSingular3x2 : public ElemOperation<6, 7> 
+struct ElemOperationSingularNx2 : public ElemOperation<6, 7> 
 {
   __host__ __device__ 
-  ElemOperationSingular3x2(T* coeffs, size_t dim, SharedMem<SharedMemType, GetSharedMemCount>& shared_mem) 
-    : coeffs_(coeffs) { } 
+  ElemOperationSingularNx2(T* coeffs, size_t dim, SharedMem<SharedMemType, GetSharedMemCount>& shared_mem) 
+    : coeffs_(coeffs), dim_(dim) { } 
  
  inline __host__ __device__ 
  void operator()(
@@ -24,10 +24,15 @@ struct ElemOperationSingular3x2 : public ElemOperation<6, 7>
      T tau_scal, 
      bool invert_tau) 
   {
+    size_t n = dim_ / 2;
     // compute D = A^T A
-    T d11 = arg[0] * arg[0] + arg[1] * arg[1] + arg[2] * arg[2];
-    T d12 = arg[3] * arg[0] + arg[4] * arg[1] + arg[5] * arg[2];
-    T d22 = arg[3] * arg[3] + arg[4] * arg[4] + arg[5] * arg[5];
+    T d11 = 0., d12 = 0., d22 = 0.;
+    
+    for(size_t i = 0; i < n; i++) {
+      d11 += arg[i] * arg[i];
+      d12 += arg[i] * arg[n+i];
+      d22 += arg[n+i] * arg[n+i];
+    }
 
     // compute eigenvalues of (lmax, lmin)
     T trace = d11 + d22;
@@ -110,25 +115,26 @@ struct ElemOperationSingular3x2 : public ElemOperation<6, 7>
       T t21 = s1*v21*v11 + s2*v22*v12;
       T t22 = s1*v21*v21 + s2*v22*v22;
 
-      res[0] = arg[0] * t11 + arg[3] * t21;
-      res[1] = arg[1] * t11 + arg[4] * t21;
-      res[2] = arg[2] * t11 + arg[5] * t21;
-      res[3] = arg[0] * t12 + arg[3] * t22;
-      res[4] = arg[1] * t12 + arg[4] * t22;
-      res[5] = arg[2] * t12 + arg[5] * t22;
+      for(size_t i = 0; i < n; i++) {
+        res[i] = arg[i] * t11 + arg[n+i] * t21;
+        res[n+i] = arg[i] * t12 + arg[n+i] * t22;
+      }
     }
     else {
-      res[0] = s1; res[3] = 0;
-      res[1] = 0;  res[4] = s2;
-      res[2] = 0;  res[5] = 0;
+      for(size_t i = 0; i < 2*n; i++) {
+          res[i] = 0;
+      }
+      res[0] = s1;
+      res[n+1] = s2;
     }
   }
 
  
 private:
+  size_t dim_;
   T* coeffs_;
 };
 
 } // namespace prost
 
-#endif // PROST_ELEM_OPERATION_SINGULAR_3X2_HPP_
+#endif // PROST_ELEM_OPERATION_SINGULAR_NX2_HPP_
