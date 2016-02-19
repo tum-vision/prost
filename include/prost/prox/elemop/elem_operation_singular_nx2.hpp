@@ -10,7 +10,7 @@ namespace prost {
 ///        with a lower semicontinuous function FunctionNd applied to the singular values.
 /// 
 template<typename T, class FUN_2D>
-struct ElemOperationSingularNx2 : public ElemOperation<6, 7> 
+struct ElemOperationSingularNx2 : public ElemOperation<0, 7> 
 {
   __host__ __device__ 
   ElemOperationSingularNx2(T* coeffs, size_t dim, SharedMem<SharedMemType, GetSharedMemCount>& shared_mem) 
