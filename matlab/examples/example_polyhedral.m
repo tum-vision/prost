@@ -2,12 +2,12 @@
 % functions
 
 %seed = randi([1, 10000]);
-%rng(1589);
-m = 10; % number of linear functions
+rng(1589);
+m = 5; % number of linear functions
 coeff_a = linspace(-0.5, 0.5, m)' + 0.05*randn(m,1);
 coeff_b = -linspace(-3, 3, m)';
 
-N = 2000000; % number of points to project
+N = 700 * 500; % number of points to project
 x0 = 6 + 5 * randn(N, 1);
 y0 = 2 + 5 * randn(N, 1);
 
@@ -24,9 +24,7 @@ prox = prost.prox.sum_ind_epi_polyhedral(0, N, 2, rep_a, rep_b, ...
                                          count_vec, index_vec);
 
 arg = [x0; y0];
-tic;
-res = prost.eval_prox(prox, arg, 1, ones(2 * N, 1));
-toc;
+res = prost.eval_prox(prox, arg, 1, ones(2 * N, 1), true);
 
 x_proj = res(1:N);
 y_proj = res(N+1:end);

@@ -46,6 +46,7 @@ void solveCholesky(int d,T* LU, T* b, T* x, T* y)
    }
 }
 
+// dim as template
 template<typename T>
 __global__
 void ProxIndEpiPolyhedralKernel(
@@ -58,17 +59,17 @@ void ProxIndEpiPolyhedralKernel(
   size_t count,
   size_t dim)
 {
-  // Optimization parameters
-  T barrier_t = 100;
-  const T barrier_mu = 2;
+  // TODO: optimize over hyperparameters (grid-search)
+  T barrier_t = 1;
+  const T barrier_mu = 5;
   const T barrier_eps = 1e-4;
   const int barrier_max_iter = 25;
 
   const T newton_eps = 10;
-  const T newton_alpha = 0.01;
-  const T newton_beta = 0.5;
-  const int newton_max_iter = 10;
-  const int line_search_max_iter = 10;
+  const T newton_alpha = 0.05;
+  const T newton_beta = 0.1;
+  const int newton_max_iter = 5;
+  const int line_search_max_iter = 5;
 
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
@@ -84,10 +85,10 @@ void ProxIndEpiPolyhedralKernel(
     size_t coeff_index = d_index[tx];
 
     SharedMem<T, ShMemCountFun> sh(dim, threadIdx.x);
-    T *current_sol = &sh[0];
+    T *current_sol = &sh[0]; // move to array
     T *newton_step = &sh[dim];
     T *newton_gradient = &sh[2 * dim];
-    T *temp_array = &sh[3 * dim];
+    T *temp_array = &sh[3 * dim]; // no need -> overwrite gradient and store in local array
     T *newton_hessian = &sh[4 * dim];
     T *newton_LU = &sh[4 * dim + dim * dim];
 
@@ -158,6 +159,7 @@ void ProxIndEpiPolyhedralKernel(
             factor = 1 / factor;            
             const T factor_sq = factor * factor;
 
+            // TODO: combine with factor calculation -> less read from a
             // update gradient and hessian
             for(int i = 0; i < dim - 1; i++)
             {
@@ -194,6 +196,7 @@ void ProxIndEpiPolyhedralKernel(
           if(lambda / 2 <= newton_eps)
             break;
 
+          // optimization: E(x) can be computed only once here.
           // perform line-search to determine newton step size t
           T t = 1;
           T en1, en2;
@@ -260,13 +263,13 @@ void ProxIndEpiPolyhedralKernel(
           //printf("it_barrier=%d, it_newton=%d, linesearch_t=%f, en1=%f, en2=%f, lambda=%f\n", it_b, it_n, t, en1, en2, lambda);
 
           for(int i = 0; i < dim; i++)
-            current_sol[i] = current_sol[i] + t * newton_step[i];
+            current_sol[i] += t * newton_step[i];
         }
 
         if( static_cast<T>(coeff_count) / barrier_t < barrier_eps )
           break;
 
-        barrier_t = barrier_mu * barrier_t; // increase penalty parameter
+        barrier_t *= barrier_mu; // increase penalty parameter
       }
     } // if(!was_feasible) 
 
@@ -344,7 +347,7 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
   T tau,
   bool invert_tau)
 {
-  static const size_t kBlockSize = 256;
+  static const size_t kBlockSize = 128;
 
   dim3 block(kBlockSize, 1, 1);
   dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
@@ -356,6 +359,7 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
 
   std::cout << "Required shared memory: " << shmem_bytes << " bytes." << std::endl;
 
+  // TODO: warm-start with previous solution
   ProxIndEpiPolyhedralKernel<T>
     <<<grid, block, shmem_bytes>>>(
       thrust::raw_pointer_cast(&(*result_beg)),
