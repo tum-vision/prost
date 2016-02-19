@@ -25,8 +25,8 @@ set(SOURCES
   "prox/prox.cu"
   "prox/prox_elem_operation.cu"
   "prox/prox_ind_epi_quad.cu"
-  "prox/prox_moreau.cu"
   "prox/prox_ind_epi_polyhedral.cu"
+  "prox/prox_moreau.cu"
   "prox/prox_transform.cu"
   "prox/prox_zero.cu"
   
@@ -60,7 +60,7 @@ set(SOURCES
   "../include/prost/prox/elemop/elem_operation_1d.hpp"
   "../include/prost/prox/elemop/elem_operation_norm2.hpp"
   "../include/prost/prox/elemop/elem_operation_ind_simplex.hpp"
-  "../include/prost/prox/elemop/elem_operation_singular_3x2.hpp"
+  "../include/prost/prox/elemop/elem_operation_singular_nx2.hpp"
   "../include/prost/prox/elemop/function_1d.hpp"
   "../include/prost/prox/elemop/function_2d.hpp"
 

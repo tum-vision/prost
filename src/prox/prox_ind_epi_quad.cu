@@ -135,12 +135,9 @@ ProxIndEpiQuad<T>::Initialize()
 
     try
     {
-      d_a_.resize(a_.size());
-      thrust::copy(a_.begin(), a_.end(), d_a_.begin());
-      d_b_.resize(b_.size());
-      thrust::copy(b_.begin(), b_.end(), d_b_.begin());
-      d_c_.resize(c_.size());
-      thrust::copy(c_.begin(), c_.end(), d_c_.begin());
+      d_a_ = a_;
+      d_b_ = b_;
+      d_c_ = c_;
     }
     catch(std::bad_alloc &e)
     {
