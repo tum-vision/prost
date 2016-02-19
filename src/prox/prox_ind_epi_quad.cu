@@ -33,7 +33,6 @@ void ProxIndEpiQuadKernel(
 
   if(tx < count)
   {
-
     Vector<T> x(count, dim-1, true, tx, d_res);
     const Vector<const T> x0(count, dim-1, true, tx, d_arg);
     T& y = d_res[count * (dim-1) + tx];
