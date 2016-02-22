@@ -30,6 +30,20 @@ namespace prost {
 template<typename T>
 class ProxIndEpiPolyhedral : public ProxSeparableSum<T> {
 public:
+  /// \brief Parameters for interior point method. To be
+  ///        removed later.
+  struct InteriorPointParams
+  {
+    T barrier_mu;
+    T barrier_eps;
+    int barrier_max_iter;
+    T newton_eps;
+    int newton_max_iter;
+    T ls_alpha;
+    T ls_beta;
+    int ls_max_iter;
+  };
+
   /// \brief Constructor.
   /// 
   /// \param index     Start of the prox.
@@ -47,7 +61,8 @@ public:
     const vector<T>& coeffs_a,
     const vector<T>& coeffs_b, 
     const vector<size_t>& count_vec,
-    const vector<size_t>& index_vec);
+    const vector<size_t>& index_vec,
+    const typename ProxIndEpiPolyhedral<T>::InteriorPointParams& ip_params);
 
   virtual ~ProxIndEpiPolyhedral() {}
 
@@ -71,6 +86,8 @@ private:
 
   device_vector<T> dev_coeffs_a_, dev_coeffs_b_;
   device_vector<size_t> dev_count_, dev_index_;
+
+  typename ProxIndEpiPolyhedral<T>::InteriorPointParams ip_params_;
 };
 
 } // namespace prost
