@@ -11,7 +11,7 @@ struct ShMemCountFun
   inline __host__ __device__
   size_t operator()(size_t dim)
   {
-    return dim * dim;
+    return 15 * dim;
   }
 };
 
@@ -73,24 +73,41 @@ void ProxIndEpiPolyhedralKernel(
     const Vector<const T> arg_x(count, DIM-1, true, tx, d_arg);
     const T arg_y = d_arg[count * (DIM-1) + tx];
 
-    size_t coeff_count = d_count[tx];
-    size_t coeff_index = d_index[tx];
+    const size_t coeff_count = d_count[tx];
+    const size_t coeff_index = d_index[tx];
 
     // shared memory
     SharedMem<T, ShMemCountFun> sh(DIM, threadIdx.x);
-    T *newton_hessian = &sh[0]; // move to array?
 
     // read coefficients into shared memory
+    int sh_pos = coeff_index - d_index[blockDim.x * blockIdx.x];
+
+    printf("tx=%d, sh_pos=%d, idx=%d, cnt=%d\n", (int)tx, sh_pos, (int)coeff_index, (int)coeff_count);
+
+    for(int i = 0; i < coeff_count; i++)
+    {
+      for(int j = 0; j < DIM - 1; j++)
+        sh[sh_pos + i * DIM + j] = d_coeffs_a[coeff_index + i * (DIM - 1) + j];
+
+      sh[sh_pos + i * DIM + (DIM - 1)] = d_coeffs_b[coeff_index + i];
+    }
+
+    __syncthreads();
 
     T current_sol[DIM];
     T newton_step[DIM];
     T newton_gradient[DIM];
+    T newton_hessian[DIM * DIM];
+    T inp_arg[DIM];
+
+    for(int i = 0; i < DIM - 1; i++)
+      inp_arg[i] = arg_x[i];
+
+    inp_arg[DIM - 1] = arg_y;
 
 #pragma unroll
-    for(int i = 0; i < DIM - 1; i++)
-      current_sol[i] = arg_x[i];
-
-    current_sol[DIM - 1] = arg_y;
+    for(int i = 0; i < DIM; i++)
+      current_sol[i] = inp_arg[i];
 
     bool was_feasible = true;
 
@@ -120,11 +137,8 @@ void ProxIndEpiPolyhedralKernel(
       // compute initial penalty parameter
       T sum_a = 0, sum_b = 0;
 #pragma unroll
-      for(int i = 0; i < DIM - 1; i++)
-      {
-        sum_a += current_sol[i] - arg_x[i];
-      }
-      sum_a += current_sol[DIM -  1] - arg_y;
+      for(int i = 0; i < DIM; i++)
+        sum_a += current_sol[i] - inp_arg[i];
 
       for(int k = 0; k < coeff_count; k++)
       {
@@ -164,10 +178,8 @@ void ProxIndEpiPolyhedralKernel(
         
           // init negative gradient to -t(x - \tilde x)
 #pragma unroll
-          for(int i = 0; i < DIM - 1; i++)
-            newton_gradient[i] = -barrier_t * (current_sol[i] - arg_x[i]);
-
-          newton_gradient[DIM - 1] = -barrier_t * (current_sol[DIM - 1] - arg_y);
+          for(int i = 0; i < DIM; i++)
+            newton_gradient[i] = -barrier_t * (current_sol[i] - inp_arg[i]);
 
           // init hessian to t Id
 #pragma unroll
@@ -250,20 +262,14 @@ void ProxIndEpiPolyhedralKernel(
 
             T diff;
 #pragma unroll
-            for(int i = 0; i < DIM - 1; i++)
+            for(int i = 0; i < DIM; i++)
             {
-              diff = current_sol[i] - arg_x[i];
+              diff = current_sol[i] - inp_arg[i];
               en2 += 0.5 * diff * diff;
 
               diff += t * newton_step[i];
               en1 += 0.5 * diff * diff;
             }
-
-            diff = current_sol[DIM - 1] - arg_y;
-            en2 += 0.5 * diff * diff;
-
-            diff += t * newton_step[DIM - 1];
-            en1 += 0.5 * diff * diff;
 
             en1 *= barrier_t;
             en2 *= barrier_t;
@@ -401,7 +407,7 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
   T tau,
   bool invert_tau)
 {
-  static const size_t kBlockSize = 128;
+  static const size_t kBlockSize = 96;
 
   dim3 block(kBlockSize, 1, 1);
   dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
