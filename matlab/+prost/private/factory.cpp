@@ -592,9 +592,20 @@ CreateProxIndEpiPolyhedral(size_t idx, size_t size, bool diagsteps, const mxArra
   std::vector<real> coeffs_b = GetVector<real>(mxGetCell(mx_coeffs, 1));
   std::vector<size_t> count_vec = GetVector<size_t>(mxGetCell(mx_coeffs, 2));
   std::vector<size_t> index_vec = GetVector<size_t>(mxGetCell(mx_coeffs, 3));
-  
+
+  // TODO: read from MATLAB and perform grid search
+  typename ProxIndEpiPolyhedral<real>::InteriorPointParams params;
+  params.barrier_mu = 10;
+  params.barrier_eps = 2e-6;
+  params.barrier_max_iter = 100;
+  params.newton_eps = 1e-5;
+  params.newton_max_iter = 5;
+  params.ls_alpha = 0.1;
+  params.ls_beta = 0.2;
+  params.ls_max_iter = 5;
+
   return new ProxIndEpiPolyhedral<real>(idx, count, dim,
-    coeffs_a, coeffs_b, count_vec, index_vec);
+    coeffs_a, coeffs_b, count_vec, index_vec, params);
 }
 
 map<string, function<prost::Prox<real>*(size_t, size_t, bool, const mxArray*)>>& get_prox_reg()
