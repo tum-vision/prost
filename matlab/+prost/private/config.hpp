@@ -4,7 +4,7 @@
 namespace matlab {
 
 typedef float real;
-// typedef double real;
+//typedef double real;
 
 } // namespace matlab
 

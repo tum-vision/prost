@@ -1,19 +1,9 @@
 #include "prost/prox/prox_ind_epi_polyhedral.hpp"
 #include "prost/prox/vector.hpp"
-#include "prost/prox/shared_mem.hpp"
 #include "prost/config.hpp"
 #include "prost/exception.hpp"
 
 namespace prost {
-
-struct ShMemCountFun 
-{
-  inline __host__ __device__
-  size_t operator()(size_t dim)
-  {
-    return 15 * dim;
-  }
-};
 
 template<typename T>
 inline __device__
@@ -46,10 +36,13 @@ void solveLinearSystem(T *A, T *b, T *x)
     break;
 
   case 3:
+    // TODO:
     solveLinearSystem3x3<T>(A, b, x);
     break;
   }
 }
+
+
 
 template<typename T, size_t DIM>
 __global__
@@ -60,284 +53,331 @@ void ProxIndEpiPolyhedralKernel(
   const T *d_coeffs_b,
   const size_t *d_count,
   const size_t *d_index,
-  size_t count,
-  typename ProxIndEpiPolyhedral<T>::InteriorPointParams params)
+  size_t count)
 {
+  const T kAcsTolerance = 1e-6;
+  const int kAcsMaxIter = 25000;
+
+  // get pointer to shared memory
+  extern __shared__ char sh_mem[];
+
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
   if(tx < count)
   {
-    Vector<T> res_x(count, DIM-1, true, tx, d_res);
-    T& res_y = d_res[count * (DIM-1) + tx];
+    //
+    // helper variables
+    //
+    T dir[DIM];              // search direction
+    T prev_x[DIM];           // previous solution
+    T cur_x[DIM];            // current solution x^k
+    T inp_arg[DIM];          // input argument
+    T mat_ata[DIM * DIM];    // A^T A
+    T temp[DIM], temp2[DIM]; // temporary variables
 
+    //
+    // read input argument
+    //
     const Vector<const T> arg_x(count, DIM-1, true, tx, d_arg);
     const T arg_y = d_arg[count * (DIM-1) + tx];
+    for(int i = 0; i < DIM - 1; i++)
+      inp_arg[i] = arg_x[i];
+    inp_arg[DIM - 1] = arg_y;
 
+    //
+    // read position in coeffs array 
+    //
     const size_t coeff_count = d_count[tx];
     const size_t coeff_index = d_index[tx];
 
-    // shared memory
-    SharedMem<T, ShMemCountFun> sh(DIM, threadIdx.x);
+    //
+    // set up variables in shared memory
+    //
+    const int size_in_bytes = 3 * sizeof(T);
+    const size_t sh_pos = (coeff_index - d_index[blockDim.x * blockIdx.x]) * size_in_bytes; 
+    const size_t sh_pos_lambda = sh_pos + coeff_count * sizeof(T);
+    const size_t sh_pos_active = sh_pos + coeff_count * 2 * sizeof(T);
 
-    // read coefficients into shared memory
-    int sh_pos = coeff_index - d_index[blockDim.x * blockIdx.x];
+    T *rhs = reinterpret_cast<T*>(&sh_mem[sh_pos]);
+    T *cur_lambda = reinterpret_cast<T*>(&sh_mem[sh_pos_lambda]);
+    int *active_set = reinterpret_cast<int *>(&sh_mem[sh_pos_active]);
+    int active_set_size;
 
-    printf("tx=%d, sh_pos=%d, idx=%d, cnt=%d\n", (int)tx, sh_pos, (int)coeff_index, (int)coeff_count);
-
-    for(int i = 0; i < coeff_count; i++)
-    {
-      for(int j = 0; j < DIM - 1; j++)
-        sh[sh_pos + i * DIM + j] = d_coeffs_a[coeff_index + i * (DIM - 1) + j];
-
-      sh[sh_pos + i * DIM + (DIM - 1)] = d_coeffs_b[coeff_index + i];
-    }
-
-    __syncthreads();
-
-    T current_sol[DIM];
-    T newton_step[DIM];
-    T newton_gradient[DIM];
-    T newton_hessian[DIM * DIM];
-    T inp_arg[DIM];
-
-    for(int i = 0; i < DIM - 1; i++)
-      inp_arg[i] = arg_x[i];
-
-    inp_arg[DIM - 1] = arg_y;
-
-#pragma unroll
-    for(int i = 0; i < DIM; i++)
-      current_sol[i] = inp_arg[i];
-
+    //
+    // initialize current solution to input argument and check feasibility
+    //
     bool was_feasible = true;
+    for(int i = 0; i < DIM; i++)
+      cur_x[i] = 0;
 
-    // generate feasible point for current_sol and check if already feasible
-    for(int i = 0; i < coeff_count; i++)
+    for(int k = 0; k < coeff_count; k++)
     {
-      T ieq = 0;
-#pragma unroll
-      for(int j = 0; j < DIM - 1; j++)
-        ieq += d_coeffs_a[coeff_index + i * (DIM - 1) + j] * current_sol[j];
+      // compute lhs of inequality constraint and right hand side b
+      T lhs = 0;
 
-      ieq += d_coeffs_b[coeff_index + i];
-
-      if(current_sol[DIM - 1] < ieq)
+      rhs[k] = d_coeffs_b[coeff_index + k] + inp_arg[DIM - 1];
+      for(int i = 0; i < DIM - 1; i++)
       {
-        current_sol[DIM - 1] = ieq;
+        lhs += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * cur_x[i];
+        rhs[k] -= d_coeffs_a[coeff_index + k * (DIM - 1) + i] * inp_arg[i];
+      } 
+
+      // check if current solution is feasible w.r.t. inequality constraint
+      if(lhs - cur_x[DIM - 1] > rhs[k])
+      {
+        // make solution feasible
+        cur_x[DIM - 1] = lhs - rhs[k];
         was_feasible = false;
       }
     }
 
-    // implement heuristic for initialization
-
+    //
+    // if the initial solution was not feasible, use active set method to find projection
+    //
     if(!was_feasible)
     {
-      current_sol[DIM - 1] += 1e-2; // make point strictly feasible
-
-      // compute initial penalty parameter
-      T sum_a = 0, sum_b = 0;
-#pragma unroll
-      for(int i = 0; i < DIM; i++)
-        sum_a += current_sol[i] - inp_arg[i];
-
+      // determine initial active set
+      active_set_size = 0;
       for(int k = 0; k < coeff_count; k++)
       {
-        double factor = -d_coeffs_b[coeff_index + k];
-
-        // compute factor
-#pragma unroll
-        for(int i = 0; i < DIM - 1; i++) 
-        {
-          T coeff_a = d_coeffs_a[coeff_index + k * (DIM - 1) + i];
-          factor -= coeff_a * current_sol[i];            
-        }
-
-        factor += current_sol[DIM - 1];
-
-#pragma unroll
+        T ieq = 0;
         for(int i = 0; i < DIM - 1; i++)
+          ieq += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * cur_x[i];
+        ieq -= cur_x[DIM - 1];
+
+        if( abs(ieq - rhs[k]) < kAcsTolerance )
         {
-          T coeff_a = d_coeffs_a[coeff_index + k * (DIM - 1) + i];
-
-          sum_b -= (1 / factor) * coeff_a;
+          active_set[active_set_size] = k;
+          active_set_size++;
         }
-
-        sum_b += (1 / factor);
       }
 
-      T barrier_t = sum_b / sum_a; 
-      //printf("Initial t=%f.\n", barrier_t);
-
-      // project onto polyhedral epigraph using barrier method
-      for(int it_b = 0; it_b < params.barrier_max_iter; it_b++) 
+      // run active set method
+      for(int acs_iter = 0; acs_iter < kAcsMaxIter; acs_iter++)
       {
-        // update current_sol by newton iteration
-        for(int it_n = 0; it_n < params.newton_max_iter; it_n++)
+        printf("Iteration %3d: active_set = [", acs_iter);
+        for(int k = 0; k < active_set_size; k++)
+          printf(" %d ", active_set[k]);
+        printf("].\n");
+
+        for(int i = 0; i < DIM; i++)
+          prev_x[i] = cur_x[i];
+
+        //
+        // solve equality constrained system with current active set
+        //
+        if(active_set_size == 0) 
         {
-          // compute newton step direction:
-        
-          // init negative gradient to -t(x - \tilde x)
-#pragma unroll
+          // if active set is empty, set x = 0
           for(int i = 0; i < DIM; i++)
-            newton_gradient[i] = -barrier_t * (current_sol[i] - inp_arg[i]);
-
-          // init hessian to t Id
-#pragma unroll
-          for(int i = 0; i < DIM; i++)
+            cur_x[i] = 0;
+        }
+        else if(DIM == 2)
+        {
+          if(active_set_size == 1)
           {
-
-#pragma unroll
-            for(int j = 0; j < DIM; j++)
-            {
-              if(i == j)
-                newton_hessian[i + j * DIM] = barrier_t;
-              else
-                newton_hessian[i + j * DIM] = 0;
-            }
-          }
-
-          // add terms to negative gradient and hessian
-          for(int k = 0; k < coeff_count; k++)
-          {
-            double factor = -d_coeffs_b[coeff_index + k];
-
-            // compute factor
-#pragma unroll
-            for(int i = 0; i < DIM - 1; i++) 
-            {
-              T coeff_a = d_coeffs_a[coeff_index + k * (DIM - 1) + i];
-              factor -= coeff_a * current_sol[i];            
-            }
-
-            factor += current_sol[DIM - 1];
-
-            factor = 1 / factor;            
-            const double factor_sq = factor * factor;
-
-            // TODO: combine with factor calculation -> less read from a
-            // update gradient and hessian
-#pragma unroll
+            // compute A_r A_r^T
+            T fac = 1;
             for(int i = 0; i < DIM - 1; i++)
             {
-              const T coeff_a = d_coeffs_a[coeff_index + k * (DIM - 1) + i];
-
-              newton_gradient[i] -= factor * coeff_a;
-
-#pragma unroll
-              for(int j = 0; j < DIM - 1; j++)
-              {
-                const T coeff_a_j = d_coeffs_a[coeff_index + k * (DIM - 1) + j];
-
-                newton_hessian[i * DIM + j] += factor_sq * coeff_a * coeff_a_j; 
-              }
-
-              newton_hessian[(DIM - 1) * DIM + i] += -factor_sq * coeff_a;
-              newton_hessian[i * DIM + (DIM - 1)] += -factor_sq * coeff_a;
+              const T coeff = d_coeffs_a[coeff_index + active_set[0] * (DIM - 1) + i];
+              fac += coeff * coeff;
             }
 
-            newton_gradient[DIM - 1] += factor;
-            newton_hessian[DIM * DIM - 1] += factor_sq;
-          } // for(int k = 0; ...)
+            // compute x = A_r^T (A_r A_r^T)^-1 b_r
+            for(int i = 0; i < DIM - 1; i++)
+              cur_x[i] = d_coeffs_a[coeff_index + active_set[0] * (DIM - 1) + i] * rhs[active_set[0]] / fac;
 
-          solveLinearSystem<T, DIM>(newton_hessian, newton_gradient, newton_step);
+            // compute lambda = (A_r A_r^T)^-1 (-A_r x)
+            T Ax = -cur_x[DIM - 1];
+            for(int i = 0; i < DIM - 1; i++)
+              Ax += d_coeffs_a[coeff_index + active_set[0] * (DIM - 1) + i] * cur_x[i];
 
-          // compute lambda^2
-          T lambda = 0;
-#pragma unroll
-          for(int i = 0; i < DIM; i++)
-            lambda += newton_gradient[i] * newton_step[i];
-
-          if(lambda / 2 <= params.newton_eps)
-            break;
-
-          // optimization: E(x) can be computed only once here.
-          // perform line-search to determine newton step size t
-          T t = 1;
-          double en1, en2;
-          bool terminated = false;
-          for(int it_l = 0; it_l < params.ls_max_iter; it_l++)
+            cur_lambda[active_set[0]] = -Ax / fac;
+          }
+          else if(active_set_size > 1)
           {
-            en1 = 0;  // E(x + t * newton_step)
-            en2 = 0;  // E(x)
+            // compute A_r^T A_r 
+            for(int i = 0; i < DIM - 1; i++)
+            {
+              mat_ata[0] = 0;
+              mat_ata[1] = 0;
+              for(int k = 0; k < active_set_size; k++)
+              {
+                const T coeff = d_coeffs_a[coeff_index + active_set[k] * (DIM - 1) + i];
 
-            T diff;
-#pragma unroll
+                mat_ata[0] += coeff * coeff;
+                mat_ata[1] -= coeff;
+              }
+            }
+            mat_ata[2] = mat_ata[1]; // symmetric
+            mat_ata[3] = active_set_size;
+
+            // compute x = (A_r^T A_r)^-1 A_r^T b_r
             for(int i = 0; i < DIM; i++)
             {
-              diff = current_sol[i] - inp_arg[i];
-              en2 += 0.5 * diff * diff;
-
-              diff += t * newton_step[i];
-              en1 += 0.5 * diff * diff;
+              temp[i] = 0;
+              for(int k = 0; k < active_set_size; k++)
+                temp[i] += d_coeffs_a[coeff_index + active_set[k] * (DIM - 1) + i] * rhs[active_set[k]];
             }
+            solveLinearSystem2x2(mat_ata, temp, cur_x);
 
-            en1 *= barrier_t;
-            en2 *= barrier_t;
+            // compute lambda = A_r (A_r^T A_r)^-1 (-x)
+            for(int i = 0; i < DIM; i++)
+              temp[i] = -cur_x[i];
 
-            for(int k = 0; k < coeff_count; k++)
+            solveLinearSystem2x2(mat_ata, temp, temp2);
+
+            for(int k = 0; k < active_set_size; k++)
             {
-              T iprod2 = d_coeffs_b[coeff_index + k]; // <(a_i -1), x> + b_i
-              T iprod1 = iprod2; // <(a_i -1), x + t * newton_step> + b_i
+              cur_lambda[active_set[k]] = 0;
 
-#pragma unroll
-              for(int i = 0; i < DIM - 1; i++)
-              {
-                const T coeff_a = d_coeffs_a[coeff_index + k * (DIM - 1) + i]; 
-
-                iprod1 += coeff_a * current_sol[i];
-                iprod2 += coeff_a * (current_sol[i] + t * newton_step[i]);
-              }
-
-              iprod1 -= current_sol[DIM - 1];
-              iprod2 -= current_sol[DIM - 1] + t * newton_step[DIM - 1];
-
-              en1 -= log(-iprod1); 
-              en2 -= log(-iprod2); 
+              for(int i = 0; i < DIM; i++)
+                cur_lambda[active_set[k]] += d_coeffs_a[coeff_index + active_set[k] * (DIM - 1) + i] * temp2[i];
             }
+          }
+        }
+        else if(DIM == 3)
+        {
+          // TODO: implement for DIM == 3
 
-            if(en1 < en2 - params.ls_alpha * t * lambda) 
+          if(active_set_size == 1)
+          {
+          }
+          else if(active_set_size == 2)
+          {
+          }
+          else if(active_set_size > 2)
+          {
+          }
+        }
+
+        //
+        // check if we are at an optimal point
+        //
+
+        // check primal feasibility
+        bool primal_feasible = true;
+        for(int k = 0; k < coeff_count; k++)
+        {
+          T Ax = 0;
+
+          for(int i = 0; i < DIM - 1; i++)
+            Ax += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * cur_x[i];
+          Ax -= cur_x[DIM - 1];
+
+          if(Ax > rhs[k] + kAcsTolerance)
+          {
+            primal_feasible = false;
+            break;
+          }
+        }
+
+        if(primal_feasible)
+        {
+          // check dual feasibility
+          bool dual_feasible = true;
+          for(int k = 0; k < active_set_size; k++)
+            if(cur_lambda[active_set[k]] < -kAcsTolerance)
+              dual_feasible = false;
+          
+          if(dual_feasible) // primal & dual feasbile -> finished
+          {
+            printf("Primal feasible & dual feasible.\n");
+            break;
+          }
+        }
+
+        //
+        // determine search direction
+        //
+        T sum_d = 0;
+        for(int i = 0; i < DIM; i++)
+        {
+          dir[i] = cur_x[i] - prev_x[i];     
+          sum_d += abs(dir[i]);
+        }
+
+        if(sum_d < kAcsTolerance)
+        {
+          // 
+          // remove first entry from active set where lambda is negative
+          //
+          int k = 0;
+          while(k < active_set_size)
+          {
+            if(cur_lambda[active_set[k]] < -kAcsTolerance)
             {
-              //printf("line-search terminated after %d iters.\n", it_l);
-              terminated = true;
+              active_set[k] = active_set[active_set_size - 1];
+              active_set_size--;
               break;
             }
 
-            t *= params.ls_beta;
+            k++;
           }
-
-          if(!terminated)
-          {
-            //printf("line-search didn't terminate after %d iters! -> increasing penalty parameter\n", 
-            //  params.ls_max_iter);
-            break;
-          }
-
-        //printf("it_barrier=%d, it_newton=%d, linesearch_t=%f, en1=%f, en2=%f, lambda=%f\n", it_b, it_n, t, en1, en2, lambda);
-#pragma unroll
-          for(int i = 0; i < DIM; i++)
-            current_sol[i] += t * newton_step[i];
-
         }
-
-        double primal_dual_gap = static_cast<double>(coeff_count) / barrier_t;
-
-        if( primal_dual_gap < params.barrier_eps )
+        else
         {
-          //printf("Reached final tolerance %f. => Converged.\n", static_cast<T>(coeff_count) / barrier_t);
-          break;
-        }
+          //
+          // determine smallest t at which a new constraint enters
+          // the active set
+          //
+          T min_step = 1;
+          for(int k = 0; k < coeff_count; k++)
+          {
+            T Ax = 0, Ad = 0;
+            for(int i = 0; i < DIM - 1; i++)
+            {
+              Ax += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * prev_x[i];
+              Ad += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * dir[i];
+            }
+            Ax -= prev_x[DIM - 1];
+            Ad -= dir[DIM - 1];
 
-        barrier_t *= params.barrier_mu; // increase penalty parameter
-      }
+            T step = (rhs[k] - Ax) / Ad;
+
+            if((abs(Ax - rhs[k]) > kAcsTolerance) && (step >= 0))
+              min_step = min(min_step, step);
+          }
+
+          //
+          // update the primal variable 
+          //
+          for(int i = 0; i < DIM; i++)
+            cur_x[i] = prev_x[i] + min_step * dir[i];
+
+          //
+          // determine new active set
+          //
+          active_set_size = 0;
+          for(int k = 0; k < coeff_count; k++)
+          {
+            T ieq = 0;
+            for(int i = 0; i < DIM - 1; i++)
+              ieq += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * cur_x[i];
+            ieq -= cur_x[DIM - 1];
+            
+            if( abs(ieq - rhs[k]) < kAcsTolerance )
+            {
+              active_set[active_set_size] = k;
+              active_set_size++;
+            }
+          } // for(int k=0; ...)
+        } // else
+      } // for(int acs_iter = 0; ...)
+
     } // if(!was_feasible) 
 
+    //
     // write back result
-#pragma unroll
+    //
+    Vector<T> res_x(count, DIM-1, true, tx, d_res);
+    T& res_y = d_res[count * (DIM-1) + tx];
+
     for(int i = 0; i < DIM - 1;i ++)
-      res_x[i] = current_sol[i];
+      res_x[i] = cur_x[i] + inp_arg[i];
 
-    res_y = current_sol[DIM - 1];
-
+    res_y = cur_x[DIM - 1] + inp_arg[DIM - 1];
   } // if(tx < count)
 }
 
@@ -349,15 +389,13 @@ ProxIndEpiPolyhedral<T>::ProxIndEpiPolyhedral(
   const vector<T>& coeffs_a,
   const vector<T>& coeffs_b, 
   const vector<size_t>& count_vec,
-  const vector<size_t>& index_vec,
-  const typename ProxIndEpiPolyhedral<T>::InteriorPointParams& ip_params)
+  const vector<size_t>& index_vec)
 
   : ProxSeparableSum<T>(index, count, dim, true, false),
     host_coeffs_a_(coeffs_a), 
     host_coeffs_b_(coeffs_b), 
     host_count_(count_vec), 
-    host_index_(index_vec),
-    ip_params_(ip_params)
+    host_index_(index_vec)
 {
 }
 
@@ -407,15 +445,14 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
   T tau,
   bool invert_tau)
 {
-  static const size_t kBlockSize = 96;
+  static const size_t kBlockSize = 128;
 
   dim3 block(kBlockSize, 1, 1);
   dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
-  std::cout << this->size_ << ", " << this->count_ << ", " << this->dim_ << "." << std::endl;
+  //std::cout << this->size_ << ", " << this->count_ << ", " << this->dim_ << "." << std::endl;
 
-  ShMemCountFun fn;
-  size_t shmem_bytes = fn(this->dim_) * sizeof(T) * kBlockSize;
+  size_t shmem_bytes = 25 * 3 * sizeof(T) * kBlockSize;
 
   std::cout << "Required shared memory: " << shmem_bytes << " bytes." << std::endl;
 
@@ -432,11 +469,10 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
       thrust::raw_pointer_cast(dev_coeffs_b_.data()),
       thrust::raw_pointer_cast(dev_count_.data()),
       thrust::raw_pointer_cast(dev_index_.data()),
-      this->count_,
-      ip_params_
+      this->count_
       );
     break;
-
+/*
   case 3:
     ProxIndEpiPolyhedralKernel<T, 3>
     <<<grid, block, shmem_bytes>>>(
@@ -446,16 +482,14 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
       thrust::raw_pointer_cast(dev_coeffs_b_.data()),
       thrust::raw_pointer_cast(dev_count_.data()),
       thrust::raw_pointer_cast(dev_index_.data()),
-      this->count_,
-      ip_params_
+      this->count_
       );
     break;
-
+*/
   default:
-    throw Exception("ProxIndEpiPolyhedral not implemented for dim > 3.");
+    throw Exception("ProxIndEpiPolyhedral not implemented for dim > 2.");
   }
-
-  std::cout << "Ran kernel.\n";
+  cudaDeviceSynchronize();
 }
 
 template class ProxIndEpiPolyhedral<float>;

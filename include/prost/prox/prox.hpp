@@ -60,8 +60,9 @@ public:
   /// \param Proximal operator argument.
   /// \param Diagonal step sizes.
   /// \param Scalar step size.
+  /// \returns GPU time of Prox in milliseconds.
   ///
-  void Eval(
+  double Eval(
     std::vector<T>& result, 
     const std::vector<T>& arg, 
     const std::vector<T>& tau_diag, 
