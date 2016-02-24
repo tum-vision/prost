@@ -3,7 +3,6 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <chrono>
 
 #include "prost/common.hpp"
 #include "prost/exception.hpp"
@@ -190,7 +189,7 @@ static void EvalProx(MEX_ARGS) {
   if(nrhs < 4)
     throw Exception("eval_prox: At least four inputs required.");
 
-  if(nlhs != 1)
+  if(nlhs == 0)
     throw Exception("One output (result of prox) required.");
 
   // check dimensions
@@ -215,18 +214,20 @@ static void EvalProx(MEX_ARGS) {
   std::vector<real> h_tau(tau_diag, tau_diag + n);
   real tau = (real) mxGetScalar(prhs[2]);
 
-  std::chrono::time_point<std::chrono::system_clock> start, end;
-  start = std::chrono::system_clock::now();
-  prox->Eval(h_result, h_arg, h_tau, tau);
-  end = std::chrono::system_clock::now();
+  double milliseconds = prox->Eval(h_result, h_arg, h_tau, tau);
 
-  int milliseconds = std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
+/*
   if(mxGetScalar(prhs[4]) > 0)
     std::cout << "Prox took " << milliseconds << "ms.\n";
+*/
   
   // convert result back to MATLAB matrix and float -> double
   plhs[0] = mxCreateDoubleMatrix(n, 1, mxREAL);
   std::copy(h_result.begin(), h_result.end(), (double *)mxGetPr(plhs[0]));
+
+  plhs[1] = mxCreateDoubleMatrix(1, 1, mxREAL);
+  double *pr = (double *)mxGetPr(plhs[1]);
+  pr[0] = milliseconds;
 }
 
 static void Init(MEX_ARGS) {

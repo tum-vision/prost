@@ -1,4 +1,5 @@
 #include "prost/prox/prox.hpp"
+#include <ctime>
 
 namespace prost {
 
@@ -21,21 +22,31 @@ void Prox<T>::Eval(
 }
 
 template<typename T>
-void Prox<T>::Eval(
+double Prox<T>::Eval(
   std::vector<T>& result, 
   const std::vector<T>& arg, 
   const std::vector<T>& tau_diag, 
   T tau) 
 {
+  const int repeats = 1;
+
   const thrust::device_vector<T> d_arg(arg.begin(), arg.end());
   thrust::device_vector<T> d_res;
   d_res.resize(arg.size());
   const thrust::device_vector<T> d_tau(tau_diag.begin(), tau_diag.end());
 
-  Eval(d_res, d_arg, d_tau, tau);
+  const clock_t begin_time = clock();
+  for(int i = 0; i < repeats; i++)
+  {
+    Eval(d_res, d_arg, d_tau, tau);
+    cudaDeviceSynchronize();
+  }
+  double s = (double)(clock() - begin_time) / CLOCKS_PER_SEC;
 
   result.resize(arg.size());
   thrust::copy(d_res.begin(), d_res.end(), result.begin());
+
+  return (s * 1000 / (double)repeats);
 }
 
 template <typename T>
