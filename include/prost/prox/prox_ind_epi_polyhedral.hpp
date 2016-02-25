@@ -54,6 +54,14 @@ public:
   virtual void Initialize();
   virtual size_t gpu_mem_amount() const;
 
+/*
+  virtual void get_separable_structure(vector<std::tuple<size_t, size_t, size_t> >& sep) {
+    for(size_t i = 0; i < count(); i++)
+      sep.push_back( 
+        std::tuple<size_t, size_t, size_t>(this->index() + i * dim(), dim(), 1) );
+  }
+*/
+
 protected:
   virtual void EvalLocal(
     const typename device_vector<T>::iterator& result_beg,
