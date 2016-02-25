@@ -9,13 +9,37 @@ template<typename T>
 inline __device__
 void solveLinearSystem2x2(T *A, T *b, T *x)
 {
-  T determinant = A[0] * A[3] - A[1] * A[2];
-
-  if(determinant != 0)
+  if(abs(A[0]) >= abs(A[2]))
   {
-    x[0] = (b[0] * A[3] - b[1] * A[1]) / determinant;
-    x[1] = (b[1] * A[0] - b[0] * A[2]) / determinant;
+    T alpha = A[2] / A[0];
+    T beta = A[3] - A[1] * alpha;
+    T gamma = b[1] - b[0] * alpha;
+    x[1] = gamma / beta;
+    x[0] = (b[0] - A[1] * x[1]) / A[0];
   }
+  else
+  {
+    T alpha = A[0] / A[2];
+    T beta = A[1] - A[3] * alpha;
+    T gamma = b[0] - b[1] * alpha;
+    x[1] = gamma / beta;
+    x[0] = (b[1] - A[3] * x[1]) / A[2];
+  }
+}
+
+template<typename T>
+inline __device__
+void solveLinearSystem2x2Precise(T *A, T *b, T *x)
+{
+  solveLinearSystem2x2<T>(A, b, x);
+
+  T db[2], dx[2];
+  db[0] = A[0] * x[0] + A[1] * x[1] - b[0];
+  db[1] = A[2] * x[0] + A[3] * x[1] - b[1];
+
+  solveLinearSystem2x2<T>(A, db, dx);
+  x[0] += dx[0];
+  x[1] += dx[1];
 }
 
 template<typename T>
@@ -24,25 +48,6 @@ void solveLinearSystem3x3(T *A, T *b, T *x)
 {
   // TODO
 }
-
-template<typename T, size_t DIM>
-inline __device__
-void solveLinearSystem(T *A, T *b, T *x)
-{
-  switch(DIM)
-  {
-  case 2:
-    solveLinearSystem2x2<T>(A, b, x);
-    break;
-
-  case 3:
-    // TODO:
-    solveLinearSystem3x3<T>(A, b, x);
-    break;
-  }
-}
-
-
 
 template<typename T, size_t DIM>
 __global__
@@ -56,7 +61,7 @@ void ProxIndEpiPolyhedralKernel(
   size_t count)
 {
   const T kAcsTolerance = 1e-6;
-  const int kAcsMaxIter = 100;
+  const int kAcsMaxIter = 250;
 
   // get pointer to shared memory
   extern __shared__ char sh_mem[];
@@ -110,6 +115,7 @@ void ProxIndEpiPolyhedralKernel(
     for(int i = 0; i < DIM; i++)
       cur_x[i] = 0;
 
+    // TODO: set norm of rhs to 1?
     for(int k = 0; k < coeff_count; k++)
     {
       // compute lhs of inequality constraint and right hand side b
@@ -155,15 +161,18 @@ void ProxIndEpiPolyhedralKernel(
       // run active set method
       for(int acs_iter = 0; acs_iter < kAcsMaxIter; acs_iter++)
       {
-        /*
+/*
         printf("Iteration %3d: active_set = [", acs_iter);
         for(int k = 0; k < active_set_size; k++)
           printf(" %d ", active_set[k]);
-        printf("].\n");
-        */
-
+        printf("]. old_x = [");
+*/
         for(int i = 0; i < DIM; i++)
+        {
+//          printf(" %f ", cur_x[i]);
           prev_x[i] = cur_x[i];
+        }
+//        printf("]. ");
 
         //
         // solve equality constrained system with current active set
@@ -208,21 +217,29 @@ void ProxIndEpiPolyhedralKernel(
             mat_ata[3] = active_set_size; // due to <(-1, ..., -1), (-1, ... -1)>
 
             // compute x = (A_r^T A_r)^-1 A_r^T b_r
+            temp[0] = 0; temp[1] = 0;
             for(int k = 0; k < active_set_size; k++) // A_r^T b_r
-              temp[0] = d_coeffs_a[coeff_index + active_set[k] * (DIM - 1) + 0]
-                         * rhs[active_set[k]] - rhs[active_set[k]];
+            {
+              temp[0] += d_coeffs_a[coeff_index + active_set[k] * (DIM - 1) + 0]
+                * rhs[active_set[k]];
+              temp[1] -= rhs[active_set[k]];
+            }
 
-            solveLinearSystem2x2(mat_ata, temp, cur_x);
+            solveLinearSystem2x2Precise<T>(mat_ata, temp, cur_x);
 
             // compute lambda_r = A_r (A_r^T A_r)^-1 (-x)
             for(int i = 0; i < DIM; i++) // temp = -x
               temp[i] = -cur_x[i];
 
-            solveLinearSystem2x2(mat_ata, temp, temp2); // temp2 = (A_r^T A_r)^-1 temp
+            solveLinearSystem2x2Precise<T>(mat_ata, temp, temp2); // temp2 = (A_r^T A_r)^-1 temp
 
             for(int k = 0; k < active_set_size; k++) // lambda_r = A_r temp2
               cur_lambda[active_set[k]] = d_coeffs_a[coeff_index + active_set[k] * (DIM - 1) + 0]
                                            * temp2[0] - temp2[1];
+
+            // since the active set has size > 1, 
+            for(int i = 0; i < DIM; i++)
+              prev_x[i] = cur_x[i];
           }
         }
         else if(DIM == 3)
@@ -240,63 +257,40 @@ void ProxIndEpiPolyhedralKernel(
           }
         }
 
-        //
-        // check if we are at an optimal point
-        //
-
-        // check primal feasibility -> doesn't seem necessary
-        /*
-        bool primal_feasible = true;
-        for(int k = 0; k < coeff_count; k++)
+/*
+        printf("potential_x = [ ");
+        for(int i = 0; i < DIM; i++)
         {
-          T Ax = 0;
-
-          for(int i = 0; i < DIM - 1; i++)
-            Ax += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * cur_x[i];
-          Ax -= cur_x[DIM - 1];
-
-          if(Ax > rhs[k] + kAcsTolerance)
-          {
-            primal_feasible = false;
-            break;
-          }
+          printf(" %f ", cur_x[i]);
         }
-
-        if(primal_feasible)
-        {
-          // check dual feasibility
-          bool dual_feasible = true;
-          for(int k = 0; k < active_set_size; k++)
-            if(cur_lambda[active_set[k]] < -kAcsTolerance)
-              dual_feasible = false;
-          
-          if(dual_feasible) // primal & dual feasbile -> finished
-          {
-            printf("Primal feasible & dual feasible.\n");
-            break;
-          }
-        }
-        */
-
-        if(active_set_size == 0)
-        {
-          printf("Empty active set!\n");
-          break;
-        }
-        
+        printf("]. ");
+*/
         //
         // determine search direction
         //
-        T sum_d = 0;
+        T norm_d = 0;
         for(int i = 0; i < DIM; i++)
         {
           dir[i] = cur_x[i] - prev_x[i];     
-          sum_d += abs(dir[i]);
+          norm_d += dir[i] * dir[i];
         }
+        norm_d = sqrt(norm_d);
 
-        //printf("sum_d = %f\n", sum_d);
+        if(norm_d > kAcsTolerance)
+          for(int i = 0; i < DIM; i++)
+            dir[i] /= norm_d;
 
-        if(sum_d < kAcsTolerance)
+/*
+        printf("search_dir = [ ");
+        for(int i = 0; i < DIM; i++)
+        {
+          printf(" %f ", dir[i]);
+        }
+        printf("]. \n");
+
+        printf("norm_d = %f\n", norm_d);
+*/
+        if(norm_d < kAcsTolerance)
         {
           // 
           // remove most negative lambda from active set
@@ -312,14 +306,17 @@ void ProxIndEpiPolyhedralKernel(
             }
           }
 
+          //
+          // check if we are at an optimal point
+          //
           if(idx_lambda == -1)
           {
-            //printf("Primal and dual feasible.\n");
+//            printf("Primal and dual feasible.\n");
             break;
           }
           else
           {
-            //printf("Removing index %d from active set.\n", idx_lambda);
+//            printf("Removing constraint %d from active set.\n", active_set[idx_lambda]);
             active_set[idx_lambda] = active_set[active_set_size - 1];
             active_set_size--;
           }          
@@ -331,7 +328,7 @@ void ProxIndEpiPolyhedralKernel(
           // enters the active set
           //
           int blocking = -1;
-          T min_step = 1;
+          T min_step = norm_d;
           for(int k = 0; k < coeff_count; k++)
           {
             bool in_set = false;
@@ -345,20 +342,18 @@ void ProxIndEpiPolyhedralKernel(
             if(in_set)
               continue;
             
-            T Ax = 0, Ad = 0;
+            T Ax = -prev_x[DIM - 1], Ad = -dir[DIM - 1];
             for(int i = 0; i < DIM - 1; i++)
             {
               Ax += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * prev_x[i];
               Ad += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * dir[i];
             }
-            Ax -= prev_x[DIM - 1];
-            Ad -= dir[DIM - 1];
 
             if(Ad > kAcsTolerance)
             {
               T step = (rhs[k] - Ax) / Ad;
               
-              if(step < min_step)
+              if((step < min_step) && (step > kAcsTolerance))
               {
                 min_step = step;
                 blocking = k;
@@ -366,11 +361,15 @@ void ProxIndEpiPolyhedralKernel(
             }
           }
 
+//          printf("Found step size %f with blocking constraint %d.\n", min_step, blocking);
+
           //
           // update the primal variable 
           //
           for(int i = 0; i < DIM; i++)
+          {
             cur_x[i] = prev_x[i] + min_step * dir[i];
+          }
 
           //
           // determine new active set by adding blocking constraint
