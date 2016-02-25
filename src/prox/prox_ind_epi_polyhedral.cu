@@ -55,8 +55,8 @@ void ProxIndEpiPolyhedralKernel(
   const size_t *d_index,
   size_t count)
 {
-  const T kAcsTolerance = 5e-6;
-  const int kAcsMaxIter = 25;
+  const T kAcsTolerance = 1e-6;
+  const int kAcsMaxIter = 100;
 
   // get pointer to shared memory
   extern __shared__ char sh_mem[];
@@ -123,7 +123,7 @@ void ProxIndEpiPolyhedralKernel(
       } 
 
       // check if current solution is feasible w.r.t. inequality constraint
-      if(lhs - cur_x[DIM - 1] > rhs[k])
+      if(lhs - cur_x[DIM - 1] > rhs[k] + kAcsTolerance)
       {
         // make solution feasible
         cur_x[DIM - 1] = lhs - rhs[k];
@@ -208,24 +208,20 @@ void ProxIndEpiPolyhedralKernel(
             mat_ata[3] = active_set_size; // due to <(-1, ..., -1), (-1, ... -1)>
 
             // compute x = (A_r^T A_r)^-1 A_r^T b_r
-            temp[0] = 0; temp[1] = 0;
-            for(int k = 0; k < active_set_size; k++)
-            {
-              temp[0] += d_coeffs_a[coeff_index + active_set[k] * (DIM - 1)]
-                         * rhs[active_set[k]];
-              temp[1] -= rhs[active_set[k]];
-            }
+            for(int k = 0; k < active_set_size; k++) // A_r^T b_r
+              temp[0] = d_coeffs_a[coeff_index + active_set[k] * (DIM - 1) + 0]
+                         * rhs[active_set[k]] - rhs[active_set[k]];
 
             solveLinearSystem2x2(mat_ata, temp, cur_x);
 
-            // compute lambda = A_r (A_r^T A_r)^-1 (-x)
-            for(int i = 0; i < DIM; i++)
+            // compute lambda_r = A_r (A_r^T A_r)^-1 (-x)
+            for(int i = 0; i < DIM; i++) // temp = -x
               temp[i] = -cur_x[i];
 
-            solveLinearSystem2x2(mat_ata, temp, temp2);
+            solveLinearSystem2x2(mat_ata, temp, temp2); // temp2 = (A_r^T A_r)^-1 temp
 
-            for(int k = 0; k < active_set_size; k++)
-              cur_lambda[active_set[k]] = d_coeffs_a[coeff_index + active_set[k] * (DIM - 1)]
+            for(int k = 0; k < active_set_size; k++) // lambda_r = A_r temp2
+              cur_lambda[active_set[k]] = d_coeffs_a[coeff_index + active_set[k] * (DIM - 1) + 0]
                                            * temp2[0] - temp2[1];
           }
         }
@@ -282,6 +278,12 @@ void ProxIndEpiPolyhedralKernel(
         }
         */
 
+        if(active_set_size == 0)
+        {
+          printf("Empty active set!\n");
+          break;
+        }
+        
         //
         // determine search direction
         //
@@ -325,17 +327,20 @@ void ProxIndEpiPolyhedralKernel(
         else
         {
           //
-          // determine smallest t at which a new constraint enters
-          // the active set
+          // determine smallest step size at which a new (blocking) constraint
+          // enters the active set
           //
-
+          int blocking = -1;
           T min_step = 1;
           for(int k = 0; k < coeff_count; k++)
           {
             bool in_set = false;
             for(int l = 0; l < active_set_size; l++)
               if(active_set[l] == k)
+              {
                 in_set = true;
+                break;
+              }
 
             if(in_set)
               continue;
@@ -349,10 +354,16 @@ void ProxIndEpiPolyhedralKernel(
             Ax -= prev_x[DIM - 1];
             Ad -= dir[DIM - 1];
 
-            T step = (rhs[k] - Ax) / Ad;
-
-            if(Ad >= 0)
-              min_step = min(min_step, step);
+            if(Ad > kAcsTolerance)
+            {
+              T step = (rhs[k] - Ax) / Ad;
+              
+              if(step < min_step)
+              {
+                min_step = step;
+                blocking = k;
+              }
+            }
           }
 
           //
@@ -362,23 +373,13 @@ void ProxIndEpiPolyhedralKernel(
             cur_x[i] = prev_x[i] + min_step * dir[i];
 
           //
-          // determine new active set. TODO: can be optimized by
-          // adding blocking constraint
+          // determine new active set by adding blocking constraint
           //
-          active_set_size = 0;
-          for(int k = 0; k < coeff_count; k++)
+          if(blocking != -1)
           {
-            T ieq = 0;
-            for(int i = 0; i < DIM - 1; i++)
-              ieq += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * cur_x[i];
-            ieq -= cur_x[DIM - 1];
-            
-            if( abs(ieq - rhs[k]) < kAcsTolerance )
-            {
-              active_set[active_set_size] = k;
-              active_set_size++;
-            }
-          } // for(int k=0; ...)
+            active_set[active_set_size] = blocking;
+            active_set_size++;
+          }
           
         } // else
       } // for(int acs_iter = 0; ...)
@@ -462,14 +463,14 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
   T tau,
   bool invert_tau)
 {
-  static const size_t kBlockSize = 256;
+  static const size_t kBlockSize = 128;
 
   dim3 block(kBlockSize, 1, 1);
   dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
   //std::cout << this->size_ << ", " << this->count_ << ", " << this->dim_ << "." << std::endl;
 
-  size_t shmem_bytes = 5 * 3 * sizeof(T) * kBlockSize;
+  size_t shmem_bytes = 10 * 3 * sizeof(T) * kBlockSize;
 
   std::cout << "Required shared memory: " << shmem_bytes << " bytes." << std::endl;
 
