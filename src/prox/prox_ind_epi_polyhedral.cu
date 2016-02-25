@@ -5,6 +5,8 @@
 
 namespace prost {
 
+//#define DEBUG_PRINT
+
 template<typename T>
 inline __device__
 void solveLinearSystem2x2(T *A, T *b, T *x)
@@ -36,10 +38,10 @@ void solveLinearSystem2x2Precise(T *A, T *b, T *x)
   T db[2], dx[2];
   db[0] = A[0] * x[0] + A[1] * x[1] - b[0];
   db[1] = A[2] * x[0] + A[3] * x[1] - b[1];
-
   solveLinearSystem2x2<T>(A, db, dx);
-  x[0] += dx[0];
-  x[1] += dx[1];
+
+  x[0] -= dx[0];
+  x[1] -= dx[1];
 }
 
 template<typename T>
@@ -61,7 +63,7 @@ void ProxIndEpiPolyhedralKernel(
   size_t count)
 {
   const T kAcsTolerance = 1e-6;
-  const int kAcsMaxIter = 250;
+  const int kAcsMaxIter = 20;
 
   // get pointer to shared memory
   extern __shared__ char sh_mem[];
@@ -115,21 +117,23 @@ void ProxIndEpiPolyhedralKernel(
     for(int i = 0; i < DIM; i++)
       cur_x[i] = 0;
 
-    // TODO: set norm of rhs to 1?
     for(int k = 0; k < coeff_count; k++)
     {
-      // compute lhs of inequality constraint and right hand side b
-      T lhs = 0;
-
+      // compute right hand side b
       rhs[k] = d_coeffs_b[coeff_index + k] + inp_arg[DIM - 1];
       for(int i = 0; i < DIM - 1; i++)
-      {
-        lhs += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * cur_x[i];
         rhs[k] -= d_coeffs_a[coeff_index + k * (DIM - 1) + i] * inp_arg[i];
-      } 
+    }
+
+    for(int k = 0; k < coeff_count; k++)
+    {
+      T lhs = 0;
+
+      for(int i = 0; i < DIM - 1; i++)
+        lhs += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * cur_x[i];
 
       // check if current solution is feasible w.r.t. inequality constraint
-      if(lhs - cur_x[DIM - 1] > rhs[k] + kAcsTolerance)
+      if(lhs - cur_x[DIM - 1] > rhs[k])
       {
         // make solution feasible
         cur_x[DIM - 1] = lhs - rhs[k];
@@ -161,18 +165,23 @@ void ProxIndEpiPolyhedralKernel(
       // run active set method
       for(int acs_iter = 0; acs_iter < kAcsMaxIter; acs_iter++)
       {
-/*
+#ifdef DEBUG_PRINT
         printf("Iteration %3d: active_set = [", acs_iter);
         for(int k = 0; k < active_set_size; k++)
           printf(" %d ", active_set[k]);
         printf("]. old_x = [");
-*/
+#endif
+
         for(int i = 0; i < DIM; i++)
         {
-//          printf(" %f ", cur_x[i]);
+#ifdef DEBUG_PRINT
+          printf(" %f ", cur_x[i]);
+#endif
           prev_x[i] = cur_x[i];
         }
-//        printf("]. ");
+#ifdef DEBUG_PRINT
+        printf("]. ");
+#endif
 
         //
         // solve equality constrained system with current active set
@@ -237,8 +246,7 @@ void ProxIndEpiPolyhedralKernel(
               cur_lambda[active_set[k]] = d_coeffs_a[coeff_index + active_set[k] * (DIM - 1) + 0]
                                            * temp2[0] - temp2[1];
 
-            // since the active set has size > 1, 
-            for(int i = 0; i < DIM; i++)
+            for(int i = 0; i < DIM - 1; i++)
               prev_x[i] = cur_x[i];
           }
         }
@@ -257,14 +265,15 @@ void ProxIndEpiPolyhedralKernel(
           }
         }
 
-/*
+#ifdef DEBUG_PRINT
         printf("potential_x = [ ");
         for(int i = 0; i < DIM; i++)
         {
           printf(" %f ", cur_x[i]);
         }
         printf("]. ");
-*/
+#endif
+
         //
         // determine search direction
         //
@@ -280,7 +289,7 @@ void ProxIndEpiPolyhedralKernel(
           for(int i = 0; i < DIM; i++)
             dir[i] /= norm_d;
 
-/*
+#ifdef DEBUG_PRINT
         printf("search_dir = [ ");
         for(int i = 0; i < DIM; i++)
         {
@@ -289,13 +298,14 @@ void ProxIndEpiPolyhedralKernel(
         printf("]. \n");
 
         printf("norm_d = %f\n", norm_d);
-*/
+#endif
+
         if(norm_d < kAcsTolerance)
         {
           // 
           // remove most negative lambda from active set
           //
-          T best_lambda = -kAcsTolerance;
+          T best_lambda = 0;
           int idx_lambda = -1;
           for(int k = 0; k < active_set_size; k++)
           {
@@ -311,12 +321,16 @@ void ProxIndEpiPolyhedralKernel(
           //
           if(idx_lambda == -1)
           {
-//            printf("Primal and dual feasible.\n");
+#ifdef DEBUG_PRINT
+            printf("Primal and dual feasible.\n");
+#endif
             break;
           }
           else
           {
-//            printf("Removing constraint %d from active set.\n", active_set[idx_lambda]);
+#ifdef DEBUG_PRINT
+            printf("Removing constraint %d from active set as it has a negative Lagrange multiplier with lambda = %f..\n", active_set[idx_lambda], best_lambda);
+#endif
             active_set[idx_lambda] = active_set[active_set_size - 1];
             active_set_size--;
           }          
@@ -349,7 +363,7 @@ void ProxIndEpiPolyhedralKernel(
               Ad += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * dir[i];
             }
 
-            if(Ad > kAcsTolerance)
+            if(Ad > 0)
             {
               T step = (rhs[k] - Ax) / Ad;
               
@@ -361,15 +375,15 @@ void ProxIndEpiPolyhedralKernel(
             }
           }
 
-//          printf("Found step size %f with blocking constraint %d.\n", min_step, blocking);
+#ifdef DEBUG_PRINT
+          printf("Found step size %f with blocking constraint %d.\n", min_step, blocking);
+#endif
 
           //
           // update the primal variable 
           //
           for(int i = 0; i < DIM; i++)
-          {
             cur_x[i] = prev_x[i] + min_step * dir[i];
-          }
 
           //
           // determine new active set by adding blocking constraint
@@ -408,7 +422,7 @@ ProxIndEpiPolyhedral<T>::ProxIndEpiPolyhedral(
   const vector<size_t>& count_vec,
   const vector<size_t>& index_vec)
 
-  : ProxSeparableSum<T>(index, count, dim, true, false),
+  : ProxSeparableSum<T>(index, count, dim, false, false),
     host_coeffs_a_(coeffs_a), 
     host_coeffs_b_(coeffs_b), 
     host_count_(count_vec), 
@@ -471,7 +485,7 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
 
   size_t shmem_bytes = 10 * 3 * sizeof(T) * kBlockSize;
 
-  std::cout << "Required shared memory: " << shmem_bytes << " bytes." << std::endl;
+  //std::cout << "Required shared memory: " << shmem_bytes << " bytes." << std::endl;
 
   // TODO: warm-start with previous solution?
 
