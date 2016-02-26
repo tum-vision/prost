@@ -18,14 +18,9 @@ namespace prost {
 ///
 ///        The prox solves the following optimization problem:
 /// 
-///        min_{x,t} (x - y)^2 / Tau_x + (t - u)^2 / Tau_t 
+///        min_{x,t} (x - y)^2 + (t - u)^2
 /// 
 ///        s.t. t >= <a_i, x> + b_i, i = 1..m
-///
-///        IMPORTANT: Ignores interleaved parameter and assumes the following 
-///                   ordering of the data (n = dim_ - 1): 
-///                   arg = [ (y^1_1, y^1_2, ... y^1_n) (y^2_1, y^2_2, ..., y^2_n) ... u^1 u^2 ... ].
-///                   (Same ordering as in prox_ind_epi_quad.hpp)
 /// 
 template<typename T>
 class ProxIndEpiPolyhedral : public ProxSeparableSum<T> {
