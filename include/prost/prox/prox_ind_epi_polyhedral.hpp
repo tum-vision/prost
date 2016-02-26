@@ -39,10 +39,11 @@ public:
     size_t index,
     size_t count,
     size_t dim, 
-    const vector<T>& coeffs_a,
-    const vector<T>& coeffs_b, 
-    const vector<size_t>& count_vec,
-    const vector<size_t>& index_vec);
+    bool interleaved,
+    const vector<double>& coeffs_a,
+    const vector<double>& coeffs_b, 
+    const vector<uint32_t>& count_vec,
+    const vector<uint32_t>& index_vec);
 
   virtual ~ProxIndEpiPolyhedral() {}
 
@@ -61,11 +62,11 @@ protected:
     bool invert_tau);
 
 private:
-  vector<T> host_coeffs_a_, host_coeffs_b_;
-  vector<size_t> host_count_, host_index_;
+  vector<double> host_coeffs_a_, host_coeffs_b_;
+  vector<uint32_t> host_count_, host_index_;
 
-  device_vector<T> dev_coeffs_a_, dev_coeffs_b_;
-  device_vector<size_t> dev_count_, dev_index_;
+  device_vector<double> dev_coeffs_a_, dev_coeffs_b_;
+  device_vector<uint32_t> dev_count_, dev_index_;
 };
 
 } // namespace prost
