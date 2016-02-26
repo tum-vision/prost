@@ -33,15 +33,14 @@ void ProxIndEpiQuadKernel(
 
   if(tx < count)
   {
-    Vector<T> x(count, dim-1, true, tx, d_res);
-    const Vector<const T> x0(count, dim-1, true, tx, d_arg);
+    Vector<T> x(count, dim-1, false, tx, d_res);
+    const Vector<const T> x0(count, dim-1, false, tx, d_arg);
     T& y = d_res[count * (dim-1) + tx];
     const T y0 = d_arg[count * (dim-1) + tx];
 
     const T a = coeffs.dev_a == nullptr ? coeffs.a : coeffs.dev_a[tx];
-    const Vector<const T> b(coeffs.dev_b == nullptr ? 1 : count, dim-1, true, coeffs.dev_b == nullptr ? 0 : tx, coeffs.dev_b);
+    const Vector<const T> b(count, dim-1, false, tx, coeffs.dev_b);
     const T c = coeffs.dev_c == nullptr ? coeffs.c : coeffs.dev_c[tx];
-
 
     T sq_norm_b = static_cast<T>(0);
     for(size_t i = 0; i < dim-1; i++) {
