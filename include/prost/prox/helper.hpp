@@ -8,6 +8,14 @@ namespace prost {
 /// \brief Namspace grouping prox helper functions.
 namespace helper {
 
+template<typename T>
+inline __host__ __device__ void swap(T& a, T& b)
+{
+  T c = a;
+  a = b;
+  b = c;
+}
+
 ///
 /// \brief Computes the orthogonal projection of (x0, y0) onto the epigraph of
 ///        the parabola y >= \alpha ||x||^2 with \alpha > 0.
