@@ -588,12 +588,12 @@ CreateProxIndEpiPolyhedral(size_t idx, size_t size, bool diagsteps, const mxArra
   bool interleaved = (bool) mxGetScalar(mxGetCell(data, 2));
   const mxArray *mx_coeffs = mxGetCell(data, 3);
 
-  std::vector<real> coeffs_a = GetVector<real>(mxGetCell(mx_coeffs, 0));
-  std::vector<real> coeffs_b = GetVector<real>(mxGetCell(mx_coeffs, 1));
-  std::vector<size_t> count_vec = GetVector<size_t>(mxGetCell(mx_coeffs, 2));
-  std::vector<size_t> index_vec = GetVector<size_t>(mxGetCell(mx_coeffs, 3));
+  std::vector<double> coeffs_a = GetVector<double>(mxGetCell(mx_coeffs, 0));
+  std::vector<double> coeffs_b = GetVector<double>(mxGetCell(mx_coeffs, 1));
+  std::vector<uint32_t> count_vec = GetVector<uint32_t>(mxGetCell(mx_coeffs, 2));
+  std::vector<uint32_t> index_vec = GetVector<uint32_t>(mxGetCell(mx_coeffs, 3));
 
-  return new ProxIndEpiPolyhedral<real>(idx, count, dim,
+  return new ProxIndEpiPolyhedral<real>(idx, count, dim, interleaved,
     coeffs_a, coeffs_b, count_vec, index_vec);
 }
 
