@@ -28,7 +28,7 @@ double Prox<T>::Eval(
   const std::vector<T>& tau_diag, 
   T tau) 
 {
-  const int repeats = 10;
+  const int repeats = 1;
 
   const thrust::device_vector<T> d_arg(arg.begin(), arg.end());
   thrust::device_vector<T> d_res;

@@ -1,7 +1,7 @@
 function [result, timing] = eval_prox(prox, arg, tau, Tau, verbose)
     
     if nargin < 5
-        verbose = false
+        verbose = false;
     end
     
     [result, timing] = prost_('eval_prox', prox, arg, tau, Tau, verbose);
