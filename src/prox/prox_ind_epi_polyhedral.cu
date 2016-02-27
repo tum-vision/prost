@@ -28,12 +28,31 @@ void solveLinearSystem2x2(T *A, T *b, T *x)
 
 template<typename T>
 inline __device__
-void solveLinearSystem3x3(T *A, T *b, T *x)
+void solveLinearSystem3x3(T *A, T *b, T *x) // requires A to be symmetric positive definite.
 {
-  // TODO
+  T d0, d3, d4, d6, d7, d8;
+  T y0, y1, y2;
+
+  // compute lower triangular matrix
+  d0 = sqrt(A[0]);
+  d3 = A[3] / d0;
+  d6 = A[6] / d0;
+  d4 = sqrt(A[4] - d3 * d3);
+  d7 = (A[7] - d6 * d3) / d4;
+  d8 = sqrt(A[8] - d6 * d6 - d7 * d7);
+
+  // forward substitute
+  y0 = (b[0]) / d0;
+  y1 = (b[1] - d3 * y0) / d4;
+  y2 = (b[2] - d6 * y0 - d7 * y1) / d8;
+
+  // backward substitute
+  x[2] = (y2) / d8;
+  x[1] = (y1 - d7 * x[2]) / d4;
+  x[0] = (y0 - d3 * x[1] - d6 * x[2]) / d0;
 }
 
-template<typename T, size_t DIM, size_t MAX_ACTIVE = DIM>
+template<typename T, size_t DIM>
   __global__
 void ProxIndEpiPolyhedralKernel(
     T *d_res,
@@ -53,13 +72,13 @@ void ProxIndEpiPolyhedralKernel(
   if(tx < count)
   {
     // helper variables
-    double dir[DIM];                // search direction
-    double cur_x[DIM];              // current solution
-    double matrix[DIM * DIM];       // matrix
-    double temp[DIM];               // temporary variable
-    double inp_arg[DIM];            // input argument
-    double lambda[MAX_ACTIVE];      // lagrange multipliers
-    uint8_t active_set[MAX_ACTIVE]; // active set 
+    double dir[3];         // search direction
+    double cur_x[3];       // current solution
+    double matrix[9];      // matrix
+    double temp[3];        // temporary variable
+    double inp_arg[3];     // input argument
+    double lambda[3];      // lagrange multipliers
+    uint8_t active_set[3]; // active set 
 
     // read position in coeffs array 
     const uint32_t coeff_count = d_count[tx];
@@ -74,10 +93,10 @@ void ProxIndEpiPolyhedralKernel(
     int active_set_size = 0;
     for(int k = 0; k < coeff_count; k++)
     {
-      double lhs = d_coeffs_a[coeff_index + k * (DIM - 1)] * cur_x[0];
+      double lhs = d_coeffs_a[(coeff_index + k) * (DIM - 1)] * cur_x[0];
 
       for(int i = 1; i < DIM - 1; i++)
-        lhs += d_coeffs_a[coeff_index + k * (DIM - 1) + i] * cur_x[i];
+        lhs += d_coeffs_a[(coeff_index + k) * (DIM - 1) + i] * cur_x[i];
 
       if(lhs - cur_x[DIM - 1] > d_coeffs_b[coeff_index + k] + kAcsTolerance)
       {
@@ -90,8 +109,12 @@ void ProxIndEpiPolyhedralKernel(
 
     if(active_set_size > 0) // was not feasible -> run active set method
     {
-      for(int it_acs = 0; it_acs < kAcsMaxIter; it_acs++)
+      int it_acs;
+      for(it_acs = 0; it_acs < kAcsMaxIter; it_acs++)
       {
+        double sum_dir = 1;
+        int blocking = -1;
+        
         if(active_set_size < DIM) // determine search direction dir 
         {
           if(active_set_size == 1)
@@ -100,28 +123,58 @@ void ProxIndEpiPolyhedralKernel(
             double rhs = -cur_x[DIM - 1] + inp_arg[DIM - 1];
             for(int i = 0; i < DIM - 1; i++)
             {
-              const double coeff = d_coeffs_a[coeff_index + active_set[0] * (DIM - 1) + i];
+              const double coeff = d_coeffs_a[(coeff_index + active_set[0]) * (DIM - 1) + i];
               fac += coeff * coeff;
               rhs += coeff * (cur_x[i] - inp_arg[i]);
             }
 
             // compute \tilde p = A_r^T (A_r A_r^T)^-1 rhs
             for(int i = 0; i < DIM - 1; i++)
-              dir[i] = d_coeffs_a[coeff_index + active_set[0] * (DIM - 1) + i] * rhs / fac;
+              dir[i] = d_coeffs_a[(coeff_index + active_set[0]) * (DIM - 1) + i] * rhs / fac;
             dir[DIM - 1] = -rhs / fac;
-
-            // backsubstitution
-            for(int i = 0; i < DIM; i++)
-              dir[i] += -cur_x[i] + inp_arg[i];
           }
           else if(active_set_size == 2)
           {
-            // TODO: implement me!
+            // compute A_r A_r^T
+            double rhs[2];
+            rhs[0] = -cur_x[DIM - 1] + inp_arg[DIM - 1];
+            rhs[1] = rhs[0];
+            
+            matrix[0] = matrix[1] = matrix[3] = 1;
+            for(int i = 0; i < DIM - 1; i++)
+            {
+              const double coeff0 = d_coeffs_a[(coeff_index + active_set[0]) * (DIM - 1) + i];
+              const double coeff1 = d_coeffs_a[(coeff_index + active_set[1]) * (DIM - 1) + i];
+              matrix[0] += coeff0 * coeff0;
+              matrix[1] += coeff0 * coeff1;
+              matrix[3] += coeff1 * coeff1;
+              
+              rhs[0] += coeff0 * (cur_x[i] - inp_arg[i]);
+              rhs[1] += coeff1 * (cur_x[i] - inp_arg[i]);
+            }
+            matrix[2] = matrix[1]; // symmetry
+
+            // compute temp = (A_r A_r^T)^-1 rhs
+            solveLinearSystem2x2<double>(matrix, rhs, temp);
+
+            // compute dir = A_r^T temp
+            for(int i = 0; i < 2; i++) // active_set_size == 2
+              dir[i] = d_coeffs_a[(coeff_index + active_set[0]) * (DIM - 1) + i] * temp[0] +
+                       d_coeffs_a[(coeff_index + active_set[1]) * (DIM - 1) + i] * temp[1];
+            dir[DIM - 1] = -temp[0] - temp[1];
+          }
+
+          // backsubstitution
+          sum_dir = 0;
+          for(int i = 0; i < DIM; i++)
+          {
+            dir[i] += -cur_x[i] + inp_arg[i];
+            sum_dir += abs(dir[i]);
           }
 
           // determine smallest step size at which a new (blocking) constraint
           // enters the active set
-          int blocking = -1;
+          //int blocking = -1;
           double min_step = 1;
 
           for(int k = 0; k < coeff_count; k++)
@@ -142,7 +195,7 @@ void ProxIndEpiPolyhedralKernel(
             double Ax = -cur_x[DIM - 1], Ad = -dir[DIM - 1];
             for(int i = 0; i < DIM - 1; i++)
             {
-              const double coeff = d_coeffs_a[coeff_index + k * (DIM - 1) + i];
+              const double coeff = d_coeffs_a[(coeff_index + k) * (DIM - 1) + i];
               
               Ax += coeff * cur_x[i];
               Ad += coeff * dir[i];
@@ -160,51 +213,155 @@ void ProxIndEpiPolyhedralKernel(
             }
           }
 
+          /*
+          printf("cur_x = [");
+          for(int i = 0; i < DIM; i++)
+            printf(" %f ", cur_x[i]);
+          printf("], dir = [");
+          for(int i = 0; i < DIM; i++)
+            printf(" %f ", dir[i]);
+          printf("], min_step=%f.\n", min_step);
+          */
+          
           // update primal variable and add blocking constraint
           for(int i = 0; i < DIM; i++)
             cur_x[i] += min_step * dir[i];
           
           if(blocking != -1) // add blocking constraint to active set
-            active_set[active_set_size++] = blocking; 
-          else // moved without finding blocking constraint -> converged at a point which is not a vertex
+            active_set[active_set_size++] = blocking;
+          else if(active_set_size == 1)
+          {
+            // moved freely without blocking constraint
+            // and at least one constraint is active at solution
+            // -> converged.
+            //printf("Moved freely without blocking constraint -> converged.\n");
             break;
+          }
         }
-        else // active_set has size DIM -> converged or throw out constraint.
+
+        /*
+        printf("Iteration %3d: active_set=[", it_acs);
+        for(int i = 0; i < active_set_size; i++)
+        {
+          printf(" %d ", active_set[i]);
+        }
+        printf("].\n");
+        */
+        
+        if(active_set_size == DIM || (blocking == -1))
         {
           if(DIM == 2)
           {
-            // compute A_r^T A_r 
-            matrix[0] = 0;
-            matrix[1] = 0;
-            for(int k = 0; k < active_set_size; k++)
+            if(active_set_size == 2)
             {
-              const double coeff = d_coeffs_a[coeff_index + active_set[k] * (DIM - 1)];
-              
-              matrix[0] += coeff * coeff;
-              matrix[1] -= coeff;
-            }
-            matrix[2] = matrix[1]; // symmetry
-            matrix[3] = active_set_size; // due to <(-1, ..., -1), (-1, ... -1)>
+              // compute A_r^T A_r 
+              matrix[0] = 0;
+              matrix[1] = 0;
+              for(int k = 0; k < active_set_size; k++) 
+              {
+                const double coeff = d_coeffs_a[(coeff_index + active_set[k]) * (DIM - 1)];
+                
+                matrix[0] += coeff * coeff;
+                matrix[1] -= coeff;
+              }
+              matrix[2] = matrix[1]; // symmetry
+              matrix[3] = DIM; // due to <(-1, ..., -1), (-1, ... -1)>, DIM == active_set_size
 
-            // compute dir = (A_r^T A_r)^-1 (x + c)
-            // dir is used as a temporary variable here.
-            for(int i = 0; i < DIM; i++) 
-              temp[i] = inp_arg[i] - cur_x[i];
+              // compute dir = (A_r^T A_r)^-1 -(x + c)
+              // dir is used as a temporary variable here.
+              for(int i = 0; i < DIM; i++) 
+                temp[i] = inp_arg[i] - cur_x[i];
             
-            solveLinearSystem2x2<double>(matrix, temp, dir); 
+              solveLinearSystem2x2<double>(matrix, temp, dir); 
               
-            // lambda_r = A_r dir
-            for(int k = 0; k < active_set_size; k++) 
-              lambda[k] = d_coeffs_a[coeff_index + active_set[k] * (DIM - 1)] * dir[0] - dir[1];
-          }
+              // lambda_r = A_r dir
+              for(int k = 0; k < active_set_size; k++) 
+                lambda[k] =
+                    d_coeffs_a[(coeff_index + active_set[k]) * (DIM - 1)] * dir[0] - dir[1];
+            }
+            else
+              printf("Warning: unusual active set size %d for DIM = 2.\n", active_set_size);
+          } 
           else if(DIM == 3)
           {
-            // TODO: implement me!
-          }
+            if(active_set_size == 2)
+            {
+              // compute A_r A_r^T
+              matrix[0] = matrix[1] = matrix[3] = 1;
+              for(int i = 0; i < DIM - 1; i++)
+              {
+                const double coeff0 = d_coeffs_a[(coeff_index + active_set[0]) * (DIM - 1) + i];
+                const double coeff1 = d_coeffs_a[(coeff_index + active_set[1]) * (DIM - 1) + i];
+                matrix[0] += coeff0 * coeff0;
+                matrix[1] += coeff0 * coeff1;
+                matrix[3] += coeff1 * coeff1;
+              }
+              matrix[2] = matrix[1]; // symmetry
+
+              // compute temp = A_r (-x - c)
+              temp[0] = cur_x[DIM - 1] - inp_arg[DIM - 1];
+              temp[1] = cur_x[DIM - 1] - inp_arg[DIM - 1];
+              
+              for(int i = 0; i < DIM - 1; i++) 
+              {
+                temp[0] +=
+                    d_coeffs_a[(coeff_index + active_set[0]) * (DIM - 1) + i] *
+                    (inp_arg[i] - cur_x[i]);
+
+                temp[1] +=
+                    d_coeffs_a[(coeff_index + active_set[1]) * (DIM - 1) + i] *
+                    (inp_arg[i] - cur_x[i]);
+              }
+
+              // compute lambda = (A_r A_r^T)^-1 temp
+              solveLinearSystem2x2<double>(matrix, temp, lambda);
+            }
+            else if(active_set_size == 3)
+            {
+              matrix[0] = matrix[1] = matrix[2] = matrix[4] = matrix[5] = 0;
+              
+              // compute A_r^T A_r
+              for(int k = 0; k < 3; k++) // active_set_size == 3
+              {
+                const double coeff0 = d_coeffs_a[(coeff_index + active_set[k]) * (DIM - 1) + 0];
+                const double coeff1 = d_coeffs_a[(coeff_index + active_set[k]) * (DIM - 1) + 1];
+
+                matrix[0] += coeff0 * coeff0;
+                matrix[1] += coeff1 * coeff0;
+                matrix[2] -= coeff0;
+                matrix[4] += coeff1 * coeff1;
+                matrix[5] -= coeff1;
+              }
+            
+              // symmetry
+              matrix[3] = matrix[1];
+              matrix[6] = matrix[2];
+              matrix[7] = matrix[5];
+            
+              // due to <(-1, ..., -1), (-1, ... -1)>
+              matrix[8] = 3; // active_set_size = 3
+
+              // compute dir = (A_r^T A_r)^-1 (-x - c)
+              // dir is used as a temporary variable here.
+              for(int i = 0; i < DIM; i++) 
+                temp[i] = inp_arg[i] - cur_x[i];
+
+              solveLinearSystem3x3<double>(matrix, temp, dir);
+            
+              // lambda_r = A_r dir
+              for(int k = 0; k < 3; k++) // active_set_size == 3
+                lambda[k] =
+                    d_coeffs_a[(coeff_index + active_set[k]) * (DIM - 1) + 0] * dir[0] +
+                    d_coeffs_a[(coeff_index + active_set[k]) * (DIM - 1) + 1] * dir[1] - dir[2];
+            } // else if(active_set_size == 3)
+            else
+              printf("Warning: unusual active set size %d for DIM = 3.\n", active_set_size);
+            
+          } // else if(DIM == 3)
      
           double best_lambda = 0;
           int idx_lambda = -1;
-          for(int k = 0; k < active_set_size; k++)
+          for(int k = 0; k < active_set_size; k++) 
           {
             if(lambda[k] < best_lambda)
             {
@@ -215,16 +372,22 @@ void ProxIndEpiPolyhedralKernel(
           
           // if all lambda >= 0 -> solution
           if(idx_lambda == -1)
+          {
+            /*
+            printf("All Lagrange Multipliers positive -> converged!\n");
+            for(int k = 0; k < active_set_size; k++)
+              printf("%g ", lambda[k]);
+            printf("\n");
+            */
             break;
+          }
           else // remove most negative lambda from active set           
             active_set[idx_lambda] = active_set[--active_set_size];
-        }
+        }        
       } // for(int it_acs = ...)
 
-/*
       if(it_acs == kAcsMaxIter)
         printf("Warning: active set method didn't converge within %d iterations.\n", kAcsMaxIter);
-*/
 
     } // if(active_set_size > 0)
 
@@ -307,7 +470,7 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
   switch(this->dim_)
   {
   case 2:
-    ProxIndEpiPolyhedralKernel<T, 2, 2>
+    ProxIndEpiPolyhedralKernel<T, 2>
       <<<grid, block>>>(
         thrust::raw_pointer_cast(&(*result_beg)),
         thrust::raw_pointer_cast(&(*arg_beg)),
@@ -319,22 +482,23 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
         this->interleaved_
         );
     break;
-/*
+
   case 3:
     ProxIndEpiPolyhedralKernel<T, 3>
-    <<<grid, block, shmem_bytes>>>(
+    <<<grid, block>>>(
       thrust::raw_pointer_cast(&(*result_beg)),
       thrust::raw_pointer_cast(&(*arg_beg)),
       thrust::raw_pointer_cast(dev_coeffs_a_.data()),
       thrust::raw_pointer_cast(dev_coeffs_b_.data()),
       thrust::raw_pointer_cast(dev_count_.data()),
       thrust::raw_pointer_cast(dev_index_.data()),
-      this->count_
+      this->count_,
+      this->interleaved_
       );
     break;
-*/
+
   default:
-    throw Exception("ProxIndEpiPolyhedral not implemented for dim > 2.");
+    throw Exception("ProxIndEpiPolyhedral not implemented for dim > 3.");
   }
   cudaDeviceSynchronize();
 }
