@@ -7,6 +7,7 @@
 #include "prost/linop/block_gradient2d.hpp"
 #include "prost/linop/block_gradient3d.hpp"
 #include "prost/linop/block_sparse.hpp"
+#include "prost/linop/block_sparse_kron_id.hpp"
 #include "prost/linop/block_zero.hpp"
 
 #include "prost/backend/backend.hpp"
@@ -93,6 +94,9 @@ CreateBlockZero(size_t row, size_t col, const mxArray *data);
   
 prost::BlockSparse<real>*
 CreateBlockSparse(size_t row, size_t col, const mxArray *data);
+
+prost::BlockSparseKronId<real>*
+CreateBlockSparseKronId(size_t row, size_t col, const mxArray *data);
   
 prost::BlockDiags<real>*
 CreateBlockDiags(size_t row, size_t col, const mxArray *pm);

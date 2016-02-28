@@ -34,12 +34,12 @@ public:
     const device_vector<T>& rhs);
 
   /// \brief For debugging/testing purposes. Not overwritten in DualLinearOperator.
-  void Eval(
+  double Eval(
     vector<T>& result,
     const vector<T>& rhs);
 
   /// \brief For debugging/testing purposes. Not overwritten in DualLinearOperator.
-  void EvalAdjoint(
+  double EvalAdjoint(
     vector<T>& result,
     const vector<T>& rhs);
 

@@ -132,8 +132,8 @@ static void EvalLinOp(MEX_ARGS) {
   if(nrhs != 3)
     throw Exception("eval_lin_op: Three inputs required!");
 
-  if(nlhs != 3)
-    throw Exception("eval_lin_op: Three outputs (result, rowsum, colsum) required.");
+  if(nlhs < 3)
+    throw Exception("eval_lin_op: At least three outputs (result, rowsum, colsum) required.");
 
   // read input arguments
   std::shared_ptr<LinearOperator<real> > linop(new LinearOperator<real>());
@@ -162,10 +162,11 @@ static void EvalLinOp(MEX_ARGS) {
 
   std::vector<real> res;
 
+  double time;
   if(transpose)
-    linop->EvalAdjoint(res, rhs);
+    time = linop->EvalAdjoint(res, rhs);
   else 
-    linop->Eval(res, rhs);
+    time = linop->Eval(res, rhs);
 
   plhs[0] = mxCreateDoubleMatrix(transpose ? linop->ncols() : linop->nrows(), 1, mxREAL);
   plhs[1] = mxCreateDoubleMatrix(linop->nrows(), 1, mxREAL);
@@ -183,6 +184,10 @@ static void EvalLinOp(MEX_ARGS) {
 
   std::copy(rowsum.begin(), rowsum.end(), (double *)mxGetPr(plhs[1]));
   std::copy(colsum.begin(), colsum.end(), (double *)mxGetPr(plhs[2]));
+
+  plhs[3] = mxCreateDoubleMatrix(1, 1, mxREAL);
+  double *pr = (double *)mxGetPr(plhs[3]);
+  pr[0] = time;
 }
 
 static void EvalProx(MEX_ARGS) {

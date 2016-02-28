@@ -132,33 +132,53 @@ void LinearOperator<T>::EvalAdjoint(
 }
 
 template<typename T>
-void LinearOperator<T>::Eval(
+double LinearOperator<T>::Eval(
   std::vector<T>& result,
   const std::vector<T>& rhs)
 {
+  static const int repeats = 1;
+  
   thrust::device_vector<T> d_rhs(rhs.begin(), rhs.end());
   thrust::device_vector<T> d_res;
   d_res.resize(nrows());
 
-  Eval(d_res, d_rhs);
+  const clock_t begin_time = clock();
+  for(int i = 0; i < repeats; i++)
+  {
+    Eval(d_res, d_rhs);
+    cudaDeviceSynchronize();
+  }
+  double s = (double)(clock() - begin_time) / CLOCKS_PER_SEC;
 
   result.resize(nrows());
   thrust::copy(d_res.begin(), d_res.end(), result.begin());
+
+  return (s * 1000 / (double)repeats);
 }
 
 template<typename T>
-void LinearOperator<T>::EvalAdjoint(
+double LinearOperator<T>::EvalAdjoint(
   std::vector<T>& result,
   const std::vector<T>& rhs)
 {
+  static const int repeats = 1;
+
   thrust::device_vector<T> d_rhs(rhs.begin(), rhs.end());
   thrust::device_vector<T> d_res;
   d_res.resize(ncols());
 
-  EvalAdjoint(d_res, d_rhs);
+  const clock_t begin_time = clock();
+  for(int i = 0; i < repeats; i++)
+  {
+    EvalAdjoint(d_res, d_rhs);
+    cudaDeviceSynchronize();
+  }
+  double s = (double)(clock() - begin_time) / CLOCKS_PER_SEC;
 
   result.resize(ncols());
   thrust::copy(d_res.begin(), d_res.end(), result.begin());
+
+  return (s * 1000 / (double)repeats);
 }
 
 template<typename T>

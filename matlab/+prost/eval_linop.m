@@ -1,5 +1,5 @@
-function [result, rowsum, colsum] = eval_linop(linop, input, transpose)
+function [result, rowsum, colsum, time] = eval_linop(linop, input, transpose)
     
-    [result, rowsum, colsum] = prost_('eval_linop', linop, input, transpose);
+    [result, rowsum, colsum, time] = prost_('eval_linop', linop, input, transpose);
     
 end
