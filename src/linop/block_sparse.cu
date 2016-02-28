@@ -10,37 +10,6 @@ namespace prost {
 template<> cusparseHandle_t BlockSparse<float>::cusp_handle_ = nullptr;
 template<> cusparseHandle_t BlockSparse<double>::cusp_handle_ = nullptr;
 
-// TODO: this is really awful C code. rewrite this.
-template<typename T>
-void BlockSparse<T>::csr2csc(
-  int n, int m, int nz, 
-  T *a, int *col_idx, int *row_start,
-  T *csc_a, int *row_idx, int *col_start)
-{
-  int i, j, k, l;
-  int *ptr;
-
-  for (i=0; i<=m; i++) col_start[i] = 0;
-
-  /* determine column lengths */
-  for (i=0; i<nz; i++) col_start[col_idx[i]+1]++;
-  for (i=0; i<m; i++) col_start[i+1] += col_start[i];
-
-  /* go through the structure once more. Fill in output matrix. */
-  for (i=0, ptr=row_start; i<n; i++, ptr++)
-    for (j=*ptr; j<*(ptr+1); j++){
-      k = col_idx[j];
-      l = col_start[k]++;
-      row_idx[l] = i;
-      if (a) csc_a[l] = a[j];
-    }
-
-  /* shift back col_start */
-  for (i=m; i>0; i--) col_start[i] = col_start[i-1];
-
-  col_start[0] = 0;
-}
-
 template<typename T>
 BlockSparse<T>* BlockSparse<T>::CreateFromCSC(
   size_t row,
@@ -64,7 +33,7 @@ BlockSparse<T>* BlockSparse<T>::CreateFromCSC(
   block->host_val_.resize(block->nnz_);
   block->host_ptr_.resize(block->nrows() + 1);
 
-  BlockSparse<T>::csr2csc(
+  csr2csc(
     block->ncols(), 
     block->nrows(), 
     block->nnz_, 

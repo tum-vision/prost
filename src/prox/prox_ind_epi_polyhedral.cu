@@ -6,8 +6,6 @@
 
 namespace prost {
 
-//#define DEBUG_PRINT
-
 template<typename T>
 inline __device__
 void solveLinearSystem2x2(T *A, T *b, T *x)
@@ -41,15 +39,21 @@ void solveLinearSystem3x3(T *A, T *b, T *x) // requires A to be symmetric positi
   d7 = (A[7] - d6 * d3) / d4;
   d8 = sqrt(A[8] - d6 * d6 - d7 * d7);
 
-  // forward substitute
+  // forward substitution
   y0 = (b[0]) / d0;
   y1 = (b[1] - d3 * y0) / d4;
   y2 = (b[2] - d6 * y0 - d7 * y1) / d8;
 
-  // backward substitute
+  // backward substitution
   x[2] = (y2) / d8;
   x[1] = (y1 - d7 * x[2]) / d4;
   x[0] = (y0 - d3 * x[1] - d6 * x[2]) / d0;
+}
+
+template<typename T, int DIM>
+inline __device__
+void solveLinearSystem(T *A, T *b, T *x) // requires A to be symmetric positive definite.
+{
 }
 
 template<typename T, size_t DIM>
@@ -112,9 +116,8 @@ void ProxIndEpiPolyhedralKernel(
       int it_acs;
       for(it_acs = 0; it_acs < kAcsMaxIter; it_acs++)
       {
-        double sum_dir = 1;
         int blocking = -1;
-        
+
         if(active_set_size < DIM) // determine search direction dir 
         {
           if(active_set_size == 1)
@@ -165,16 +168,11 @@ void ProxIndEpiPolyhedralKernel(
           }
 
           // backsubstitution
-          sum_dir = 0;
           for(int i = 0; i < DIM; i++)
-          {
             dir[i] += -cur_x[i] + inp_arg[i];
-            sum_dir += abs(dir[i]);
-          }
 
           // determine smallest step size at which a new (blocking) constraint
           // enters the active set
-          //int blocking = -1;
           double min_step = 1;
 
           for(int k = 0; k < coeff_count; k++)
@@ -212,16 +210,6 @@ void ProxIndEpiPolyhedralKernel(
               }
             }
           }
-
-          /*
-          printf("cur_x = [");
-          for(int i = 0; i < DIM; i++)
-            printf(" %f ", cur_x[i]);
-          printf("], dir = [");
-          for(int i = 0; i < DIM; i++)
-            printf(" %f ", dir[i]);
-          printf("], min_step=%f.\n", min_step);
-          */
           
           // update primal variable and add blocking constraint
           for(int i = 0; i < DIM; i++)
@@ -234,19 +222,9 @@ void ProxIndEpiPolyhedralKernel(
             // moved freely without blocking constraint
             // and at least one constraint is active at solution
             // -> converged.
-            //printf("Moved freely without blocking constraint -> converged.\n");
             break;
           }
         }
-
-        /*
-        printf("Iteration %3d: active_set=[", it_acs);
-        for(int i = 0; i < active_set_size; i++)
-        {
-          printf(" %d ", active_set[i]);
-        }
-        printf("].\n");
-        */
         
         if(active_set_size == DIM || (blocking == -1))
         {
@@ -373,12 +351,6 @@ void ProxIndEpiPolyhedralKernel(
           // if all lambda >= 0 -> solution
           if(idx_lambda == -1)
           {
-            /*
-            printf("All Lagrange Multipliers positive -> converged!\n");
-            for(int k = 0; k < active_set_size; k++)
-              printf("%g ", lambda[k]);
-            printf("\n");
-            */
             break;
           }
           else // remove most negative lambda from active set           
@@ -444,6 +416,9 @@ void ProxIndEpiPolyhedral<T>::Initialize()
   {
     throw Exception("Out of memory.");
   }
+
+  if(!(this->dim_ == 2 || this->dim_ == 3))
+    throw Exception("Polyhedral epigraph projection only implemented for dimensions 2 and 3.");
 }
 
 template<typename T>
@@ -464,7 +439,7 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
   T tau,
   bool invert_tau)
 {
-  dim3 block(192, 1, 1);
+  dim3 block(kBlockSizeCUDA, 1, 1);
   dim3 grid((this->count_ + block.x - 1) / block.x, 1, 1);
 
   switch(this->dim_)

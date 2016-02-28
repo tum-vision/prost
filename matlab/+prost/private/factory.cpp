@@ -57,11 +57,12 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
 };
 
 const static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>> default_block_reg = {
-  { "diags",      CreateBlockDiags      },
-  { "gradient2d", CreateBlockGradient2D },
-  { "gradient3d", CreateBlockGradient3D },
-  { "sparse",     CreateBlockSparse     },
-  { "zero",       CreateBlockZero       },
+  { "diags",          CreateBlockDiags        },
+  { "gradient2d",     CreateBlockGradient2D   },
+  { "gradient3d",     CreateBlockGradient3D   },
+  { "sparse",         CreateBlockSparse       },
+  { "sparse_kron_id", CreateBlockSparseKronId },
+  { "zero",           CreateBlockZero         },
 };
 
 const static map<string, function<Backend<real>*(const mxArray*)>> default_backend_reg = {
@@ -334,6 +335,9 @@ CreateBlockSparse(size_t row, size_t col, const mxArray *data)
 {
   mxArray *pm = mxGetCell(data, 0);
 
+  if(!mxIsSparse(pm))
+    throw Exception("Matrix must be sparse!");
+  
   double *val = mxGetPr(pm);
   mwIndex *ind = mxGetIr(pm);
   mwIndex *ptr = mxGetJc(pm);
@@ -351,6 +355,42 @@ CreateBlockSparse(size_t row, size_t col, const mxArray *data)
   return BlockSparse<real>::CreateFromCSC(
     row, 
     col,
+    nrows,
+    ncols,
+    nnz,
+    vec_val,
+    vec_ptr,
+    vec_ind);
+}
+
+prost::BlockSparseKronId<real>*
+CreateBlockSparseKronId(size_t row, size_t col, const mxArray *data)
+{
+  mxArray *pm = mxGetCell(data, 0);
+
+  if(!mxIsSparse(pm))
+    throw Exception("Matrix must be sparse!");
+
+  double *val = mxGetPr(pm);
+  mwIndex *ind = mxGetIr(pm);
+  mwIndex *ptr = mxGetJc(pm);
+  const mwSize *dims = mxGetDimensions(pm);
+
+  int nrows = dims[0];
+  int ncols = dims[1];
+  int nnz = ptr[ncols];
+
+  size_t diaglength = GetScalarFromCellArray<size_t>(data, 1);
+
+  // convert from mwIndex -> int32_t, double -> real
+  std::vector<real> vec_val(val, val + nnz);
+  std::vector<int32_t> vec_ptr(ptr, ptr + (ncols + 1));
+  std::vector<int32_t> vec_ind(ind, ind + nnz); 
+
+  return BlockSparseKronId<real>::CreateFromCSC(
+    row, 
+    col,
+    diaglength,
     nrows,
     ncols,
     nnz,

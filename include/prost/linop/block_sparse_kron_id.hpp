@@ -1,48 +1,40 @@
-#ifndef PROST_BLOCK_SPARSE_HPP_
-#define PROST_BLOCK_SPARSE_HPP_
-
-#include <thrust/device_vector.h>
-#include <thrust/device_ptr.h>
-
-#include <cuda_runtime.h>
-#include <cusparse.h>
+#ifndef PROST_BLOCK_SPARSE_KRON_ID_HPP_
+#define PROST_BLOCK_SPARSE_KRON_ID_HPP_
 
 #include "prost/linop/block.hpp"
 
 namespace prost {
 
-/// 
-/// \brief Linear operator based on sparse matrix.
-/// 
+///
+/// \brief Linear operator composed of many small sparse matrices.
+///
 template<typename T>
-class BlockSparse : public Block<T> {
-  BlockSparse(size_t row, size_t col, size_t nrows, size_t ncols);
+class BlockSparseKronId : public Block<T>
+{
+  BlockSparseKronId(size_t row, size_t col, size_t nrows, size_t ncols);
+  
+ public:
+  static BlockSparseKronId<T> *CreateFromCSC(
+      size_t row,
+      size_t col,
+      size_t diaglength,
+      int m,
+      int n,
+      int nnz,
+      const vector<T>& val,
+      const vector<int32_t>& ptr,
+      const vector<int32_t>& ind);
 
-public: 
-  // TODO: add check somewhere if int32_t index is big enough
-  static BlockSparse<T> *CreateFromCSC(
-    size_t row,
-    size_t col,
-    int m,
-    int n,
-    int nnz,
-    const vector<T>& val,
-    const vector<int32_t>& ptr,
-    const vector<int32_t>& ind);
-
-  virtual ~BlockSparse();
+  virtual ~BlockSparseKronId() {}
 
   virtual void Initialize();
 
-  /// \brief Required for preconditioners, row and col are "local" 
-  ///        for the operator, which means they start at 0.
   virtual T row_sum(size_t row, T alpha) const;
   virtual T col_sum(size_t col, T alpha) const;
 
   virtual size_t gpu_mem_amount() const;
-  
-protected:
-  // TODO: implement sparse matrix multiplication on CPU
+
+ protected:
   virtual void EvalLocalAdd(
     const typename device_vector<T>::iterator& res_begin,
     const typename device_vector<T>::iterator& res_end,
@@ -55,16 +47,16 @@ protected:
     const typename device_vector<T>::const_iterator& rhs_begin,
     const typename device_vector<T>::const_iterator& rhs_end);
 
-  /// \brief Number of non-zero elements.
-  size_t nnz_;
-
-  static cusparseHandle_t cusp_handle_;
-  cusparseMatDescr_t descr_;
-
+ private:
+  size_t diaglength_;
+  size_t mat_nrows_;
+  size_t mat_ncols_;
+  size_t mat_nnz_;
+  
   device_vector<int32_t> ind_, ind_t_;
   device_vector<int32_t> ptr_, ptr_t_;
   device_vector<T> val_, val_t_;
-
+  
   vector<int32_t> host_ind_, host_ind_t_;
   vector<int32_t> host_ptr_, host_ptr_t_;
   vector<T> host_val_, host_val_t_;
@@ -72,4 +64,4 @@ protected:
 
 } // namespace prost
 
-#endif // PROST_BLOCK_SPARSE_HPP_
+#endif // PROST_BLOCK_SPARSE_KRON_ID_HPP_

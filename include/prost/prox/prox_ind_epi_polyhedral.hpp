@@ -21,6 +21,11 @@ namespace prost {
 ///        min_{x,t} (x - y)^2 + (t - u)^2
 /// 
 ///        s.t. t >= <a_i, x> + b_i, i = 1..m
+///
+///        IMPORTANT: the a_i must be unique (no pointless constraints)
+///                   and no more than DIM hyperplanes should intersect
+///                   in one point (no more than DIM coplanar points in
+///                   the dual representation).
 /// 
 template<typename T>
 class ProxIndEpiPolyhedral : public ProxSeparableSum<T> {
