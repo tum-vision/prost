@@ -14,19 +14,23 @@ void ProxTransformPrescaleArgument(
   const T *dev_b,
   const T *dev_d,
   const T *dev_e,
-  T a, T b, T d, T e, T tau, size_t n)
+  T a, T b, T d, T e, T tau, size_t n, bool invert_tau)
 {
   size_t tx = threadIdx.x + blockIdx.x * blockDim.x;
 
   if(tx >= n)
     return;
 
+  T tau2 = tau * tau_diag[tx];
+  if(invert_tau)
+    tau2 = 1 / tau2;
+
   a = (nullptr == dev_a) ? a : dev_a[tx];
   b = (nullptr == dev_b) ? b : dev_b[tx];
   d = (nullptr == dev_d) ? d : dev_d[tx];
   e = (nullptr == dev_e) ? e : dev_e[tx];
 
-  scaled_arg[tx] = (a * (arg[tx] - tau * tau_diag[tx] * d)) / (1 + tau * tau_diag[tx] * e) - b;
+  scaled_arg[tx] = (a * (arg[tx] - tau2 * d)) / (1 + tau2 * e) - b;
 }
 
 template<typename T>
@@ -37,18 +41,22 @@ void ProxTransformPrescaleStepSize(
   const T *dev_a,
   const T *dev_c,
   const T *dev_e,
-  T a, T c, T e, T tau, size_t n)
+  T a, T c, T e, T tau, size_t n, bool invert_tau)
 {
   size_t tx = threadIdx.x + blockIdx.x * blockDim.x;
 
   if(tx >= n)
     return;
 
+  T tau2 = tau * tau_diag[tx];
+  if(invert_tau)
+    tau2 = 1 / tau2;
+
   a = (nullptr == dev_a) ? a : dev_a[tx];
   c = (nullptr == dev_c) ? c : dev_c[tx];
   e = (nullptr == dev_e) ? e : dev_e[tx];
 
-  scaled_tau[tx] = (a * a * c * tau * tau_diag[tx]) / (1 + tau * tau_diag[tx] * e);
+  scaled_tau[tx] = (a * a * c * tau2) / (1 + tau2 * e);
 }
 
 template<typename T>
@@ -161,7 +169,7 @@ void ProxTransform<T>::EvalLocal(
       (host_b_.size() > 1) ? thrust::raw_pointer_cast(dev_b_.data()) : nullptr,
       (host_d_.size() > 1) ? thrust::raw_pointer_cast(dev_d_.data()) : nullptr,
       (host_e_.size() > 1) ? thrust::raw_pointer_cast(dev_e_.data()) : nullptr,
-      host_a_[0], host_b_[0], host_d_[0], host_e_[0], tau, this->size_);
+      host_a_[0], host_b_[0], host_d_[0], host_e_[0], tau, this->size_, invert_tau);
 
   ProxTransformPrescaleStepSize<T>
     <<<grid, block>>>(
@@ -170,7 +178,7 @@ void ProxTransform<T>::EvalLocal(
       (host_a_.size() > 1) ? thrust::raw_pointer_cast(dev_a_.data()) : nullptr,
       (host_c_.size() > 1) ? thrust::raw_pointer_cast(dev_c_.data()) : nullptr,
       (host_e_.size() > 1) ? thrust::raw_pointer_cast(dev_e_.data()) : nullptr,
-      host_a_[0], host_c_[0], host_e_[0], tau, this->size_);
+      host_a_[0], host_c_[0], host_e_[0], tau, this->size_, invert_tau);
 
   // compute prox on scaled argument
   inner_fn_->EvalLocal(
@@ -181,7 +189,7 @@ void ProxTransform<T>::EvalLocal(
     scaled_tau_.begin(),
     scaled_tau_.end(),
     1,
-    invert_tau);
+    false);
 
   // rescale result
   ProxTransformPostscale<T>

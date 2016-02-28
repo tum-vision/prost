@@ -12,20 +12,21 @@ function [passed] = test_prox_transform()
         Tau = rand(N, 1);
 
         %% evaluate prox directly
-        x = prost.eval_prox( prost.prox.sum_1d(0, N, 'abs', ...
-                                           a, b, c, d, e), y, ...
+        x = prost.eval_prox( prost.prox.moreau(prost.prox.sum_1d(0, N, 'abs', ...
+                                           a, b, c, d, e)), y, ...
                              tau, Tau);
     
         %% evaluate prox via transformation
         prox_1d = prost.prox.sum_1d(0, N, 'abs', 1, 0, 1, 0, 0);
         
-        x2 = prost.eval_prox( prost.prox.transform( ...
-            prox_1d, a, b, c, d, e), y, tau, Tau );
+        x2 = prost.eval_prox( prost.prox.moreau(prost.prox.transform( ...
+            prox_1d, a, b, c, d, e)), y, tau, Tau );
 
         %% check if result is the same
         diff = x - x2;
     
         if norm(diff, Inf) > 1e-5
+            fprintf(' failed! norm_diff = %f\n', norm(diff, Inf));
             passed = false;
             return;
         end

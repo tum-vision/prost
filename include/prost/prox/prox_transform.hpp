@@ -10,8 +10,6 @@ namespace prost {
 ///        h(x) = c f(ax - b) + <d, x> + (e/2) <x, x>,
 ///        using the proximal operator of f. 
 /// 
-///        TODO: Add possible orthogonal linear transform.
-///        TODO: BUG: doesnt work with Moreua -> fix invert_tau!!!
 template<typename T>
 class ProxTransform : public Prox<T> {
 public:
