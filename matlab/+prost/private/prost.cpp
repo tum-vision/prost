@@ -65,6 +65,7 @@ static bool MexStoppingCallback() {
 
 static void SolveProblem(MEX_ARGS) {
   BlockDiags<real>::ResetConstMem();
+  BlockSparseKronId<real>::ResetConstMem();
 
   std::shared_ptr<Problem<real> > problem = CreateProblem(prhs[0]);
   std::shared_ptr<Backend<real> > backend = CreateBackend(prhs[1]);
@@ -128,6 +129,7 @@ static void SolveProblem(MEX_ARGS) {
 
 static void EvalLinOp(MEX_ARGS) {
   BlockDiags<real>::ResetConstMem();
+  BlockSparseKronId<real>::ResetConstMem();
 
   if(nrhs != 3)
     throw Exception("eval_lin_op: Three inputs required!");
