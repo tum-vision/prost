@@ -6,7 +6,8 @@
 namespace prost {
 
 ///
-/// \brief Linear operator implementation of the MATLAB command speye.
+/// \brief Linear operator implementation of the MATLAB command speye and
+///        to some extend spdiags.
 ///
 /// \param ndiags: number of diagonals
 /// \param offsets: array of size ndiags, starting position of diagonals
