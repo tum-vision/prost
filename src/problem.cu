@@ -24,11 +24,12 @@ struct ProxCompare {
 
 /// \brief Checks whether the whole domain is covered by prox operators.
 template<typename T>
-bool CheckDomainProx(const typename Problem<T>::ProxList& proxs, size_t n) {
+void CheckDomainProx(const typename Problem<T>::ProxList& proxs, size_t n, const std::string& name)
+{
   size_t num_proxs = proxs.size();
 
   if(0 == num_proxs)
-    return true;
+    return;
 
   typename Problem<T>::ProxList sorted_proxs = proxs;
   std::sort(sorted_proxs.begin(), sorted_proxs.end(), ProxCompare<T>());
@@ -37,15 +38,23 @@ bool CheckDomainProx(const typename Problem<T>::ProxList& proxs, size_t n) {
     
     if(sorted_proxs[i]->end() != (sorted_proxs[i + 1]->index() - 1))
     {
-      return false;
+      stringstream ss;
+
+      ss << name << ": Prox operators are overlapping or have empty space: [";
+      ss << sorted_proxs[i]->index() << ", " << sorted_proxs[i]->end() << "] and [";
+      ss << sorted_proxs[i + 1]->index() << ", " << sorted_proxs[i + 1]->end() << "]." << endl;
+      throw Exception(ss.str());
     }
   }
 
   if(sorted_proxs[num_proxs - 1]->end() != (n - 1)) {
-    return false;
-  }
+    stringstream ss;
 
-  return true;
+    ss << name << ": Last prox operator ends after the domain: [";
+    ss << sorted_proxs[num_proxs - 1]->index() << ", " << sorted_proxs[num_proxs - 1]->end() << "], end = ";
+    ss << n - 1 << "." << endl;
+    throw Exception(ss.str());
+  }
 }
 
 template<typename T>
@@ -103,17 +112,10 @@ void Problem<T>::Initialize()
     throw Exception("Proximal operator for g AND gstar specified. Only set one!");
 
   // check if whole domain is covered by prox operators
-  if(!CheckDomainProx<T>(prox_g_, ncols_)) 
-    throw Exception("prox_g does not cover the whole domain!");
-
-  if(!CheckDomainProx<T>(prox_f_, nrows_)) 
-    throw Exception("prox_f does not cover the whole domain!");
-   
-  if(!CheckDomainProx<T>(prox_gstar_, ncols_)) 
-    throw Exception("prox_gstar does not cover the whole domain!");
-
-  if(!CheckDomainProx<T>(prox_fstar_, nrows_)) 
-    throw Exception("prox_fstar does not cover the whole domain!");
+  CheckDomainProx<T>(prox_g_, ncols_, "prox_g");
+  CheckDomainProx<T>(prox_f_, nrows_, "prox_f");
+  CheckDomainProx<T>(prox_gstar_, ncols_, "prox_gstar");
+  CheckDomainProx<T>(prox_fstar_, nrows_, "prox_fstar");
 
   // Init Proxs
   for(auto& prox : prox_f_) 
