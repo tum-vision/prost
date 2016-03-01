@@ -37,7 +37,7 @@ function [passed] = test_linop_sparse_kron_id()
     norm_diff_t = max(abs(x_t - x_matlab_t));
     rowsum_diff = max(abs(rowsum - sum(abs(K),2)));
     colsum_diff = max(abs(colsum - sum(abs(K),1)'));
-    if norm_diff > 1e-3
+    if norm_diff > 1e-4
         fprintf('failed! Reason: norm_diff > 1e-4: %f\n', norm_diff);
         passed = false;
         
