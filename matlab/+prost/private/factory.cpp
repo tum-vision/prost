@@ -95,11 +95,17 @@ std::vector<T> GetVector(const mxArray *p)
   const mwSize *dims = mxGetDimensions(p);
   double *val = mxGetPr(p);
 
+  if(!mxIsDouble(p))
+    throw Exception("Argument has to be passed as a vector of type double.");
+
   if(dims[1] != 1 && dims[0] != 1)
     throw Exception("Vector has to be Nx1 or 1xN.");
 
   if(dims[0] == 0 || dims[1] == 0)
     throw Exception("Empty vector passed.");
+
+  if(dims[0] < 0 || dims[1] < 0)
+    throw Exception("Vector has negative dimension (should never happen).");
 
   if(dims[1] == 1)
     return std::vector<T>(val, val + dims[0]);

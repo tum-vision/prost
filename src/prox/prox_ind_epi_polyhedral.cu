@@ -69,7 +69,7 @@ void ProxIndEpiPolyhedralKernel(
     bool interleaved)
 {
   const double kAcsTolerance = 1e-9;
-  const int kAcsMaxIter = 50;
+  const int kAcsMaxIter = 250;
   
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
@@ -296,6 +296,8 @@ void ProxIndEpiPolyhedralKernel(
             }
             else if(active_set_size == 3)
             {
+              // TODO: implement pseudo-inverse via SVD.
+
               matrix[0] = matrix[1] = matrix[2] = matrix[4] = matrix[5] = 0;
               
               // compute A_r^T A_r
@@ -359,7 +361,7 @@ void ProxIndEpiPolyhedralKernel(
       } // for(int it_acs = ...)
 
       if(it_acs == kAcsMaxIter)
-        printf("Warning: active set method didn't converge within %d iterations.\n", kAcsMaxIter);
+        printf("Warning: active set method didn't converge within %d iterations (at tx=%u).\n", kAcsMaxIter, (uint32_t)tx);
 
     } // if(active_set_size > 0)
 
@@ -476,6 +478,15 @@ void ProxIndEpiPolyhedral<T>::EvalLocal(
     throw Exception("ProxIndEpiPolyhedral not implemented for dim > 3.");
   }
   cudaDeviceSynchronize();
+
+  cudaError_t error = cudaGetLastError();
+  if(error != cudaSuccess)
+  {
+    // print the CUDA error message and throw exception
+    std::stringstream ss;
+    ss << "CUDA error: " << cudaGetErrorString(error) << std::endl;
+    throw Exception(ss.str());
+  }
 }
 
 template class ProxIndEpiPolyhedral<float>;

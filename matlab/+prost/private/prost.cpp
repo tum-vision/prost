@@ -223,11 +223,6 @@ static void EvalProx(MEX_ARGS) {
 
   double milliseconds = prox->Eval(h_result, h_arg, h_tau, tau);
 
-/*
-  if(mxGetScalar(prhs[4]) > 0)
-    std::cout << "Prox took " << milliseconds << "ms.\n";
-*/
-  
   // convert result back to MATLAB matrix and float -> double
   plhs[0] = mxCreateDoubleMatrix(n, 1, mxREAL);
   std::copy(h_result.begin(), h_result.end(), (double *)mxGetPr(plhs[0]));

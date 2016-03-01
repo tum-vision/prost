@@ -158,10 +158,14 @@ void BlockSparseKronId<T>::Initialize()
      (cmem_counter_cols_ > kMaxCols))
   {
     in_cmem_ = false;
-
+    cmem_counter_nnz_ -= mat_nnz_;
+    cmem_counter_cols_ -= mat_ncols_ + 1;
+    cmem_counter_rows_ -= mat_nrows_ + 1;
+/*
     std::cout << cmem_counter_nnz_ << ", " << kMaxNNZ << std::endl;
     std::cout << cmem_counter_rows_ << ", " << kMaxRows << std::endl;
     std::cout << cmem_counter_cols_ << ", " << kMaxCols << std::endl;
+*/
   }
   else
   {
@@ -342,7 +346,8 @@ void BlockSparseKronId<T>::EvalAdjointLocalAdd(
             true);
   }
   cudaDeviceSynchronize();
-                                                                                                     // check for error
+
+  // check for error  
   cudaError_t error = cudaGetLastError();
   if(error != cudaSuccess)
   {
