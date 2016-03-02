@@ -69,7 +69,7 @@ void ProxIndEpiPolyhedralKernel(
     bool interleaved)
 {
   const double kAcsTolerance = 1e-9;
-  const int kAcsMaxIter = 250;
+  const int kAcsMaxIter = 50;
   
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
@@ -412,6 +412,15 @@ void ProxIndEpiPolyhedral<T>::Initialize()
 
   if(host_index_.size() != this->count() || host_count_.size() != this->count())
     throw Exception("Count doesn't match size of indices/counts array!");
+
+  uint32_t last_index = *host_index_.rbegin();
+  uint32_t last_count = *host_count_.rbegin();
+  
+  if(host_coeffs_a_.size() != (last_index + last_count) * (this->dim_ - 1))
+    throw Exception("Slope coefficients array coeffs_a doesn't match size specified in indices/counts array!");
+
+  if(host_coeffs_b_.size() != (last_index + last_count))
+    throw Exception("Intercept coefficients array coeffs_b doesn't match size specified in indices/counts array!");
 
   // copy and allocate data on GPU
   try 
