@@ -168,52 +168,59 @@ void ProxIndEpiPolyhedralKernel(
           }
 
           // backsubstitution
+          double sum_d = 0;
           for(int i = 0; i < DIM; i++)
-            dir[i] += -cur_x[i] + inp_arg[i];
-
-          // determine smallest step size at which a new (blocking) constraint
-          // enters the active set
-          double min_step = 1;
-
-          for(int k = 0; k < coeff_count; k++)
           {
-            // check if constraint k is in active set
-            bool in_set = false;
-            for(int l = 0; l < active_set_size; l++)
-              if(active_set[l] == k)
-              {
-                in_set = true;
-                break;
-              }
-            
-            // if so, disregard the constraint
-            if(in_set)
-              continue;
-
-            double Ax = -cur_x[DIM - 1], Ad = -dir[DIM - 1];
-            for(int i = 0; i < DIM - 1; i++)
-            {
-              const double coeff = d_coeffs_a[(coeff_index + k) * (DIM - 1) + i];
-              
-              Ax += coeff * cur_x[i];
-              Ad += coeff * dir[i];
-            }
-
-            if(Ad > 0)
-            {
-              double step = (d_coeffs_b[coeff_index + k] - Ax) / Ad;
-              
-              if(step < min_step)
-              {
-                min_step = step;
-                blocking = k;
-              }
-            }
+            dir[i] += -cur_x[i] + inp_arg[i];
+            sum_d += abs(dir[i]);
           }
+
+          if(sum_d > kAcsTolerance)
+          {
+            // determine smallest step size at which a new (blocking) constraint
+            // enters the active set
+            double min_step = 1;
+
+            for(int k = 0; k < coeff_count; k++)
+            {
+              // check if constraint k is in active set
+              bool in_set = false;
+              for(int l = 0; l < active_set_size; l++)
+                if(active_set[l] == k)
+                {
+                  in_set = true;
+                  break;
+                }
+            
+              // if so, disregard the constraint
+              if(in_set)
+                continue;
+
+              double Ax = -cur_x[DIM - 1], Ad = -dir[DIM - 1];
+              for(int i = 0; i < DIM - 1; i++)
+              {
+                const double coeff = d_coeffs_a[(coeff_index + k) * (DIM - 1) + i];
+              
+                Ax += coeff * cur_x[i];
+                Ad += coeff * dir[i];
+              }
+
+              if(Ad > 0)
+              {
+                double step = (d_coeffs_b[coeff_index + k] - Ax) / Ad;
+              
+                if((step < min_step) && (step > kAcsTolerance))
+                {
+                  min_step = step;
+                  blocking = k;
+                }
+              }
+            }
           
-          // update primal variable and add blocking constraint
-          for(int i = 0; i < DIM; i++)
-            cur_x[i] += min_step * dir[i];
+            // update primal variable and add blocking constraint
+            for(int i = 0; i < DIM; i++)
+              cur_x[i] += min_step * dir[i];
+          }
           
           if(blocking != -1) // add blocking constraint to active set
             active_set[active_set_size++] = blocking;
@@ -493,3 +500,4 @@ template class ProxIndEpiPolyhedral<float>;
 template class ProxIndEpiPolyhedral<double>;
 
 } // namespace prost
+
