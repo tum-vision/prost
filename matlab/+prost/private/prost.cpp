@@ -212,6 +212,13 @@ static void EvalProx(MEX_ARGS) {
   prox = CreateProx(prhs[0]);
   prox->Initialize();
 
+  if(prox->size() != n)
+  {
+    stringstream ss;
+    ss << "Size of input argument (" << n << ") doesn't match size of prox (" << prox->size() << ")!\n";
+    throw Exception(ss.str());
+  }
+
   // read data from matlab
   double *arg = (double *)mxGetPr(prhs[1]);
   double *tau_diag = (double *)mxGetPr(prhs[3]);
