@@ -6,6 +6,8 @@
 
 namespace prost {
 
+//#define DEBUG_PRINT
+
 template<typename T>
 inline __device__
 void solveLinearSystem2x2(T *A, T *b, T *x)
@@ -50,10 +52,36 @@ void solveLinearSystem3x3(T *A, T *b, T *x) // requires A to be symmetric positi
   x[0] = (y0 - d3 * x[1] - d6 * x[2]) / d0;
 }
 
-template<typename T, int DIM>
+template<typename T>
 inline __device__
-void solveLinearSystem(T *A, T *b, T *x) // requires A to be symmetric positive definite.
+void solveLinearSystem2x2Precise(T *A, T *b, T *x)
 {
+  solveLinearSystem2x2<T>(A, b, x);
+
+  T db[2], dx[2];
+  db[0] = A[0] * x[0] + A[1] * x[1] - b[0];
+  db[1] = A[2] * x[0] + A[3] * x[1] - b[1];
+
+  solveLinearSystem2x2<T>(A, db, dx);
+  x[0] -= dx[0];
+  x[1] -= dx[1];
+}
+
+template<typename T>
+inline __device__
+void solveLinearSystem3x3Precise(T *A, T *b, T *x)
+{
+  solveLinearSystem3x3<T>(A, b, x);
+
+  T db[3], dx[3];
+  db[0] = A[0] * x[0] + A[1] * x[1] + A[2] * x[2] - b[0];
+  db[1] = A[3] * x[0] + A[4] * x[1] + A[5] * x[2] - b[1]; 
+  db[2] = A[6] * x[0] + A[7] * x[1] + A[8] * x[2] - b[2];
+
+  solveLinearSystem3x3<T>(A, db, dx);
+  x[0] -= dx[0];
+  x[1] -= dx[1];
+  x[2] -= dx[2];
 }
 
 template<typename T, size_t DIM>
@@ -69,7 +97,7 @@ void ProxIndEpiPolyhedralKernel(
     bool interleaved)
 {
   const double kAcsTolerance = 1e-9;
-  const int kAcsMaxIter = 50;
+  const int kAcsMaxIter = 100;
   
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
@@ -102,7 +130,7 @@ void ProxIndEpiPolyhedralKernel(
       for(int i = 1; i < DIM - 1; i++)
         lhs += d_coeffs_a[(coeff_index + k) * (DIM - 1) + i] * cur_x[i];
 
-      if(lhs - cur_x[DIM - 1] > d_coeffs_b[coeff_index + k] + kAcsTolerance)
+      if(lhs - cur_x[DIM - 1] > d_coeffs_b[coeff_index + k])
       {
         cur_x[DIM - 1] = lhs - d_coeffs_b[coeff_index + k];
 
@@ -135,6 +163,8 @@ void ProxIndEpiPolyhedralKernel(
             for(int i = 0; i < DIM - 1; i++)
               dir[i] = d_coeffs_a[(coeff_index + active_set[0]) * (DIM - 1) + i] * rhs / fac;
             dir[DIM - 1] = -rhs / fac;
+            // projection onto halfspace
+
           }
           else if(active_set_size == 2)
           {
@@ -158,7 +188,7 @@ void ProxIndEpiPolyhedralKernel(
             matrix[2] = matrix[1]; // symmetry
 
             // compute temp = (A_r A_r^T)^-1 rhs
-            solveLinearSystem2x2<double>(matrix, rhs, temp);
+            solveLinearSystem2x2Precise<double>(matrix, rhs, temp);
 
             // compute dir = A_r^T temp
             for(int i = 0; i < 2; i++) // active_set_size == 2
@@ -175,7 +205,7 @@ void ProxIndEpiPolyhedralKernel(
             sum_d += abs(dir[i]);
           }
 
-          if(sum_d > kAcsTolerance)
+          if(sum_d > 0)
           {
             // determine smallest step size at which a new (blocking) constraint
             // enters the active set
@@ -205,11 +235,11 @@ void ProxIndEpiPolyhedralKernel(
                 Ad += coeff * dir[i];
               }
 
-              if(Ad > 0)
+              if(Ad > kAcsTolerance)
               {
                 double step = (d_coeffs_b[coeff_index + k] - Ax) / Ad;
               
-                if((step < min_step) && (step > kAcsTolerance))
+                if((step < min_step) && (step > -kAcsTolerance))
                 {
                   min_step = step;
                   blocking = k;
@@ -229,6 +259,9 @@ void ProxIndEpiPolyhedralKernel(
             // moved freely without blocking constraint
             // and at least one constraint is active at solution
             // -> converged.
+#ifdef DEBUG_PRINT
+            printf("Converged since active_set_size == 1 and no blocking constraint found.\n");
+#endif
             break;
           }
         }
@@ -257,7 +290,7 @@ void ProxIndEpiPolyhedralKernel(
               for(int i = 0; i < DIM; i++) 
                 temp[i] = inp_arg[i] - cur_x[i];
             
-              solveLinearSystem2x2<double>(matrix, temp, dir); 
+              solveLinearSystem2x2Precise<double>(matrix, temp, dir); 
               
               // lambda_r = A_r dir
               for(int k = 0; k < active_set_size; k++) 
@@ -299,11 +332,12 @@ void ProxIndEpiPolyhedralKernel(
               }
 
               // compute lambda = (A_r A_r^T)^-1 temp
-              solveLinearSystem2x2<double>(matrix, temp, lambda);
+              solveLinearSystem2x2Precise<double>(matrix, temp, lambda);
             }
             else if(active_set_size == 3)
             {
               // TODO: implement pseudo-inverse via SVD.
+              // See https://github.com/ericjang/svd3/blob/master/svd3_cuda/svd3_cuda.h
 
               matrix[0] = matrix[1] = matrix[2] = matrix[4] = matrix[5] = 0;
               
@@ -333,7 +367,7 @@ void ProxIndEpiPolyhedralKernel(
               for(int i = 0; i < DIM; i++) 
                 temp[i] = inp_arg[i] - cur_x[i];
 
-              solveLinearSystem3x3<double>(matrix, temp, dir);
+              solveLinearSystem3x3Precise<double>(matrix, temp, dir);
             
               // lambda_r = A_r dir
               for(int k = 0; k < 3; k++) // active_set_size == 3
@@ -360,6 +394,24 @@ void ProxIndEpiPolyhedralKernel(
           // if all lambda >= 0 -> solution
           if(idx_lambda == -1)
           {
+#ifdef DEBUG_PRINT
+            printf("Converged since all Lagrange multipliers in active set are positive: ");
+            for(int k = 0; k < active_set_size; k++) 
+            {
+              printf("%f ", lambda[k]);
+            }
+            printf("\nPrimal feasibility:\n");
+
+            for(int k = 0; k < coeff_count; k++)
+            {
+              double Ax = 0;
+              for(int i = 0; i < DIM - 1; i++)
+                Ax += d_coeffs_a[(coeff_index + k) * (DIM - 1) + i] * cur_x[i];
+              Ax -= cur_x[DIM - 1];
+
+              printf("%f <= %f\n", Ax, d_coeffs_b[coeff_index + k]);
+            }
+#endif
             break;
           }
           else // remove most negative lambda from active set           
@@ -371,6 +423,23 @@ void ProxIndEpiPolyhedralKernel(
         printf("Warning: active set method didn't converge within %d iterations (at tx=%u).\n", kAcsMaxIter, (uint32_t)tx);
 
     } // if(active_set_size > 0)
+
+    // KKT Check
+    for(int k = 0; k < coeff_count; k++)
+    {
+      double Ax = 0;
+      for(int i = 0; i < DIM - 1; i++)
+        Ax += d_coeffs_a[(coeff_index + k) * (DIM - 1) + i] * cur_x[i];
+      Ax -= cur_x[DIM - 1];
+
+      double diff = Ax - d_coeffs_b[coeff_index + k];
+
+      if(diff > 5e-3)
+      {
+        printf("Warning: solution is not primal feasible! tx=%d diff=%g\n", tx, diff);
+        break;
+      }
+    }
 
     // write out result
     Vector<T> res(count, DIM, interleaved, tx, d_res);
