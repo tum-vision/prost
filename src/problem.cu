@@ -50,10 +50,20 @@ void CheckDomainProx(const typename Problem<T>::ProxList& proxs, size_t n, const
   if(sorted_proxs[num_proxs - 1]->end() != (n - 1)) {
     stringstream ss;
 
-    ss << name << ": Last prox operator ends after the domain: [";
-    ss << sorted_proxs[num_proxs - 1]->index() << ", " << sorted_proxs[num_proxs - 1]->end() << "], end = ";
-    ss << n - 1 << "." << endl;
-    throw Exception(ss.str());
+    if(sorted_proxs[num_proxs - 1]->end() < (n - 1)) 
+    {
+      ss << name << ": Last prox operator ends too early: [";
+      ss << sorted_proxs[num_proxs - 1]->index() << ", " << sorted_proxs[num_proxs - 1]->end() << "], end = ";
+      ss << n - 1 << "." << endl;
+      throw Exception(ss.str());
+    }
+    else
+    {
+      ss << name << ": Last prox operator ends after the domain: [";
+      ss << sorted_proxs[num_proxs - 1]->index() << ", " << sorted_proxs[num_proxs - 1]->end() << "], end = ";
+      ss << n - 1 << "." << endl;
+      throw Exception(ss.str());
+    }
   }
 }
 
