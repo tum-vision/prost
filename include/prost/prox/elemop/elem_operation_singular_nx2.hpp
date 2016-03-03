@@ -26,7 +26,7 @@ struct ElemOperationSingularNx2 : public ElemOperation<0, 7>
   {
     size_t n = dim_ / 2;
     // compute D = A^T A
-    T d11 = 0., d12 = 0., d22 = 0.;
+    double d11 = 0., d12 = 0., d22 = 0.;
     
     for(size_t i = 0; i < n; i++) {
       d11 += arg[i] * arg[i];
@@ -35,20 +35,20 @@ struct ElemOperationSingularNx2 : public ElemOperation<0, 7>
     }
 
     // compute eigenvalues of (lmax, lmin)
-    T trace = d11 + d22;
-    T det = d11*d22 - d12*d12;
-    T d = sqrt(max(static_cast<T>(0), static_cast<T>(0.25)*trace*trace - det));
-    T lmax = max(static_cast<T>(0), static_cast<T>(0.5) * trace + d);
-    T lmin = max(static_cast<T>(0), static_cast<T>(0.5) * trace - d);
-    T smax = sqrt(lmax);
-    T smin = sqrt(lmin);
+    double trace = d11 + d22;
+    double det = d11*d22 - d12*d12;
+    double d = sqrt(max(static_cast<T>(0), static_cast<T>(0.25)*trace*trace - det));
+    double lmax = max(static_cast<T>(0), static_cast<T>(0.5) * trace + d);
+    double lmin = max(static_cast<T>(0), static_cast<T>(0.5) * trace - d);
+    double smax = sqrt(lmax);
+    double smin = sqrt(lmin);
 
     // Project (smax, smin) 
 
     // compute step-size
-    T tau = invert_tau ? (1. / (tau_scal * tau_diag[0])) : (tau_scal * tau_diag[0]);
+    double tau = invert_tau ? (1. / (tau_scal * tau_diag[0])) : (tau_scal * tau_diag[0]);
 
-    T s1, s2;
+    double s1, s2;
     if(coeffs_[0] == 0 || coeffs_[2] == 0) {
       s1 = (smax - tau * coeffs_[3]) / (1. + tau * coeffs_[4]);
       s2 = (smin - tau * coeffs_[3]) / (1. + tau * coeffs_[4]);
@@ -78,7 +78,7 @@ struct ElemOperationSingularNx2 : public ElemOperation<0, 7>
     if(smax > 0) {
       // Compute orthonormal system of Eigenvectors , such that
       // (v11, v21) belongs to lmax and (v12, v22) belongs to lmin
-      T v11, v12, v21, v22;
+      double v11, v12, v21, v22;
       if(d12 == 0.0) {
         if (d11 >= d22) {
           v11 = 1.0;
@@ -94,12 +94,12 @@ struct ElemOperationSingularNx2 : public ElemOperation<0, 7>
       } else {
         v11 = lmax - d22;
         v21 = d12;
-        T l1 = hypot(v11, v21);
+        double l1 = hypot(v11, v21);
         v11 /= l1;
         v21 /= l1;
         v12 = lmin - d22;
         v22 = d12;
-        T l2 = hypot(v12, v22);
+        double l2 = hypot(v12, v22);
         v12 /= l2;
         v22 /= l2; 
       }     
@@ -110,10 +110,10 @@ struct ElemOperationSingularNx2 : public ElemOperation<0, 7>
 
       // Compute T = V * \Sigma^+ * \Sigma_p * VˆT
 
-      T t11 = s1*v11*v11 + s2*v12*v12;
-      T t12 = s1*v11*v21 + s2*v12*v22;
-      T t21 = s1*v21*v11 + s2*v22*v12;
-      T t22 = s1*v21*v21 + s2*v22*v22;
+      double t11 = s1*v11*v11 + s2*v12*v12;
+      double t12 = s1*v11*v21 + s2*v12*v22;
+      double t21 = s1*v21*v11 + s2*v22*v12;
+      double t22 = s1*v21*v21 + s2*v22*v22;
 
       for(size_t i = 0; i < n; i++) {
         res[i] = arg[i] * t11 + arg[n+i] * t21;
