@@ -93,24 +93,33 @@ template<typename T>
 std::vector<T> GetVector(const mxArray *p)
 {
   const mwSize *dims = mxGetDimensions(p);
-  double *val = mxGetPr(p);
-
-  if(!mxIsDouble(p))
-    throw Exception("Argument has to be passed as a vector of type double.");
-
+  
   if(dims[1] != 1 && dims[0] != 1)
     throw Exception("Vector has to be Nx1 or 1xN.");
 
   if(dims[0] == 0 || dims[1] == 0)
     throw Exception("Empty vector passed.");
 
-  if(dims[0] < 0 || dims[1] < 0)
-    throw Exception("Vector has negative dimension (should never happen).");
-
-  if(dims[1] == 1)
-    return std::vector<T>(val, val + dims[0]);
+  if(mxIsDouble(p))
+  {
+    double *val = mxGetPr(p);
+    
+    if(dims[1] == 1)
+      return std::vector<T>(val, val + dims[0]);
+    else
+      return std::vector<T>(val, val + dims[1]);
+  }
+  else if(mxIsSingle(p))
+  {
+    float *val = (float *)mxGetPr(p);
+    
+    if(dims[1] == 1)
+      return std::vector<T>(val, val + dims[0]);
+    else
+      return std::vector<T>(val, val + dims[1]);
+  }
   else
-    return std::vector<T>(val, val + dims[1]);    
+    throw Exception("Argument has to be passed as a vector of type single or double.");
 }
 
 // Reads a cell-array of matlab vectors into an std::array of std::vector.
