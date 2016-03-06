@@ -1,9 +1,9 @@
 function [passed] = test_linop_sparse_kron_id()
 
-    diaglength = 50 * 50;
+    diaglength = 640 * 480;
     nrows = 81;
     ncols = 64;
-    K_mat = sprand(nrows, ncols, 0.05);
+    K_mat = sprand(nrows, ncols, 0.001);
     % sum(sum(abs(K_mat)>0))
     
     linop = { ...

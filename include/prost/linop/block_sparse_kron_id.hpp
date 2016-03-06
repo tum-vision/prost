@@ -36,11 +36,6 @@ class BlockSparseKronId : public Block<T>
 
   virtual size_t gpu_mem_amount() const;
 
-  /// \brief Important: has to be called once during initializaiton.
-  static void ResetConstMem() {
-    cmem_counter_nnz_ = cmem_counter_rows_ = cmem_counter_cols_ = 0;
-  }
-
  protected:
   virtual void EvalLocalAdd(
     const typename device_vector<T>::iterator& res_begin,
@@ -66,14 +61,6 @@ class BlockSparseKronId : public Block<T>
 
   /// \brief Number of non-zero elements in small sparse matrix M.
   size_t mat_nnz_;
-
-  /// \brief Is the sparse matrix stored in constant memory?
-  bool in_cmem_;
-
-  /// \brief Offset into constant memory.
-  size_t cmem_offset_nnz_;
-  size_t cmem_offset_rows_;
-  size_t cmem_offset_cols_;
   
   /// \brief GPU data for small sparse matrix M (used if not stored in const-mem).
   device_vector<int32_t> ind_, ind_t_;
@@ -84,11 +71,6 @@ class BlockSparseKronId : public Block<T>
   vector<int32_t> host_ind_, host_ind_t_;
   vector<int32_t> host_ptr_, host_ptr_t_;
   vector<float> host_val_, host_val_t_;
-
-  /// Constant memory counter.
-  static size_t cmem_counter_nnz_;
-  static size_t cmem_counter_rows_;
-  static size_t cmem_counter_cols_;
 };
 
 } // namespace prost
