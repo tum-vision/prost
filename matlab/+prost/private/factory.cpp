@@ -461,8 +461,13 @@ CreateBackendPDHG(const mxArray *data)
 std::shared_ptr<Prox<real> >
 CreateProx(const mxArray *pm) 
 {
+  const mwSize *dims = mxGetDimensions(pm);
+  const mwSize max_dim = std::max(dims[0], dims[1]);
+
+  if(max_dim != 5)
+    throw Exception("Invalid prox description. Dim != 5.");
+
   std::string name(mxArrayToString(mxGetCell(pm, 0)));
-  
   size_t idx = GetScalarFromCellArray<size_t>(pm, 1);
   size_t size = GetScalarFromCellArray<size_t>(pm, 2);
   bool diagsteps = GetScalarFromCellArray<bool>(pm, 3);
@@ -501,6 +506,12 @@ CreateProx(const mxArray *pm)
 std::shared_ptr<Block<real> >
 CreateBlock(const mxArray *pm)
 {
+  const mwSize *dims = mxGetDimensions(pm);
+  const mwSize max_dim = std::max(dims[0], dims[1]);
+
+  if(max_dim != 4)
+    throw Exception("Invalid block description. Dim != 4.");
+  
   std::string name(mxArrayToString(mxGetCell(pm, 0)));
 
   size_t row = GetScalarFromCellArray<size_t>(pm, 1);
