@@ -11,6 +11,8 @@ if(UNIX)
   list(APPEND CUDA_NVCC_FLAGS -std=c++11)
 endif()
 
+list(APPEND CUDA_NVCC_FLAGS "-gencode=arch=compute_30,code=sm_30")
+
 set(SOURCES
 
   "linop/block.cu"

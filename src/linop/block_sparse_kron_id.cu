@@ -4,24 +4,6 @@
 
 namespace prost {
 
-static const size_t kMaxNNZ = 2048; 
-static const size_t kMaxRows = 1024; 
-static const size_t kMaxCols = 1024; 
-
-__constant__ int32_t cmem_ind[kMaxNNZ];
-__constant__ int32_t cmem_ind_t[kMaxNNZ];
-__constant__ float cmem_val[kMaxNNZ];
-__constant__ float cmem_val_t[kMaxNNZ];
-__constant__ int32_t cmem_ptr[kMaxRows];
-__constant__ int32_t cmem_ptr_t[kMaxCols];
-
-template<> size_t BlockSparseKronId<float>::cmem_counter_nnz_ = 0;
-template<> size_t BlockSparseKronId<float>::cmem_counter_rows_ = 0;
-template<> size_t BlockSparseKronId<float>::cmem_counter_cols_ = 0;
-template<> size_t BlockSparseKronId<double>::cmem_counter_nnz_ = 0;
-template<> size_t BlockSparseKronId<double>::cmem_counter_rows_ = 0;
-template<> size_t BlockSparseKronId<double>::cmem_counter_cols_ = 0;
-
 template<typename T>
 __global__ void BlockSparseKronIdKernel(
     T *result,
@@ -32,7 +14,7 @@ __global__ void BlockSparseKronIdKernel(
     const int32_t *ptr,
     const float *val)
 {
-  const int tx = threadIdx.x + blockIdx.x * blockDim.x;
+  const size_t tx = threadIdx.x + blockIdx.x * blockDim.x;
 
   if(tx < diaglength * nrows)
   {
@@ -48,51 +30,6 @@ __global__ void BlockSparseKronIdKernel(
     result[tx] += sum;
   }
 }
-
-template<typename T>
-__global__ void BlockSparseKronIdKernelConst(
-    T *result,
-    const T *rhs,
-    size_t diaglength,
-    size_t nrows,
-    size_t idx_rows,
-    size_t idx_cols,
-    size_t idx_nnz,
-    bool transpose)
-{
-  const int tx = threadIdx.x + blockIdx.x * blockDim.x;
-
-  if(tx >= diaglength * nrows)
-    return;
-  
-  T sum = 0;
-
-  if(transpose)
-  {
-    size_t col_ofs = tx % diaglength;
-    size_t row = tx / diaglength;
-
-    const int32_t stop = cmem_ptr_t[idx_cols + row + 1];
-    
-    for(int32_t i = cmem_ptr_t[idx_cols + row]; i < stop; i++)
-      sum += cmem_val_t[idx_nnz + i] * rhs[cmem_ind_t[idx_nnz + i] * diaglength + col_ofs];
-
-    result[tx] += sum;
-  }
-  else
-  {
-    size_t col_ofs = tx % diaglength;
-    size_t row = tx / diaglength;
-
-    const int32_t stop = cmem_ptr[idx_rows + row + 1];
-    
-    for(int32_t i = cmem_ptr[idx_rows + row]; i < stop; i++)
-      sum += cmem_val[idx_nnz + i] * rhs[cmem_ind[idx_nnz + i] * diaglength + col_ofs];
-
-    result[tx] += sum;
-  }
-}
-
 
 template<typename T>
 BlockSparseKronId<T>::BlockSparseKronId(size_t row, size_t col, size_t nrows, size_t ncols)
@@ -112,7 +49,7 @@ BlockSparseKronId<T> *BlockSparseKronId<T>::CreateFromCSC(
     const vector<int32_t>& ptr,
     const vector<int32_t>& ind)
 {
-  BlockSparseKronId<T> *block = new BlockSparseKronId<T>(row, col, m * diaglength, n * diaglength);
+  BlockSparseKronId<T> *block = new BlockSparseKronId<T>(row, col, ((size_t)m) * diaglength, ((size_t)n) * diaglength);
 
   block->diaglength_ = diaglength;
   block->mat_nnz_ = nnz;
@@ -145,86 +82,24 @@ BlockSparseKronId<T> *BlockSparseKronId<T>::CreateFromCSC(
 template<typename T>
 void BlockSparseKronId<T>::Initialize()
 {
-  cmem_offset_nnz_ = cmem_counter_nnz_;
-  cmem_offset_cols_ = cmem_counter_cols_;
-  cmem_offset_rows_ = cmem_counter_rows_;
+  // forward
+  ind_.resize(mat_nnz_);
+  val_.resize(mat_nnz_);
+  ptr_.resize(mat_nrows_ + 1);
 
-  cmem_counter_nnz_ += mat_nnz_;
-  cmem_counter_cols_ += mat_ncols_ + 1;
-  cmem_counter_rows_ += mat_nrows_ + 1;
+  // transpose
+  ind_t_.resize(mat_nnz_);
+  val_t_.resize(mat_nnz_);
+  ptr_t_.resize(mat_ncols_ + 1);
 
-  if((cmem_counter_nnz_ > kMaxNNZ) ||
-     (cmem_counter_rows_ > kMaxRows) ||
-     (cmem_counter_cols_ > kMaxCols))
-  {
-    in_cmem_ = false;
-    cmem_counter_nnz_ -= mat_nnz_;
-    cmem_counter_cols_ -= mat_ncols_ + 1;
-    cmem_counter_rows_ -= mat_nrows_ + 1;
-/*
-    std::cout << cmem_counter_nnz_ << ", " << kMaxNNZ << std::endl;
-    std::cout << cmem_counter_rows_ << ", " << kMaxRows << std::endl;
-    std::cout << cmem_counter_cols_ << ", " << kMaxCols << std::endl;
-*/
-  }
-  else
-  {
-    in_cmem_ = true;
-  }
+  // copy to GPU
+  thrust::copy(host_ind_t_.begin(), host_ind_t_.end(), ind_t_.begin());
+  thrust::copy(host_ptr_t_.begin(), host_ptr_t_.end(), ptr_t_.begin());
+  thrust::copy(host_val_t_.begin(), host_val_t_.end(), val_t_.begin());
 
-  if(in_cmem_)
-  {
-    cudaMemcpyToSymbol(cmem_ind_t,
-                       &host_ind_t_[0],
-                       sizeof(int32_t) * mat_nnz_,
-                       cmem_offset_nnz_ * sizeof(int32_t));
-
-    cudaMemcpyToSymbol(cmem_ptr_t,
-                       &host_ptr_t_[0],
-                       sizeof(int32_t) * (mat_ncols_ + 1),
-                       cmem_offset_cols_ * sizeof(int32_t));
-
-    cudaMemcpyToSymbol(cmem_val_t,
-                       &host_val_t_[0],
-                       sizeof(float) * mat_nnz_,
-                       cmem_offset_nnz_ * sizeof(float));
-
-    cudaMemcpyToSymbol(cmem_ind,
-                       &host_ind_[0],
-                       sizeof(int32_t) * mat_nnz_,
-                       cmem_offset_nnz_ * sizeof(int32_t));
-
-    cudaMemcpyToSymbol(cmem_ptr,
-                       &host_ptr_[0],
-                       sizeof(int32_t) * (mat_nrows_ + 1),
-                       cmem_offset_rows_ * sizeof(int32_t));
-
-    cudaMemcpyToSymbol(cmem_val,
-                       &host_val_[0],
-                       sizeof(float) * mat_nnz_,
-                       cmem_offset_nnz_ * sizeof(float));
-  }
-  else
-  {
-    // forward
-    ind_.resize(mat_nnz_);
-    val_.resize(mat_nnz_);
-    ptr_.resize(mat_nrows_ + 1);
-
-    // transpose
-    ind_t_.resize(mat_nnz_);
-    val_t_.resize(mat_nnz_);
-    ptr_t_.resize(mat_ncols_ + 1);
-
-    // copy to GPU
-    thrust::copy(host_ind_t_.begin(), host_ind_t_.end(), ind_t_.begin());
-    thrust::copy(host_ptr_t_.begin(), host_ptr_t_.end(), ptr_t_.begin());
-    thrust::copy(host_val_t_.begin(), host_val_t_.end(), val_t_.begin());
-
-    thrust::copy(host_ind_.begin(), host_ind_.end(), ind_.begin());
-    thrust::copy(host_ptr_.begin(), host_ptr_.end(), ptr_.begin());
-    thrust::copy(host_val_.begin(), host_val_.end(), val_.begin());
-  }
+  thrust::copy(host_ind_.begin(), host_ind_.end(), ind_.begin());
+  thrust::copy(host_ptr_.begin(), host_ptr_.end(), ptr_.begin());
+  thrust::copy(host_val_.begin(), host_val_.end(), val_.begin());
 }
 
 template<typename T>
@@ -256,10 +131,7 @@ T BlockSparseKronId<T>::col_sum(size_t col, T alpha) const
 template<typename T>
 size_t BlockSparseKronId<T>::gpu_mem_amount() const
 {
-  if(in_cmem_)
-    return 0;
-  else
-    return (host_ind_.size() + host_ind_t_.size() + host_ptr_.size() + host_ptr_t_.size()) * sizeof(int32_t) + (host_val_.size() + host_val_t_.size()) * sizeof(T);
+  return (host_ind_.size() + host_ind_t_.size() + host_ptr_.size() + host_ptr_t_.size()) * sizeof(int32_t) + (host_val_.size() + host_val_t_.size()) * sizeof(T);
 }
 
 template<typename T>
@@ -269,43 +141,26 @@ void BlockSparseKronId<T>::EvalLocalAdd(
     const typename device_vector<T>::const_iterator& rhs_begin,
     const typename device_vector<T>::const_iterator& rhs_end)
 {
-  const size_t count = this->nrows();
-  const size_t num_blocks = (count + kBlockSizeCUDA) / kBlockSizeCUDA;
+  dim3 block(kBlockSizeCUDA, 1, 1);
+  dim3 grid((this->nrows() + block.x) / block.x, 1, 1);
 
-  if(!in_cmem_)
-  {
-    BlockSparseKronIdKernel<T>
-        <<<num_blocks, kBlockSizeCUDA>>>(
-            thrust::raw_pointer_cast(&(*res_begin)),
-            thrust::raw_pointer_cast(&(*rhs_begin)),
-            diaglength_,
-            mat_nrows_,
-            thrust::raw_pointer_cast(ind_.data()),
-            thrust::raw_pointer_cast(ptr_.data()),
-            thrust::raw_pointer_cast(val_.data()));
-  }
-  else
-  {
-    BlockSparseKronIdKernelConst<T>
-        <<<num_blocks, kBlockSizeCUDA>>>(
-            thrust::raw_pointer_cast(&(*res_begin)),
-            thrust::raw_pointer_cast(&(*rhs_begin)),
-            diaglength_,
-            mat_nrows_,
-            cmem_offset_rows_,
-            cmem_offset_cols_,
-            cmem_offset_nnz_,
-            false);
-
-  }
+  BlockSparseKronIdKernel<T>
+      <<<grid, block>>>(
+          thrust::raw_pointer_cast(&(*res_begin)),
+          thrust::raw_pointer_cast(&(*rhs_begin)),
+          diaglength_,
+          mat_nrows_,
+          thrust::raw_pointer_cast(ind_.data()),
+          thrust::raw_pointer_cast(ptr_.data()),
+          thrust::raw_pointer_cast(val_.data()));
   cudaDeviceSynchronize();
-                                                                                                     // check for error
+
   cudaError_t error = cudaGetLastError();
   if(error != cudaSuccess)
   {
     // print the CUDA error message and throw exception
     std::stringstream ss;
-    ss << "CUDA error: " << cudaGetErrorString(error) << std::endl;
+    ss << "BlockSparseKronId: CUDA error: " << cudaGetErrorString(error) << std::endl;
     throw Exception(ss.str());
   }
 }
@@ -317,34 +172,18 @@ void BlockSparseKronId<T>::EvalAdjointLocalAdd(
     const typename device_vector<T>::const_iterator& rhs_begin,
     const typename device_vector<T>::const_iterator& rhs_end)
 {
-  const size_t count = this->ncols();
-  const size_t num_blocks = (count + kBlockSizeCUDA) / kBlockSizeCUDA;
+  dim3 block(kBlockSizeCUDA, 1, 1);
+  dim3 grid((this->ncols() + block.x) / block.x, 1, 1);
 
-  if(!in_cmem_)
-  {
-    BlockSparseKronIdKernel<T>
-        <<<num_blocks, kBlockSizeCUDA>>>(
-            thrust::raw_pointer_cast(&(*res_begin)),
-            thrust::raw_pointer_cast(&(*rhs_begin)),
-            diaglength_,
-            mat_ncols_,
-            thrust::raw_pointer_cast(ind_t_.data()),
-            thrust::raw_pointer_cast(ptr_t_.data()),
-            thrust::raw_pointer_cast(val_t_.data()));
-  }
-  else
-  {
-    BlockSparseKronIdKernelConst<T>
-        <<<num_blocks, kBlockSizeCUDA>>>(
-            thrust::raw_pointer_cast(&(*res_begin)),
-            thrust::raw_pointer_cast(&(*rhs_begin)),
-            diaglength_,
-            mat_ncols_,
-            cmem_offset_rows_,
-            cmem_offset_cols_,
-            cmem_offset_nnz_,
-            true);
-  }
+  BlockSparseKronIdKernel<T>
+      <<<grid, block>>>(
+          thrust::raw_pointer_cast(&(*res_begin)),
+          thrust::raw_pointer_cast(&(*rhs_begin)),
+          diaglength_,
+          mat_ncols_,
+          thrust::raw_pointer_cast(ind_t_.data()),
+          thrust::raw_pointer_cast(ptr_t_.data()),
+          thrust::raw_pointer_cast(val_t_.data()));
   cudaDeviceSynchronize();
 
   // check for error  
@@ -353,7 +192,7 @@ void BlockSparseKronId<T>::EvalAdjointLocalAdd(
   {
     // print the CUDA error message and throw exception
     std::stringstream ss;
-    ss << "CUDA error: " << cudaGetErrorString(error) << std::endl;
+    ss << "BlockSparseKronId: CUDA error: " << cudaGetErrorString(error) << std::endl;
     throw Exception(ss.str());
   }
 }
