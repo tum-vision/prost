@@ -7,6 +7,7 @@
 namespace prost {
 
 //#define DEBUG_PRINT
+//#define KKT_CHECK
 
 template<typename T>
 inline __device__
@@ -188,7 +189,7 @@ void ProxIndEpiPolyhedralKernel(
             matrix[2] = matrix[1]; // symmetry
 
             // compute temp = (A_r A_r^T)^-1 rhs
-            solveLinearSystem2x2Precise<double>(matrix, rhs, temp);
+            solveLinearSystem2x2<double>(matrix, rhs, temp);
 
             // compute dir = A_r^T temp
             for(int i = 0; i < 2; i++) // active_set_size == 2
@@ -290,7 +291,7 @@ void ProxIndEpiPolyhedralKernel(
               for(int i = 0; i < DIM; i++) 
                 temp[i] = inp_arg[i] - cur_x[i];
             
-              solveLinearSystem2x2Precise<double>(matrix, temp, dir); 
+              solveLinearSystem2x2<double>(matrix, temp, dir); 
               
               // lambda_r = A_r dir
               for(int k = 0; k < active_set_size; k++) 
@@ -332,7 +333,7 @@ void ProxIndEpiPolyhedralKernel(
               }
 
               // compute lambda = (A_r A_r^T)^-1 temp
-              solveLinearSystem2x2Precise<double>(matrix, temp, lambda);
+              solveLinearSystem2x2<double>(matrix, temp, lambda);
             }
             else if(active_set_size == 3)
             {
@@ -367,7 +368,7 @@ void ProxIndEpiPolyhedralKernel(
               for(int i = 0; i < DIM; i++) 
                 temp[i] = inp_arg[i] - cur_x[i];
 
-              solveLinearSystem3x3Precise<double>(matrix, temp, dir);
+              solveLinearSystem3x3<double>(matrix, temp, dir);
             
               // lambda_r = A_r dir
               for(int k = 0; k < 3; k++) // active_set_size == 3
@@ -424,6 +425,7 @@ void ProxIndEpiPolyhedralKernel(
 
     } // if(active_set_size > 0)
 
+#ifdef KKT_CHECK
     // KKT Check
     for(int k = 0; k < coeff_count; k++)
     {
@@ -434,12 +436,13 @@ void ProxIndEpiPolyhedralKernel(
 
       double diff = Ax - d_coeffs_b[coeff_index + k];
 
-      if(diff > 5e-3)
+      if(diff > 1e-3)
       {
-        printf("Warning: solution is not primal feasible! tx=%d diff=%g\n", tx, diff);
+        printf("Warning: solution is not primal feasible! tx=%d diff=%g\n", (int)tx, diff);
         break;
       }
     }
+#endif
 
     // write out result
     Vector<T> res(count, DIM, interleaved, tx, d_res);
