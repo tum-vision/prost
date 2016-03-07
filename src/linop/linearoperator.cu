@@ -96,7 +96,7 @@ void LinearOperator<T>::Initialize()
     throw Exception("Blocks are overlapping inside the linear operator. Recheck the indices.");
 
   if(area != nrows_ * ncols_)  
-    throw Exception("There's empty space between the blocks inside the linear operator. Recheck the indicies.");
+    std::cout << "Warning: There's empty space between the blocks inside the linear operator. Recheck the indicies." << std::endl;
 
   for(auto& block : blocks_)
     block->Initialize();
