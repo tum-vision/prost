@@ -11,7 +11,7 @@ if(UNIX)
   list(APPEND CUDA_NVCC_FLAGS -std=c++11)
 endif()
 
-list(APPEND CUDA_NVCC_FLAGS "-gencode=arch=compute_30,code=sm_30")
+list(APPEND CUDA_NVCC_FLAGS "-gencode=arch=compute_52,code=sm_52")
 
 set(SOURCES
 
