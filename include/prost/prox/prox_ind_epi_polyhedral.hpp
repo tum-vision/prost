@@ -45,8 +45,8 @@ public:
     size_t count,
     size_t dim, 
     bool interleaved,
-    const vector<double>& coeffs_a,
-    const vector<double>& coeffs_b, 
+    const vector<T>& coeffs_a,
+    const vector<T>& coeffs_b, 
     const vector<uint32_t>& count_vec,
     const vector<uint32_t>& index_vec);
 
@@ -67,10 +67,10 @@ protected:
     bool invert_tau);
 
 private:
-  vector<double> host_coeffs_a_, host_coeffs_b_;
+  vector<T> host_coeffs_a_, host_coeffs_b_;
   vector<uint32_t> host_count_, host_index_;
 
-  device_vector<double> dev_coeffs_a_, dev_coeffs_b_;
+  device_vector<T> dev_coeffs_a_, dev_coeffs_b_;
   device_vector<uint32_t> dev_count_, dev_index_;
 };
 
