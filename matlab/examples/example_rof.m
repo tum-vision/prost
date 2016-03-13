@@ -3,19 +3,62 @@
 % min_u (1/2) (u-f)^2 + \lambda |\nabla u| 
 %
 
-im = imread('../../images/dog.png');
+im = imread('../../images/frame10.png');
 im = imresize(im, 1);
 [ny, nx, nc] = size(im);
 f = double(im(:)) / 255.;
 grad = spmat_gradient2d(nx,ny,nc);
-lmb = 15;
+lmb = 1;
+
+% grad_gray = spmat_gradient2d(nx,ny,1);
+% f_gray = double(rgb2gray(im)) / 255;
+% Gpre=fspecial('gaussian', [13, 13], 0.5);
+% f_gray = imfilter(f_gray, Gpre, 'same');
+% f_gray = f_gray(:);
+% gf = grad_gray * f_gray;
+% gf_norm = reshape(gf, [ny, nx, 2]);
+% gf_norm = sqrt(sum(gf_norm.^2, 3));
+% normal = zeros(ny*nx*2,1);
+% gf_norm_rep = repmat(gf_norm(:), 2, 1);
+% normal(gf_norm_rep>eps) = gf(gf_norm_rep>eps) ./ gf_norm_rep(gf_norm_rep>eps);
+% normal = reshape(normal, [ny nx 2]);
+
+% normal_perp = zeros(ny,nx,2);
+% normal_perp(:,:,1) = -normal(:, :, 2); 
+% normal_perp(:,:,2) = normal(:, :, 1); 
+
+% normal_outer = zeros(ny, nx, 2, 2);
+% normal_perp_outer = zeros(ny, nx, 2, 2);
+
+% for i=1:ny
+%     i
+%     for j=1:nx
+%         normal_outer(i,j,:,:) = squeeze(normal(i, j, :)) * squeeze(normal(i, j, :))';
+%         normal_perp_outer(i,j,:,:) = squeeze(normal_perp(i, j, :)) * squeeze(normal_perp(i, j, :))';
+%     end
+% end
+
+% alpha = 5;
+% beta = 0.5;
+% D = repmat(reshape(exp(-alpha .* (gf_norm .^beta)), [ny nx]), [1, ...
+%                     1, 2, 2]) .* normal_outer + normal_perp_outer;
+
+% d11 = squeeze(D(:,:,1,1));
+% d12 = squeeze(D(:,:,1,2));
+% d21 = squeeze(D(:,:,2,1));
+% d22 = squeeze(D(:,:,2,2));
+
+% Dtensor = [spdiags(d11(:), 0, ny*nx, ny*nx), spdiags(d12(:), 0, ny*nx, ny*nx); 
+%            spdiags(d21(:), 0, ny*nx, ny*nx), spdiags(d22(:), 0, ny*nx, ny*nx); ];
+
+% grad=spmat_gradient2d_dtensor(nx,ny,nc,Dtensor);
 
 prost.init();
 
 %% create problem description
 prob = prost.problem();
-%prob.linop = { prost.block.sparse(0, 0, grad) };
-prob.linop = { prost.block.gradient2d(0, 0, nx, ny, nc) };
+prob.linop = { prost.block.sparse(0, 0, grad) };
+%prob.linop = { prost.block.gradient2d(0, 0, nx, ny, nc) };
 
 prob.prox_g = { prost.prox.sum_1d(0, nx * ny * nc, 'square', 1, f, ...
                                    1, 0, 0) };

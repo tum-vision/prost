@@ -90,8 +90,8 @@ template<typename T, size_t DIM>
 void ProxIndEpiPolyhedralKernel(
     T *d_res,
     const T *d_arg,
-    const double *d_coeffs_a,
-    const double *d_coeffs_b,
+    const T *d_coeffs_a,
+    const T *d_coeffs_b,
     const uint32_t *d_count, 
     const uint32_t *d_index,
     size_t count,
@@ -458,8 +458,8 @@ ProxIndEpiPolyhedral<T>::ProxIndEpiPolyhedral(
   size_t count,
   size_t dim, 
   bool interleaved,
-  const vector<double>& coeffs_a,
-  const vector<double>& coeffs_b, 
+  const vector<T>& coeffs_a,
+  const vector<T>& coeffs_b, 
   const vector<uint32_t>& count_vec,
   const vector<uint32_t>& index_vec)
 
@@ -514,7 +514,7 @@ void ProxIndEpiPolyhedral<T>::Initialize()
 template<typename T>
 size_t ProxIndEpiPolyhedral<T>::gpu_mem_amount() const
 {
-  return (host_coeffs_a_.size() + host_coeffs_b_.size()) * sizeof(double) + 
+  return (host_coeffs_a_.size() + host_coeffs_b_.size()) * sizeof(T) + 
     (host_count_.size() + host_index_.size()) * sizeof(uint32_t);
 }
 
