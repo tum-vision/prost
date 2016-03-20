@@ -57,6 +57,7 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
 };
 
 const static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>> default_block_reg = {
+  { "dense",          CreateBlockDense        },
   { "diags",          CreateBlockDiags        },
   { "gradient2d",     CreateBlockGradient2D   },
   { "gradient3d",     CreateBlockGradient3D   },
@@ -321,6 +322,19 @@ CreateBlockDiags(size_t row, size_t col, const mxArray *pm)
 
   size_t ndiags = factors.size();
   return new BlockDiags<real>(row, col, nrows, ncols, ndiags, offsets, factors);
+}
+
+BlockDense<real>*
+CreateBlockDense(size_t row, size_t col, const mxArray *pm)
+{
+  size_t nrows = mxGetM(mxGetCell(pm, 0));
+  size_t ncols = mxGetN(mxGetCell(pm, 0));
+  double *data = reinterpret_cast<double *>(mxGetData(mxGetCell(pm, 0)));
+  std::vector<real> r_data(data, data + nrows * ncols);
+
+  //cout << nrows << "," << ncols << "," << r_data.size() << endl;
+  
+  return BlockDense<real>::CreateFromColFirstData(row, col, nrows, ncols, r_data);
 }
 
 prost::BlockGradient2D<real>*

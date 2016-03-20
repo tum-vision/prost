@@ -136,7 +136,7 @@ double LinearOperator<T>::Eval(
   std::vector<T>& result,
   const std::vector<T>& rhs)
 {
-  static const int repeats = 1;
+  static const int repeats = 5;
   
   thrust::device_vector<T> d_rhs(rhs.begin(), rhs.end());
   thrust::device_vector<T> d_res;
@@ -161,7 +161,7 @@ double LinearOperator<T>::EvalAdjoint(
   std::vector<T>& result,
   const std::vector<T>& rhs)
 {
-  static const int repeats = 1;
+  static const int repeats = 5;
 
   thrust::device_vector<T> d_rhs(rhs.begin(), rhs.end());
   thrust::device_vector<T> d_res;
