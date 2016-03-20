@@ -11,11 +11,12 @@ if(UNIX)
   list(APPEND CUDA_NVCC_FLAGS -std=c++11)
 endif()
 
-list(APPEND CUDA_NVCC_FLAGS "-gencode=arch=compute_52,code=sm_52")
+list(APPEND CUDA_NVCC_FLAGS "-gencode=arch=compute_30,code=sm_30")
 
 set(SOURCES
 
   "linop/block.cu"
+  "linop/block_dense.cu"
   "linop/block_diags.cu"
   "linop/block_gradient2d.cu"
   "linop/block_gradient3d.cu"
@@ -40,6 +41,7 @@ set(SOURCES
   "solver.cu"
 
   "../include/prost/linop/block.hpp"
+  "../include/prost/linop/block_dense.hpp"
   "../include/prost/linop/block_diags.hpp"
   "../include/prost/linop/block_gradient2d.hpp"
   "../include/prost/linop/block_gradient3d.hpp"

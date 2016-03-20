@@ -31,7 +31,7 @@ set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS) # remove -shared options as mex does 
 
 if(APPLE)
   # this hack is necessary, as FindCUDA adds rpath under MacOSX and mex does not accept it
-  set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> -cxx <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -output <TARGET> <OBJECTS> -lut -lcudart -lcusparse -lprost -L${CMAKE_BINARY_DIR}/src")
+  set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> -cxx <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -output <TARGET> <OBJECTS> -lut -lcudart -lcusparse -lcublas -lprost -L${CMAKE_BINARY_DIR}/src")
 else()
   set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> -cxx <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -output <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 endif()
@@ -58,11 +58,11 @@ endif()
 add_library( prost_ SHARED ${SOURCES} ${MATLAB_CUSTOM_SOURCES})
 
 if(MSVC)
-  target_link_libraries( prost_ prost libmex libmx libut ${CUDA_cusparse_LIBRARY} )
+  target_link_libraries( prost_ prost libmex libmx libut ${CUDA_cusparse_LIBRARY} ${CUDA_cublas_LIBRARY} )
   set_property(TARGET prost_ PROPERTY LINK_FLAGS "/export:mexFunction")
   set_property(TARGET prost_ PROPERTY  _CRT_SECURE_NO_WARNINGS )
 else()
-  target_link_libraries( prost_ prost ut cusparse )
+  target_link_libraries( prost_ prost ut cusparse cublas )
   add_dependencies( prost_ prost ) #required.
 endif()
 

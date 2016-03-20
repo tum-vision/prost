@@ -3,6 +3,7 @@
 
 #include "prost/linop/linearoperator.hpp"
 #include "prost/linop/block.hpp"
+#include "prost/linop/block_dense.hpp"
 #include "prost/linop/block_diags.hpp"
 #include "prost/linop/block_gradient2d.hpp"
 #include "prost/linop/block_gradient3d.hpp"
@@ -89,6 +90,12 @@ prost::ProxZero<real>*
 CreateProxZero(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
 // block create functions
+prost::BlockDense<real>*
+CreateBlockDense(size_t row, size_t col, const mxArray *pm);
+
+prost::BlockDiags<real>*
+CreateBlockDiags(size_t row, size_t col, const mxArray *pm);
+
 prost::BlockZero<real>*
 CreateBlockZero(size_t row, size_t col, const mxArray *data);
   
@@ -98,9 +105,6 @@ CreateBlockSparse(size_t row, size_t col, const mxArray *data);
 prost::BlockSparseKronId<real>*
 CreateBlockSparseKronId(size_t row, size_t col, const mxArray *data);
   
-prost::BlockDiags<real>*
-CreateBlockDiags(size_t row, size_t col, const mxArray *pm);
-
 prost::BlockGradient2D<real>*
 CreateBlockGradient2D(size_t row, size_t col, const mxArray *pm);
 
