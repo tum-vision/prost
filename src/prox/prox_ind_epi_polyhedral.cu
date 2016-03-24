@@ -98,7 +98,7 @@ void ProxIndEpiPolyhedralKernel(
     bool interleaved)
 {
   const double kAcsTolerance = 1e-9;
-  const int kAcsMaxIter = 100;
+  const int kAcsMaxIter = 2500;
   
   size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
 
