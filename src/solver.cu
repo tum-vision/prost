@@ -113,7 +113,11 @@ typename Solver<T>::ConvergenceResult Solver<T>::Solve() {
 
     // check if we should run the intermediate solution callback this iteration
     if(i >= cb_iters.front() || is_converged || is_stopped) {
-      backend_->current_solution(cur_primal_sol_, cur_dual_sol_);
+      //backend_->current_solution(cur_primal_sol_, cur_dual_sol_);
+      backend_->current_solution(cur_primal_sol_,
+                                 cur_primal_constr_sol_,
+                                 cur_dual_sol_,
+                                 cur_dual_constr_sol_);
  
       if(opts_.verbose) {
         int digits = std::floor(std::log10( (double) opts_.max_iters )) + 1;
@@ -185,6 +189,24 @@ const vector<T>& Solver<T>::cur_dual_sol() const
     return cur_primal_sol_;
 
   return cur_dual_sol_;
+}
+
+template<typename T>
+const vector<T>& Solver<T>::cur_primal_constr_sol() const
+{
+  if(opts_.solve_dual_problem)
+    return cur_dual_constr_sol_;
+
+  return cur_primal_constr_sol_;
+}
+
+template<typename T>
+const vector<T>& Solver<T>::cur_dual_constr_sol() const
+{
+  if(opts_.solve_dual_problem)
+    return cur_primal_constr_sol_;
+
+  return cur_dual_constr_sol_;
 }
 
 // Explicit template instantiation

@@ -74,15 +74,19 @@ public:
   void SetIntermCallback(const typename Solver<T>::IntermCallback& cb);
 
   const vector<T>& cur_primal_sol() const; 
-  const vector<T>& cur_dual_sol() const; 
+  const vector<T>& cur_dual_sol() const;
+  const vector<T>& cur_primal_constr_sol() const;
+  const vector<T>& cur_dual_constr_sol() const;
   
 protected:
   typename Solver<T>::Options opts_;
   shared_ptr<Problem<T>> problem_;
   shared_ptr<Backend<T>> backend_;
 
-  vector<T> cur_primal_sol_;
-  vector<T> cur_dual_sol_;
+  vector<T> cur_primal_sol_; // x
+  vector<T> cur_dual_sol_; // y
+  vector<T> cur_primal_constr_sol_; // z
+  vector<T> cur_dual_constr_sol_; // w
 
   typename Solver<T>::IntermCallback interm_cb_;
   typename Solver<T>::StoppingCallback stopping_cb_;

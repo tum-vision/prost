@@ -14,7 +14,7 @@
 
 namespace prost {
 
-/// \brief 
+/// \brief Computes x^{k+1} = x^k - tau T K^T y^k
 template<typename T>
 struct primal_proxarg_functor
 {
@@ -30,6 +30,7 @@ struct primal_proxarg_functor
   T tau_;
 };
 
+/// \brief Computes y^{k+1} = y^k + sigma S K (x^{k+1} + theta (x^{k+1} - x^k))
 template<typename T>
 struct dual_proxarg_functor
 {
@@ -48,6 +49,7 @@ struct dual_proxarg_functor
   T theta_;
 };
 
+/// \brief Computes the (scaled) dual residual 
 template<typename T>
 struct dual_residual_transform : public thrust::unary_function<thrust::tuple<T,T,T,T,T>, thrust::tuple<T,T> >
 {
@@ -71,6 +73,7 @@ struct dual_residual_transform : public thrust::unary_function<thrust::tuple<T,T
   T tau_;
 };
 
+/// \brief Computes the (scaled) primal residual
 template<typename T>
 struct primal_residual_transform : public thrust::unary_function<thrust::tuple<T,T,T,T,T>, thrust::tuple<T, T> >
 {
@@ -96,6 +99,7 @@ struct primal_residual_transform : public thrust::unary_function<thrust::tuple<T
   T theta_;
 };
 
+/// \brief Helper 
 template<typename T>
 struct residual_tuple_sum : public thrust::binary_function< thrust::tuple<T, T>, 
                                                               thrust::tuple<T, T>,
@@ -110,6 +114,55 @@ struct residual_tuple_sum : public thrust::binary_function< thrust::tuple<T, T>,
         thrust::get<0>(t0) + thrust::get<0>(t1), 
         thrust::get<1>(t0) + thrust::get<1>(t1));
   }
+};
+
+/*
+          x_prev_.end(), 0
+          x_.end(), 1
+          this->problem_->scaling_right().end(), 2
+          kty_prev_.end(), 3
+          temp_.end() 4
+ */
+template<typename T>
+struct compute_w_variable_functor
+{
+  __host__ __device__ compute_w_variable_functor(T tau) : tau_(tau) { }
+
+  template <typename Tuple>
+  __host__ __device__
+  void operator()(Tuple t)
+  {
+    thrust::get<4>(t) = (thrust::get<0>(t) - thrust::get<1>(t)) / (thrust::get<2>(t) * tau_)
+                        - thrust::get<3>(t);
+  }
+
+  T tau_;
+};
+
+/*
+          y_prev_.end(), 0
+          y_.end(), 1
+          this->problem_->scaling_left().end(), 2
+          kx_.end(), 3
+          kx_prev_.end(), 4
+          temp_.end())), 5
+*/
+template<typename T>
+struct compute_z_variable_functor
+{
+  __host__ __device__ compute_z_variable_functor(T sigma, T theta)
+      : sigma_(sigma), theta_(theta) { }
+
+  template <typename Tuple>
+  __host__ __device__
+  void operator()(Tuple t)
+  {
+    thrust::get<5>(t) = (thrust::get<0>(t) - thrust::get<1>(t)) / (sigma_ * thrust::get<2>(t))
+                        + (1 + theta_) * thrust::get<3>(t) - theta_ * thrust::get<4>(t);
+  }
+
+  T sigma_;
+  T theta_;
 };
 
 template<typename T>
@@ -421,7 +474,7 @@ BackendPDHG<T>::Release() { }
 
 template<typename T>
 void 
-BackendPDHG<T>::current_solution(std::vector<T>& primal, std::vector<T>& dual) const
+BackendPDHG<T>::current_solution(std::vector<T>& primal, std::vector<T>& dual) 
 {
   thrust::copy(x_.begin(), x_.end(), primal.begin());
   thrust::copy(y_.begin(), y_.end(), dual.begin());
@@ -435,6 +488,58 @@ BackendPDHG<T>::gpu_mem_amount() const
   size_t n = this->problem_->ncols();
 
   return (4 * (n + m) + std::max(n, m)) * sizeof(T);
+}
+
+template<typename T>
+void
+BackendPDHG<T>::current_solution(
+    vector<T>& primal_x,
+    vector<T>& primal_z,
+    vector<T>& dual_y,
+    vector<T>& dual_w) 
+{
+  thrust::copy(x_.begin(), x_.end(), primal_x.begin());
+  thrust::copy(y_.begin(), y_.end(), dual_y.begin());
+
+  thrust::for_each(
+      thrust::make_zip_iterator(thrust::make_tuple(
+          x_prev_.begin(),
+          x_.begin(),
+          this->problem_->scaling_right().begin(),
+          kty_prev_.begin(),
+          temp_.begin())),
+
+      thrust::make_zip_iterator(thrust::make_tuple(
+          x_prev_.end(),
+          x_.end(),
+          this->problem_->scaling_right().end(),
+          kty_prev_.end(),
+          temp_.end())),
+
+      compute_w_variable_functor<T>(tau_));
+
+  thrust::copy(temp_.begin(), temp_.begin() + dual_w.size(), dual_w.begin());
+  
+  thrust::for_each(
+      thrust::make_zip_iterator(thrust::make_tuple(
+          y_prev_.begin(),
+          y_.begin(),
+          this->problem_->scaling_left().begin(),
+          kx_.begin(),
+          kx_prev_.begin(),
+          temp_.begin())),
+
+      thrust::make_zip_iterator(thrust::make_tuple(
+          y_prev_.end(),
+          y_.end(),
+          this->problem_->scaling_left().end(),
+          kx_.end(),
+          kx_prev_.end(),
+          temp_.end())),
+
+      compute_z_variable_functor<T>(sigma_, theta_));
+
+  thrust::copy(temp_.begin(), temp_.begin() + primal_z.size(), primal_z.begin());  
 }
 
 // Explicit template instantiation

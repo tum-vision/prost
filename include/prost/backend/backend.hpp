@@ -27,7 +27,13 @@ public:
   virtual void Release() = 0;
 
   /// \brief Copies current primal dual solution pair (x,y) to the host.
-  virtual void current_solution(vector<T>& primal_sol, vector<T>& dual_sol) const = 0;
+  virtual void current_solution(vector<T>& primal_sol, vector<T>& dual_sol) = 0;
+
+  /// \brief Copies current primal and dual solutions (x, z, y, w) to the host.
+  virtual void current_solution(vector<T>& primal_x,
+                                vector<T>& primal_z,
+                                vector<T>& dual_y,
+                                vector<T>& dual_w) = 0;
 
   /// \brief Returns norm of the primal residual |Ax - z|.
   virtual T primal_residual() const { return primal_residual_; }

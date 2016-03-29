@@ -59,6 +59,9 @@ public:
 
     /// \brief Type of step-size scheme.
     typename BackendPDHG<T>::StepsizeVariant stepsize_variant;
+
+    /// \brief Compute residuals at all?
+    bool compute_residuals;
   };
 
   BackendPDHG(const typename BackendPDHG<T>::Options& opts);
@@ -68,7 +71,12 @@ public:
   virtual void PerformIteration();
   virtual void Release();
 
-  virtual void current_solution(vector<T>& primal, vector<T>& dual) const;
+  virtual void current_solution(vector<T>& primal, vector<T>& dual);
+
+  virtual void current_solution(vector<T>& primal_x,
+                                vector<T>& primal_z,
+                                vector<T>& dual_y,
+                                vector<T>& dual_w);
 
   /// \brief Returns amount of gpu memory required in bytes.
   virtual size_t gpu_mem_amount() const;

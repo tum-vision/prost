@@ -85,7 +85,9 @@ static void SolveProblem(MEX_ARGS) {
 
   // Copy result back to MATLAB
   mxArray *mex_primal_sol = mxCreateDoubleMatrix(problem->ncols(), 1, mxREAL);
+  mxArray *mex_primal_constr_sol = mxCreateDoubleMatrix(problem->nrows(), 1, mxREAL);
   mxArray *mex_dual_sol = mxCreateDoubleMatrix(problem->nrows(), 1, mxREAL);
+  mxArray *mex_dual_constr_sol = mxCreateDoubleMatrix(problem->ncols(), 1, mxREAL);
   mxArray *result_string;
 
   switch(result)
@@ -111,17 +113,29 @@ static void SolveProblem(MEX_ARGS) {
 	    solver->cur_primal_sol().end(),
 	    (double *)mxGetPr(mex_primal_sol));
 
-  const char *fieldnames[3] = {
+  std::copy(solver->cur_primal_constr_sol().begin(),
+            solver->cur_primal_constr_sol().end(),
+            (double *)mxGetPr(mex_primal_constr_sol));
+
+  std::copy(solver->cur_dual_constr_sol().begin(),
+            solver->cur_dual_constr_sol().end(),
+            (double *)mxGetPr(mex_dual_constr_sol));
+
+  const char *fieldnames[5] = {
     "x",
     "y",
+    "z",
+    "w",
     "result"
   };
 
-  plhs[0] = mxCreateStructMatrix(1, 1, 3, fieldnames);
+  plhs[0] = mxCreateStructMatrix(1, 1, 5, fieldnames);
 
   mxSetFieldByNumber(plhs[0], 0, 0, mex_primal_sol);
   mxSetFieldByNumber(plhs[0], 0, 1, mex_dual_sol);
-  mxSetFieldByNumber(plhs[0], 0, 2, result_string);
+  mxSetFieldByNumber(plhs[0], 0, 2, mex_primal_constr_sol);
+  mxSetFieldByNumber(plhs[0], 0, 3, mex_dual_constr_sol);
+  mxSetFieldByNumber(plhs[0], 0, 4, result_string);
 
   solver->Release();
 }
