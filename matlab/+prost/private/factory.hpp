@@ -47,7 +47,7 @@ using std::function;
 using std::shared_ptr;
 using std::map;
 
-void SolverIntermCallback(int iter, const vector<real>& primal, const vector<real>& dual);
+bool SolverIntermCallback(int iter, const vector<real>& primal, const vector<real>& dual);
      
 shared_ptr<prost::Prox<real>>    CreateProx(const mxArray *pm);
 shared_ptr<prost::Block<real>>   CreateBlock(const mxArray *pm);
