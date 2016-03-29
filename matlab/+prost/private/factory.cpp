@@ -70,7 +70,7 @@ const static map<string, function<Backend<real>*(const mxArray*)>> default_backe
   { "pdhg", CreateBackendPDHG },
 };
 
-void
+bool
 SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vector<real>& dual)
 {
   mxArray *cb_rhs[4];
@@ -79,13 +79,19 @@ SolverIntermCallback(int iter, const std::vector<real>& primal, const std::vecto
   cb_rhs[2] = mxCreateDoubleMatrix(primal.size(), 1, mxREAL); 
   cb_rhs[3] = mxCreateDoubleMatrix(dual.size(), 1, mxREAL);
 
+  mxArray *cb_lhs[1];
+
   std::copy(primal.begin(), primal.end(), mxGetPr(cb_rhs[2]));
   std::copy(dual.begin(), dual.end(), mxGetPr(cb_rhs[3]));
   
-  mexCallMATLAB(0, NULL, 4, cb_rhs, "feval");
+  mexCallMATLAB(1, cb_lhs, 4, cb_rhs, "feval");
 
   mxDestroyArray(cb_rhs[2]);
   mxDestroyArray(cb_rhs[3]);
+
+  bool is_converged = static_cast<double>(mxGetScalar(cb_lhs[0]));
+
+  return is_converged;
 }
 
 // Reads a vector from matlab and converts it to std::vector of

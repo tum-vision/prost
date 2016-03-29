@@ -56,7 +56,7 @@ public:
   };
 
   /// \brief Intermediate solution callback. Arguments: (iteration, primal_solution, dual_solution). 
-  typedef function<void(int, const vector<T>&, const vector<T>&)> IntermCallback;
+  typedef function<bool(int, const vector<T>&, const vector<T>&)> IntermCallback;
 
   /// \brief Stopping callback. Used to terminate the solver
   ///        prematurely (i.e. by user input from Matlab).

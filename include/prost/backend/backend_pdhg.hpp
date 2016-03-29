@@ -59,9 +59,6 @@ public:
 
     /// \brief Type of step-size scheme.
     typename BackendPDHG<T>::StepsizeVariant stepsize_variant;
-
-    /// \brief Compute residuals at all?
-    bool compute_residuals;
   };
 
   BackendPDHG(const typename BackendPDHG<T>::Options& opts);

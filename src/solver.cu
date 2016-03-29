@@ -84,7 +84,9 @@ void Solver<T>::Initialize() {
   }
 
   cur_primal_sol_.resize( problem_->ncols() );
+  cur_primal_constr_sol_.resize( problem_->nrows() );
   cur_dual_sol_.resize( problem_->nrows() );
+  cur_dual_constr_sol_.resize( problem_->ncols() );
 }
 
 template<typename T>
@@ -130,9 +132,9 @@ typename Solver<T>::ConvergenceResult Solver<T>::Solve() {
 
       // MATLAB callback
       if(opts_.solve_dual_problem)
-        interm_cb_(i + 1, cur_dual_sol_, cur_primal_sol_);
+        is_converged |= interm_cb_(i + 1, cur_dual_sol_, cur_primal_sol_);
       else
-        interm_cb_(i + 1, cur_primal_sol_, cur_dual_sol_);
+        is_converged |= interm_cb_(i + 1, cur_primal_sol_, cur_dual_sol_);
       
       cb_iters.pop_front();
     }

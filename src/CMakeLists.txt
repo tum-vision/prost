@@ -1,5 +1,10 @@
 string(TIMESTAMP VERSION "%Y-%m-%d")
 
+include(../cmake/CudaVersion.cmake)
+prost_select_nvcc_arch_flags(PROST_NVCC_FLAGS)
+#message(${PROST_NVCC_FLAGS_readable})
+message("Detected NVCC flags:${PROST_NVCC_FLAGS}")
+
 set(PROST_VERSION "0.1-build-${VERSION}")
 add_definitions(-DPROST_VERSION=${PROST_VERSION})
 
@@ -11,7 +16,8 @@ if(UNIX)
   list(APPEND CUDA_NVCC_FLAGS -std=c++11)
 endif()
 
-list(APPEND CUDA_NVCC_FLAGS "-gencode=arch=compute_30,code=sm_30")
+#list(APPEND CUDA_NVCC_FLAGS "-gencode=arch=compute_52,code=sm_52 -gencode=arch=compute_20,code=sm_21")
+list(APPEND CUDA_NVCC_FLAGS ${PROST_NVCC_FLAGS})
 
 set(SOURCES
 

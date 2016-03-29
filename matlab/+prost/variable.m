@@ -1,13 +1,15 @@
-classdef dual_variable < handle
+classdef variable < handle
     properties
         dim
         idx
         val
         fun
+        linop
+        pairing
     end
     
     methods
-        function h = dual_variable(dim)
+        function h = variable(dim)
             h.dim = dim;
         end
     end
