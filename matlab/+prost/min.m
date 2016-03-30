@@ -1,5 +1,5 @@
 function [problem] = min(primal_vars, primal_constrained_vars)
-% MIN_MAX  Creates a linearly constrained primal problem from the specified variables
+% MIN  Creates a linearly constrained primal problem from the specified variables
    
     problem.type = 'min';
     problem.primal_vars = primal_vars;
@@ -30,9 +30,14 @@ function [problem] = min(primal_vars, primal_constrained_vars)
             primal_vars{i}.idx, primal_vars{i}.dim);
         
         if ~isempty(primal_vars{i}.linop)
-            problem.data.linop{end + 1} = primal_vars{i}.linop(...
-                primal_vars{i}.pairing.idx, ...
-                primal_vars{i}.idx);
+            num_pairs = prod(size(primal_vars{i}.pairing));
+            for j=1:num_pairs
+                problem.data.linop{end + 1} = primal_vars{i}.linop{j}(...
+                    primal_vars{i}.pairing{j}.idx, ...
+                    primal_vars{i}.idx, ...
+                    primal_vars{i}.pairing{j}.dim, ...
+                    primal_vars{i}.dim);
+            end
         end
     end
 
