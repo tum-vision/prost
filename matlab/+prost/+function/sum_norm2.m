@@ -25,5 +25,5 @@ function [func] = sum_norm2(dim, interleaved, fun, a, b, c, d, e, alpha, beta)
     func = @(idx, count) prost.prox.sum_norm2(idx, count / dim, dim, ...
                                               interleaved, fun, a, b, c, ...
                                               d, e, alpha, beta);
-
+    
 end
