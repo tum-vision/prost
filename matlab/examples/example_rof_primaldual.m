@@ -18,6 +18,9 @@ u.fun = prost.function.sum_1d('square', 1, f, lmb, 0, 0);
 q.fun = prost.function.sum_norm2(... 
     2 * nc, false, 'ind_leq0', 1, 1, 1, 0, 0);
 
+%q.fun = prost.function.conjugate(prost.function.sum_norm2(... 
+%    2 * nc, false, 'l0', 1, 0, 1, 0, 0));
+
 prost.set_dual_pair(u, q, prost.linop.sparse(grad));
 
 prob = prost.min_max( {u}, {q} );
