@@ -1,4 +1,4 @@
-classdef variable < handle
+classdef sub_variable < handle
     properties
         dim
         idx
@@ -6,16 +6,19 @@ classdef variable < handle
         fun
         linop
         pairing
-        subvars
+        parent
     end
     
     methods
-        function h = variable(dim)
+        function h = sub_variable(parent, dim)
             h.dim = dim;
+            h.parent = parent;
             h.pairing = {};
             h.linop = {};
             h.fun = prost.function.zero();
-            h.subvars = {};
+
+            parent.fun = {};
+            parent.subvars{end+1} = h;
         end
     end
 end

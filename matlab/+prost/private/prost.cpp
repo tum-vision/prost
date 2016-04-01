@@ -53,6 +53,8 @@ extern void utSetInterruptPending(bool);
 
 #define MEX_ARGS int nlhs, mxArray **plhs, int nrhs, const mxArray **prhs
 
+static int current_gpu_device = 0;
+
 static bool MexStoppingCallback() {
   if(utIsInterruptPending())
   {
@@ -64,6 +66,11 @@ static bool MexStoppingCallback() {
 }
 
 static void SolveProblem(MEX_ARGS) {
+  cudaError_t error = cudaSetDevice(current_gpu_device);
+  cudaDeviceReset();
+  if(error != cudaSuccess)
+    throw Exception("Invalid CUDA device.");
+
   BlockDiags<real>::ResetConstMem();
 
   std::shared_ptr<Problem<real> > problem = CreateProblem(prhs[0]);
@@ -72,6 +79,10 @@ static void SolveProblem(MEX_ARGS) {
 
   if(opts.verbose) {
     std::cout << "prost v" << prost::get_version().c_str() << std::endl;
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, current_gpu_device);
+    int sm_per_multiproc = _ConvertSMVer2Cores(prop.major, prop.minor);
+    printf("Running on device number %d: %s (%.1f GB, %d Cores).\n", current_gpu_device, prop.name, (double)prop.totalGlobalMem/(1024.*1024*1024), prop.multiProcessorCount * sm_per_multiproc);
   }
 
   std::shared_ptr<Solver<real> > solver( new Solver<real>(problem, backend) );
@@ -149,6 +160,11 @@ static void EvalLinOp(MEX_ARGS) {
   if(nlhs < 3)
     throw Exception("eval_lin_op: At least three outputs (result, rowsum, colsum) required.");
 
+  cudaError_t error = cudaSetDevice(current_gpu_device);
+  cudaDeviceReset();
+  if(error != cudaSuccess)
+    throw Exception("Invalid CUDA device.");
+
   // read input arguments
   std::shared_ptr<LinearOperator<real> > linop(new LinearOperator<real>());
 
@@ -211,6 +227,11 @@ static void EvalProx(MEX_ARGS) {
   if(nlhs == 0)
     throw Exception("One output (result of prox) required.");
 
+  cudaError_t error = cudaSetDevice(current_gpu_device);
+  cudaDeviceReset();
+  if(error != cudaSuccess)
+    throw Exception("Invalid CUDA device.");
+
   // check dimensions
   const mwSize *dims = mxGetDimensions(prhs[1]);
 
@@ -252,13 +273,29 @@ static void EvalProx(MEX_ARGS) {
 }
 
 static void Init(MEX_ARGS) {
-  cudaDeviceReset();
-  //mexLock(); 
+  mexLock(); 
 }
 
 static void Release(MEX_ARGS) {
-  //mexUnlock(); 
-  cudaDeviceReset();
+  mexUnlock(); 
+}
+
+static void ListGPUs(MEX_ARGS) {
+  int nDevices;
+
+  cudaGetDeviceCount(&nDevices);
+  for (int i = 0; i < nDevices; i++) {
+    cudaDeviceProp prop;
+    cudaGetDeviceProperties(&prop, i);
+    int sm_per_multiproc = _ConvertSMVer2Cores(prop.major, prop.minor);
+    printf("Device number %d: %s (%.1f GB, %d Cores).\n", i, prop.name, (double)prop.totalGlobalMem/(1024.*1024*1024), prop.multiProcessorCount * sm_per_multiproc);
+  }
+}
+
+static void SetGPU(MEX_ARGS) {
+  int id = mxGetScalar(prhs[0]);
+
+  current_gpu_device = id;
 }
 
 const static map<string, function<void(MEX_ARGS)>> cmd_reg = {
@@ -267,6 +304,8 @@ const static map<string, function<void(MEX_ARGS)>> cmd_reg = {
   { "solve_problem", SolveProblem },
   { "eval_linop",    EvalLinOp    },
   { "eval_prox",     EvalProx     },
+  { "list_gpus",     ListGPUs     },
+  { "set_gpu",       SetGPU       },
 };
 
 void mexFunction(MEX_ARGS)
