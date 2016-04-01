@@ -15,9 +15,8 @@ classdef sub_variable < handle
             h.parent = parent;
             h.pairing = {};
             h.linop = {};
-            h.fun = prost.function.zero();
+            h.fun = {}; %prost.function.zero();
 
-            parent.fun = {};
             parent.subvars{end+1} = h;
         end
     end
