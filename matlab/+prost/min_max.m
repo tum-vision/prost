@@ -47,17 +47,20 @@ function [problem] = min_max(primal_vars, dual_vars)
     for i=1:problem.num_primals
        
         % add primal prox
-        if ~isempty(primal_vars{i}.fun)
-            problem.data.prox_g{end + 1} = primal_vars{i}.fun(...
-                primal_vars{i}.idx, primal_vars{i}.dim);
-        end
-
         num_subvars = prod(size(primal_vars{i}.subvars));
+        has_subvar_prox = false;
         for j=1:num_subvars
             if ~isempty(primal_vars{i}.subvars{j}.fun)
                 problem.data.prox_g{end + 1} = primal_vars{i}.subvars{j}.fun(...
-                    primal_vars{i}.subvars{j}.idx, primal_vars{i}.subvars{j}.dim);
+                    primal_vars{i}.subvars{j}.idx, ...
+                    primal_vars{i}.subvars{j}.dim);
+                has_subvar_prox = true;
             end           
+        end        
+
+        if ~isempty(primal_vars{i}.fun) && ~has_subvar_prox
+            problem.data.prox_g{end + 1} = primal_vars{i}.fun(...
+                primal_vars{i}.idx, primal_vars{i}.dim);
         end
         
         % add linops
@@ -88,18 +91,21 @@ function [problem] = min_max(primal_vars, dual_vars)
 
     for i=1:problem.num_duals
         num_subvars = prod(size(dual_vars{i}.subvars));
+        has_subvar_prox = false;
+        for j=1:num_subvars
+            if ~isempty(dual_vars{i}.subvars{j}.fun)
+                problem.data.prox_fstar{end + 1} = dual_vars{i}.subvars{j}.fun(...
+                    dual_vars{i}.subvars{j}.idx, ...
+                    dual_vars{i}.subvars{j}.dim);
+                has_subvar_prox = true;
+            end
+        end
 
-        if ~isempty(dual_vars{i}.fun)
+        if ~isempty(dual_vars{i}.fun) && ~has_subvar_prox
             problem.data.prox_fstar{end + 1} = dual_vars{i}.fun(...
                 dual_vars{i}.idx, dual_vars{i}.dim);
         end
 
-        for j=1:num_subvars
-            if ~isempty(dual_vars{i}.subvars{j}.fun)
-                problem.data.prox_fstar{end + 1} = dual_vars{i}.subvars{j}.fun(...
-                    dual_vars{i}.subvars{j}.idx, dual_vars{i}.subvars{j}.dim);
-            end
-        end
     end
 
     problem.data.scaling = 'alpha';

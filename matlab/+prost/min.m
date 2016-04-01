@@ -45,18 +45,22 @@ function [problem] = min(primal_vars, primal_constrained_vars)
 
     for i=1:problem.num_primals
         
-        % add primal prox
-        if ~isempty(primal_vars{i}.fun)
-            problem.data.prox_g{end + 1} = primal_vars{i}.fun(...
-                primal_vars{i}.idx, primal_vars{i}.dim);
-        end
-
         num_subvars = prod(size(primal_vars{i}.subvars));
+        has_subvar_prox = false;
         for j=1:num_subvars
             if ~isempty(primal_vars{i}.subvars{j}.fun)
                 problem.data.prox_g{end + 1} = primal_vars{i}.subvars{j}.fun(...
-                    primal_vars{i}.subvars{j}.idx, primal_vars{i}.subvars{j}.dim);
+                    primal_vars{i}.subvars{j}.idx, ...
+                    primal_vars{i}.subvars{j}.dim);
+                
+                has_subvar_prox = true;
             end           
+        end
+
+        % add primal prox
+        if ~isempty(primal_vars{i}.fun) && ~has_subvar_prox
+            problem.data.prox_g{end + 1} = primal_vars{i}.fun(...
+                primal_vars{i}.idx, primal_vars{i}.dim);
         end
         
         % add linop
@@ -86,19 +90,23 @@ function [problem] = min(primal_vars, primal_constrained_vars)
     end
 
     for i=1:problem.num_constrained_primals
-        num_subvars = prod(size(primal_constrained_vars{i}.subvars));
-
-        if ~isempty(primal_constrained_vars{i}.fun)
-            problem.data.prox_f{end + 1} = primal_constrained_vars{i}.fun(...
-                primal_constrained_vars{i}.idx, primal_constrained_vars{i}.dim);
-        end
+        num_subvars = ...
+            prod(size(primal_constrained_vars{i}.subvars));
+        has_subvar_prox = false;
 
         for j=1:num_subvars
             if ~isempty(primal_constrained_vars{i}.subvars{j}.fun)
                 problem.data.prox_f{end + 1} = primal_constrained_vars{i}.subvars{j}.fun(...
                     primal_constrained_vars{i}.subvars{j}.idx, ...
                     primal_constrained_vars{i}.subvars{j}.dim);
+                
+                has_subvar_prox = true;
             end
+        end
+
+        if ~isempty(primal_constrained_vars{i}.fun) && ~has_subvar_prox
+            problem.data.prox_f{end + 1} = primal_constrained_vars{i}.fun(...
+                primal_constrained_vars{i}.idx, primal_constrained_vars{i}.dim);
         end
     end
 

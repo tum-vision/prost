@@ -27,7 +27,7 @@ function [passed] = test_linop_sparse_zero()
                                                      ncols);
                 else
                     K_mat = sprand(nrows,ncols,0.01);
-                    linop{idx, 1} = prost.block.sparse(row, col, K_mat);
+                    linop{idx, 1} = prost.block.sparse(row, col, size(K_mat,1),size(K_mat,2),K_mat);
                 end
                 
                 K_row = cat(2, K_row, K_mat);

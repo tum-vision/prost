@@ -4,7 +4,8 @@ function [passed] = test_linop_gradient2d()
     ny = 229;
     L = 8;
 
-    linop_2d = { prost.block.gradient2d(0, 0, nx, ny, L) };
+    linop_2d = { prost.block.gradient2d(0, 0, nx*ny*2*L, nx*ny*L, ...
+                                        nx, ny, L, false) };
     K_2d = spmat_gradient2d(nx, ny, L);
 
     inp = rand(nx*ny*L, 1);
