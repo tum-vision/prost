@@ -25,6 +25,7 @@ using std::vector;
 
 string get_version(); 
 template<typename T> list<double> linspace(T start_in, T end_in, int num_in);
+int _ConvertSMVer2Cores(int major, int minor);
 
 /// \brief Helper function that converts CSR format to CSC format, 
 ///        not in-place, if a == NULL, only pattern is reorganized
