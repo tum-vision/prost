@@ -14,7 +14,14 @@ lmb = 0.3;
 u = prost.variable(nx*ny*nc);
 g = prost.variable(2*nx*ny*nc);
 
-u.fun = prost.function.sum_1d('square', 1, f, lmb, 0, 0);
+% Example on how to use sub-variables:
+u1 = prost.sub_variable(u, 100);
+u2 = prost.sub_variable(u, 500);
+u3 = prost.sub_variable(u, nx*ny*nc-600);
+u1.fun = prost.function.sum_1d('square', 1, f(1:100), lmb, 0, 0);
+u2.fun = prost.function.sum_1d('square', 1, f(101:600), lmb, 0, 0);
+u3.fun = prost.function.sum_1d('square', 1, f(601:end), lmb, 0, 0);
+
 g.fun = prost.function.sum_norm2(2 * nc, false, 'abs', 1, 0, 1, 0, 0);
 
 prost.set_constraint(u, g, prost.linop.sparse(grad));
@@ -41,4 +48,3 @@ toc;
 %%
 % show result
 imshow(reshape(u.val, [ny nx nc]));
-

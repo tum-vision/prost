@@ -7,10 +7,10 @@ function [passed] = test_linop_sparse_kron_id()
     % sum(sum(abs(K_mat)>0))
     
     linop = { ...
-        prost.block.sparse_kron_id(0, 0, K_mat, diaglength); ...
-        prost.block.sparse_kron_id(nrows * diaglength, 0, K_mat, diaglength);
-        prost.block.sparse_kron_id(nrows * diaglength, ncols * diaglength, K_mat, diaglength);
-        prost.block.sparse_kron_id(0, ncols * diaglength, K_mat, diaglength);
+        prost.block.sparse_kron_id(0, 0, nrows*diaglength, ncols*diaglength, K_mat, diaglength); ...
+        prost.block.sparse_kron_id(nrows * diaglength, 0, nrows*diaglength, ncols*diaglength, K_mat, diaglength);
+        prost.block.sparse_kron_id(nrows * diaglength, ncols * diaglength, nrows*diaglength, ncols*diaglength, K_mat, diaglength);
+        prost.block.sparse_kron_id(0, ncols * diaglength, nrows*diaglength, ncols*diaglength, K_mat, diaglength);
             };
     
     K = kron(K_mat, speye(diaglength));
