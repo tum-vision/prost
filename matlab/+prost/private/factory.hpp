@@ -12,6 +12,7 @@
 #include "prost/linop/block_zero.hpp"
 
 #include "prost/backend/backend.hpp"
+#include "prost/backend/backend_admm.hpp"
 #include "prost/backend/backend_pdhg.hpp"
 
 #include "prost/prox/prox.hpp"
@@ -111,9 +112,12 @@ CreateBlockGradient2D(size_t row, size_t col, const mxArray *pm);
 prost::BlockGradient3D<real>*
 CreateBlockGradient3D(size_t row, size_t col, const mxArray *pm);  
   
-// other 
+// backends
 prost::BackendPDHG<real>* 
 CreateBackendPDHG(const mxArray *data);
+
+prost::BackendADMM<real>* 
+CreateBackendADMM(const mxArray *data);
 
 } // namespace matlab
 

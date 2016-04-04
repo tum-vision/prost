@@ -41,6 +41,7 @@ set(SOURCES
   "prox/prox_zero.cu"
   
   "backend/backend_pdhg.cu"
+  "backend/backend_admm.cu"
 
   "common.cu"
   "problem.cu"
@@ -78,6 +79,7 @@ set(SOURCES
 
   "../include/prost/backend/backend.hpp"
   "../include/prost/backend/backend_pdhg.hpp"
+  "../include/prost/backend/backend_admm.hpp"
 
   "../include/prost/common.hpp"
   "../include/prost/config.hpp"
