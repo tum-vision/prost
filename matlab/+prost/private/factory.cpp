@@ -67,6 +67,7 @@ const static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>>
 };
 
 const static map<string, function<Backend<real>*(const mxArray*)>> default_backend_reg = {
+  { "admm", CreateBackendADMM },
   { "pdhg", CreateBackendPDHG },
 };
 
@@ -474,6 +475,28 @@ CreateBackendPDHG(const mxArray *data)
     throw Exception("Couldn't recognize step-size variant. Valid options are {alg1,alg2,goldstein,boyd}.");
 
   BackendPDHG<real> *backend = new BackendPDHG<real>(opts);
+
+  return backend;
+}
+
+BackendADMM<real>* 
+CreateBackendADMM(const mxArray *data)
+{
+  BackendADMM<real>::Options opts;
+
+  // read options from data
+  opts.rho0 =           GetScalarFromField<real>(data, "rho0");
+  opts.residual_iter =  GetScalarFromField<int>(data,  "residual_iter"); 
+  opts.arb_delta =      GetScalarFromField<real>(data, "arb_delta");
+  opts.arb_gamma =      GetScalarFromField<real>(data, "arb_gamma");
+  opts.arb_tau =        GetScalarFromField<real>(data, "arb_tau");
+  opts.alpha =          GetScalarFromField<real>(data, "alpha");
+  opts.cg_max_iter =    GetScalarFromField<int>(data, "cg_max_iter");
+  opts.cg_tol_pow  =    GetScalarFromField<int>(data, "cg_tol_pow");
+  opts.cg_tol_ini  =    GetScalarFromField<int>(data, "cg_tol_ini");
+  opts.cg_tol_max  =    GetScalarFromField<int>(data, "cg_tol_max");
+
+  BackendADMM<real> *backend = new BackendADMM<real>(opts);
 
   return backend;
 }

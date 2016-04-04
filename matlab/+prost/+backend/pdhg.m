@@ -1,7 +1,5 @@
 function [backend] = pdhg(varargin)
 
-    dummy_cb = @(it, res_primal, res_dual, tau, sigma) [tau, sigma];
-    
     p = inputParser;
     addOptional(p, 'tau0', 1);
     addOptional(p, 'sigma0', 1);
@@ -14,7 +12,6 @@ function [backend] = pdhg(varargin)
     addOptional(p, 'arb_delta', 1.05);
     addOptional(p, 'arb_tau', 0.8);
     addOptional(p, 'stepsize', 'boyd');
-    addOptional(p, 'stepsize_callback', dummy_cb);
    
     p.parse(varargin{:});
    
