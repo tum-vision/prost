@@ -2,6 +2,7 @@
 #define PROST_BACKEND_ADMM_HPP_
 
 #include <thrust/device_vector.h>
+#include <cublas_v2.h>
 
 #include "prost/backend/backend.hpp"
 #include "prost/common.hpp"
@@ -26,7 +27,7 @@ public:
     double cg_tol_pow;
 
     /// \brief initial cg tolerance
-    double cg_tol_ini;
+    double cg_tol_min;
 
     /// \brief maximal cg tolerance
     double cg_tol_max;
@@ -62,7 +63,7 @@ private:
   thrust::device_vector<T> x_half_, z_half_;
   thrust::device_vector<T> x_proj_, z_proj_;
   thrust::device_vector<T> x_dual_, z_dual_;
-  thrust::device_vector<T> temp1_, temp2_;
+  thrust::device_vector<T> temp1_, temp2_, temp3_;
   
   /// \brief ADMM-specific options.
   typename BackendADMM<T>::Options opts_;
@@ -78,6 +79,9 @@ private:
 
   /// \brief Internal prox_f
   vector< shared_ptr<Prox<T> > > prox_f_;
+
+  /// \brief cuBLAS handle
+  cublasHandle_t hdl_;
 };
 
 } // namespace prost

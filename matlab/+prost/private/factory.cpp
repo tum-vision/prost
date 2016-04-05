@@ -492,9 +492,9 @@ CreateBackendADMM(const mxArray *data)
   opts.arb_tau =        GetScalarFromField<real>(data, "arb_tau");
   opts.alpha =          GetScalarFromField<real>(data, "alpha");
   opts.cg_max_iter =    GetScalarFromField<int>(data, "cg_max_iter");
-  opts.cg_tol_pow  =    GetScalarFromField<int>(data, "cg_tol_pow");
-  opts.cg_tol_ini  =    GetScalarFromField<int>(data, "cg_tol_ini");
-  opts.cg_tol_max  =    GetScalarFromField<int>(data, "cg_tol_max");
+  opts.cg_tol_pow  =    GetScalarFromField<real>(data, "cg_tol_pow");
+  opts.cg_tol_min  =    GetScalarFromField<real>(data, "cg_tol_min");
+  opts.cg_tol_max  =    GetScalarFromField<real>(data, "cg_tol_max");
 
   BackendADMM<real> *backend = new BackendADMM<real>(opts);
 
