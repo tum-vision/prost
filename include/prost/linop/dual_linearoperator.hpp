@@ -16,11 +16,13 @@ class DualLinearOperator : public LinearOperator<T> {
 
   virtual void Eval(
     device_vector<T>& result, 
-    const device_vector<T>& rhs);
+    const device_vector<T>& rhs,
+    T beta = 0);
 
   virtual void EvalAdjoint(
     device_vector<T>& result, 
-    const device_vector<T>& rhs);
+    const device_vector<T>& rhs,
+    T beta = 0);
   
     /// \brief Returns \sum_{col=1}^{ncols} |K_{row,col}|^{\alpha}.
   virtual T row_sum(size_t row, T alpha) const;

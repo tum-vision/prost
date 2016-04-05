@@ -113,10 +113,18 @@ void LinearOperator<T>::Release()
 
 template<typename T>
 void LinearOperator<T>::Eval(
-  thrust::device_vector<T>& result, 
-  const thrust::device_vector<T>& rhs)
+    thrust::device_vector<T>& result, 
+    const thrust::device_vector<T>& rhs,
+    T beta)
 {
-  thrust::fill(result.begin(), result.end(), 0);
+  if(beta == 0)
+  {
+    thrust::fill(result.begin(), result.end(), 0);
+  }
+  else if(beta != 1)
+  {
+    thrust::transform(result.begin(), result.end(), result.begin(), beta * thrust::placeholders::_1);
+  }
 
   for(auto& block : blocks_)
     block->EvalAdd(result, rhs);
@@ -125,9 +133,17 @@ void LinearOperator<T>::Eval(
 template<typename T>
 void LinearOperator<T>::EvalAdjoint(
   thrust::device_vector<T>& result, 
-  const thrust::device_vector<T>& rhs)
+  const thrust::device_vector<T>& rhs,
+  T beta)
 {
-  thrust::fill(result.begin(), result.end(), 0);
+  if(beta == 0)
+  {
+    thrust::fill(result.begin(), result.end(), 0);
+  }
+  else if(beta != 1)
+  {
+    thrust::transform(result.begin(), result.end(), result.begin(), beta * thrust::placeholders::_1);
+  }
 
   for(auto& block : blocks_)
     block->EvalAdjointAdd(result, rhs);

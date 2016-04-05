@@ -42,7 +42,7 @@ struct dual_proxarg_functor
   void operator()(Tuple t)
   {
     thrust::get<4>(t) = thrust::get<0>(t) + sigma_ * thrust::get<1>(t) * 
-      ((1 + theta_) * thrust::get<2>(t) - theta_ * thrust::get<3>(t));
+                        ((1 + theta_) * thrust::get<2>(t) - theta_ * thrust::get<3>(t));
   }
 
   T sigma_;
@@ -462,20 +462,9 @@ BackendPDHG<T>::UpdateResidualsAndStepsizes()
 
   if(opts_.stepsize_variant == BackendPDHG<T>::StepsizeVariant::kPDHGStepsAlg2)
   {
-    if(this->solver_opts_.solve_dual_problem)
-    {
-      theta_ = 1. / std::sqrt(1. + 2. * opts_.alg2_gamma * sigma_);
-      tau_ = theta_ / tau_;
-      sigma_ = sigma_ * theta_;
-    }
-    else
-    {
-      theta_ = 1. / std::sqrt(1. + 2. * opts_.alg2_gamma * tau_);
-      tau_ = theta_ * tau_;
-      sigma_ = sigma_ / theta_;
-    }
-
-    //cout << "theta=" << theta_ << ", tau=" << tau_ << ", sigma=" << sigma_ << ", gamma=" << opts_.alg2_gamma << endl;
+    theta_ = 1. / std::sqrt(1. + 2. * opts_.alg2_gamma * tau_);
+    tau_ = theta_ * tau_;
+    sigma_ = sigma_ / theta_;
   }
 }
 

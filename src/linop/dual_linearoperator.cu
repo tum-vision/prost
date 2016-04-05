@@ -18,9 +18,17 @@ DualLinearOperator<T>::~DualLinearOperator()
 template<typename T>
 void DualLinearOperator<T>::Eval(
     device_vector<T>& result, 
-    const device_vector<T>& rhs)
+    const device_vector<T>& rhs,
+    T beta)
 {
-  thrust::fill(result.begin(), result.end(), 0);
+  if(beta == 0)
+  {
+    thrust::fill(result.begin(), result.end(), 0);
+  }
+  else if(beta != 1)
+  {
+    thrust::transform(result.begin(), result.end(), result.begin(), -beta * thrust::placeholders::_1);
+  }
 
   for(auto& block : child_->blocks_)
     block->EvalAdjointAdd(result, rhs);
@@ -32,9 +40,17 @@ void DualLinearOperator<T>::Eval(
 template<typename T>
 void DualLinearOperator<T>::EvalAdjoint(
     device_vector<T>& result, 
-    const device_vector<T>& rhs)
+    const device_vector<T>& rhs,
+    T beta)
 {
-  thrust::fill(result.begin(), result.end(), 0);
+  if(beta == 0)
+  {
+    thrust::fill(result.begin(), result.end(), 0);
+  }
+  else if(beta != 1)
+  {
+    thrust::transform(result.begin(), result.end(), result.begin(), -beta * thrust::placeholders::_1);
+  }
 
   for(auto& block : child_->blocks_)
     block->EvalAdd(result, rhs);
