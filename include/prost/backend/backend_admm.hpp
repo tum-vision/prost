@@ -59,13 +59,10 @@ public:
   virtual size_t gpu_mem_amount() const;
 
 private:
-  thrust::device_vector<T> xz_half_;
-  thrust::device_vector<T> xz_proj_;
-  thrust::device_vector<T> xz_dual_;
-
-  thrust::device_ptr<T> x_half_, z_half_;
-  thrust::device_ptr<T> x_proj_, z_proj_;
-  thrust::device_ptr<T> x_dual_, z_dual_;
+  thrust::device_vector<T> x_half_, z_half_;
+  thrust::device_vector<T> x_proj_, z_proj_;
+  thrust::device_vector<T> x_dual_, z_dual_;
+  thrust::device_vector<T> temp1_, temp2_;
   
   /// \brief ADMM-specific options.
   typename BackendADMM<T>::Options opts_;

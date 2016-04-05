@@ -50,7 +50,8 @@ public:
     thrust::device_vector<T>& result, 
     const thrust::device_vector<T>& arg, 
     const thrust::device_vector<T>& tau_diag, 
-    T tau);
+    T tau,
+    bool invert_tau = false);
 
   /// 
   /// \brief Evaluates the prox operator on the GPU, using CPU data. Mainly 

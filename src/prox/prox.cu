@@ -8,7 +8,8 @@ void Prox<T>::Eval(
   thrust::device_vector<T>& result, 
   const thrust::device_vector<T>& arg, 
   const thrust::device_vector<T>& tau_diag, 
-  T tau)
+  T tau,
+  bool invert_tau)
 {
   EvalLocal(
     result.begin() + index_,
@@ -18,7 +19,7 @@ void Prox<T>::Eval(
     tau_diag.cbegin() + index_,
     tau_diag.cbegin() + index_ + size_,
     tau,
-    false);
+    invert_tau);
 }
 
 template<typename T>

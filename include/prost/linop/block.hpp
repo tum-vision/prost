@@ -29,7 +29,7 @@ public:
   void EvalAdjointAdd(
     device_vector<T>& result, 
     const device_vector<T>& rhs);
-
+  
   /// \brief Required for preconditioners, row and col are "local" 
   ///        for the operator, which means they start at 0.
   virtual T row_sum(size_t row, T alpha) const = 0;

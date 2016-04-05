@@ -27,11 +27,13 @@ public:
 
   virtual void Eval(
     device_vector<T>& result, 
-    const device_vector<T>& rhs);
+    const device_vector<T>& rhs,
+    T beta = 0);
 
   virtual void EvalAdjoint(
     device_vector<T>& result, 
-    const device_vector<T>& rhs);
+    const device_vector<T>& rhs,
+    T beta = 0);
 
   /// \brief For debugging/testing purposes. Not overwritten in DualLinearOperator.
   double Eval(
