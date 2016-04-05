@@ -10,12 +10,26 @@
 #include "prost/prox/prox.hpp"
 #include "prost/prox/prox_moreau.hpp"
 
+#include "prost/cgls.hpp"
 #include "prost/exception.hpp"
 #include "prost/problem.hpp"
 
 namespace prost {
 
-/// \brief <0> = alpha <1> + (1-alpha) <2> + <3>
+// compute norm using cuBLAS
+void nrm2(cublasHandle_t hdl, int n, const double *x, double *result) 
+{
+  cublasDnrm2(hdl, n, x, static_cast<int>(1), result);
+}
+
+void nrm2(cublasHandle_t hdl, int n, const float *x, double *result) 
+{
+  float result_float;
+  cublasSnrm2(hdl, n, x, static_cast<int>(1), &result_float);
+  *result = static_cast<double>(result_float);
+}
+
+/// \brief <0> = (alpha <1> + (1-alpha) <2> + <3>) / sqrt(<4>)
 template<typename T>
 struct temp1_functor
 {
@@ -25,8 +39,8 @@ struct temp1_functor
   __host__ __device__
   void operator()(Tuple t)
   {
-    thrust::get<0>(t) = alpha_ * thrust::get<1>(t) +
-                        (1 - alpha_) * thrust::get<2>(t) + thrust::get<3>(t);
+    thrust::get<0>(t) = (alpha_ * thrust::get<1>(t) +
+      (1 - alpha_) * thrust::get<2>(t) + thrust::get<3>(t)) / sqrt(thrust::get<4>(t));
   }
 
   T alpha_;
@@ -65,7 +79,19 @@ struct x_proj_functor
   __host__ __device__
   void operator()(Tuple t)
   {
-    thrust::get<0>(t) = thrust::get<0>(t) * sqrt(thrust::get<2>(t)) + thrust::get<1>(t);
+    thrust::get<0>(t) = sqrt(thrust::get<2>(t)) * (thrust::get<0>(t) + thrust::get<1>(t));
+  }
+};
+
+/// \brief Computes <0> = <1> * sqrt(<3>) - <2>
+template<typename T>
+struct x_dual_functor
+{
+  template <typename Tuple>
+  __host__ __device__
+  void operator()(Tuple t)
+  {
+    thrust::get<0>(t) = thrust::get<1>(t) * sqrt(thrust::get<3>(t)) - thrust::get<2>(t);
   }
 };
 
@@ -132,18 +158,40 @@ struct gemv_functor3
   T alpha_;
 };
 
+// <0> = -rho(<1> - <2> + <3>)
+template<typename T>
+struct get_dual_functor
+{
+  get_dual_functor(T rho, T expo) : rho_(rho), expo_(expo) { }
+
+  template <typename Tuple>
+  __host__ __device__
+  void operator()(Tuple t)
+  {
+    thrust::get<0>(t) = -rho_ * pow(thrust::get<4>(t), expo_) * (thrust::get<1>(t) - thrust::get<2>(t) + thrust::get<3>(t));
+  }
+
+  T rho_;
+  T expo_;
+};
+
 template<typename T>
 struct GemvPrecondK //: cgls::Gemv<T> {
 {
   GemvPrecondK(const thrust::device_vector<T>& Sigma,
                const thrust::device_vector<T>& Tau,
                shared_ptr<LinearOperator<T>> linop,
-               const thrust::device_vector<T>& temp)
-      : Sigma_(Sigma), Tau_(Tau), temp_(temp)
+               thrust::device_vector<T>& temp)
+    : Sigma_(Sigma), Tau_(Tau), linop_(linop), temp_(temp)
   {
   }
   
-  int operator()(char op, const T alpha, const T *x, const T beta, T *y) const
+  int operator()(
+    char op, 
+    const T alpha, 
+    const thrust::device_vector<T>& x, 
+    const T beta, 
+    thrust::device_vector<T>& y) const
   {
     // implement y := alpha * op(A) x + beta * y
 
@@ -151,47 +199,47 @@ struct GemvPrecondK //: cgls::Gemv<T> {
     {      
       // temp = Tau^{1/2} * x
       thrust::transform(Tau_.begin(), Tau_.end(),
-                        thrust::device_pointer_cast(x),
-                        temp_.begin(),
-                        gemv_functor1<T>());
+        x.begin(),
+        temp_.begin(),
+        gemv_functor1<T>());
       
       // y = (beta / (alpha * Sigma^{1/2})) * y
       thrust::transform(Sigma_.begin(), Sigma_.end(),
-                        thrust::device_pointer_cast(y),
-                        thrust::device_pointer_cast(y),
-                        gemv_functor2<T>(alpha, beta));
+        y.begin(),
+        y.begin(),
+        gemv_functor2<T>(alpha, beta));
 
       // y += A * temp
       linop_->Eval(y, temp_, 1);
 
       // y = alpha * Sigma^{1/2} * y
       thrust::transform(Sigma_.begin(), Sigma_.end(),
-                        thrust::device_pointer_cast(y),
-                        thrust::device_pointer_cast(y),
-                        gemv_functor3<T>(alpha));
+        y.begin(),
+        y.begin(),
+        gemv_functor3<T>(alpha));
     }
     else // adjoint
     {
       // temp = Sigma^{1/2} * x
       thrust::transform(Sigma_.begin(), Sigma_.end(),
-                        thrust::device_pointer_cast(x),
-                        temp_.begin(),
-                        gemv_functor1<T>());
+        x.begin(),
+        temp_.begin(),
+        gemv_functor1<T>());
 
       // y = (beta / (alpha * Tau^{1/2})) * y
       thrust::transform(Tau_.begin(), Tau_.end(),
-                        thrust::device_pointer_cast(y),
-                        thrust::device_pointer_cast(y),
-                        gemv_functor2<T>(alpha, beta));
+        y.begin(),
+        y.begin(),
+        gemv_functor2<T>(alpha, beta));
 
       // y += A^T * temp
       linop_->EvalAdjoint(y, temp_, 1);
 
       // y = alpha * Tau^{1/2} * y
       thrust::transform(Tau_.begin(), Tau_.end(),
-                        thrust::device_pointer_cast(y),
-                        thrust::device_pointer_cast(y),
-                        gemv_functor3<T>(alpha));
+        y.begin(),
+        y.begin(),
+        gemv_functor3<T>(alpha));
     }
 
     return 0;
@@ -233,6 +281,7 @@ void BackendADMM<T>::Initialize()
     
     temp1_.resize(n, 0);
     temp2_.resize(m, 0);
+    temp3_.resize(l, 0);
   }
   catch(std::bad_alloc& e)
   {
@@ -273,64 +322,31 @@ void BackendADMM<T>::Initialize()
   }
   else
     prox_f_ = this->problem_->prox_f();
+
+  rho_ = opts_.rho0;
+  iteration_ = 0;
+
+  cublasCreate_v2(&hdl_);
 }
 
 template<typename T>
 void BackendADMM<T>::PerformIteration()
 {
-  // temp_ = x_proj_ - x_dual_
-  thrust::for_each(
-      thrust::make_zip_iterator(thrust::make_tuple(
-          temp1_.begin(),
-          x_proj_.begin(),
-          x_dual_.begin())),
-
-      thrust::make_zip_iterator(thrust::make_tuple(
-          temp1_.end(),
-          x_proj_.end(),
-          x_dual_.end())),
-
-      difference_functor<T>());
-
-  // x_half_ = prox_g(temp_)
-  for(auto& p : prox_g_)
-    p->Eval(x_half_, temp1_, this->problem_->scaling_right(), 1 / rho_);
-
-  // temp_ = z_proj_ - z_dual_
-  thrust::for_each(
-      thrust::make_zip_iterator(thrust::make_tuple(
-          temp2_.begin(),
-          z_proj_.begin(),
-          z_dual_.begin())),
-
-      thrust::make_zip_iterator(thrust::make_tuple(
-          temp2_.end(),
-          z_proj_.end(),
-          z_dual_.end())),
-
-      difference_functor<T>());
-
-  // z_half_ = prox_f(temp_)
-  for(auto& p : prox_f_)
-    p->Eval(z_half_, temp2_, this->problem_->scaling_left(), rho_, true); 
-
-  // -----------------------------------------------------------
-  // TODO: The iteration ends here. Reorder updates accordingly.
-  // -----------------------------------------------------------
-
-  // . temp1_ = alpha x_half_ + (1-alpha) x_proj_ + x_dual_
+  // . temp1_ = T^{-1/2} (alpha x_half_ + (1-alpha) x_proj_ + x_dual_)
   thrust::for_each(
       thrust::make_zip_iterator(thrust::make_tuple(
           temp1_.begin(),
           x_half_.begin(),
           x_proj_.begin(),
-          x_dual_.begin())),
+          x_dual_.begin(),
+          this->problem_->scaling_right().begin())),
       
       thrust::make_zip_iterator(thrust::make_tuple(
           temp1_.end(),
           x_half_.end(),
           x_proj_.end(),
-          x_dual_.end())),
+          x_dual_.end(),
+          this->problem_->scaling_right().begin())),
       
       temp1_functor<T>(opts_.alpha));
   
@@ -350,14 +366,53 @@ void BackendADMM<T>::PerformIteration()
       
       temp2_functor<T>());
 
-  // TODO:
-  // Minimize |Kx-d|^2 + |x|^2 for d = temp2_ with cgls Method
-  // and store result in x_proj_
-  // x_half_, x_dual_, z_proj_, z_half_, z_dual_ can be used as temp variables (for cg method)
-  // add variable to warm-start cg?
-  // why y0 - Ax0 as rhs in pogs?!
+  // abstract linear operator Sigma^{1/2} K Tau^{1/2}
+  GemvPrecondK<T> gemv(
+    this->problem_->scaling_left(),
+    this->problem_->scaling_right(),
+    this->problem_->linop(),
+    temp3_);
+
+  // z_dual_ is not needed, hence use it to store projection variable
+  thrust::copy(temp2_.begin(), temp2_.end(), z_dual_.begin());
+  thrust::device_vector<T>& tmp_proj_arg = z_dual_;
+
+  // tmp_proj_arg = temp2_ - Sigma^{1/2} K Tau^{1/2} temp_1
+  gemv('n', -1, temp1_, 1, tmp_proj_arg);
   
-  // x_proj = Tau^{1/2} x_proj + temp1_
+  double cg_tol = opts_.cg_tol_min / 
+    std::pow(static_cast<T>(iteration_ + 1), opts_.cg_tol_pow);
+  cg_tol = std::max(cg_tol, opts_.cg_tol_max);
+
+  //std::cout << iteration_ << ", " << cg_tol << ", " << opts_.cg_tol_min << ", " << opts_.cg_tol_max << std::endl;
+
+  // x_half, z_half, z_proj and x_dual can be used as temporary variables
+  // for the conjugate gradient method.
+  thrust::device_vector<T>& tmp_p = x_half_;
+  thrust::device_vector<T>& tmp_q = z_half_;
+  thrust::device_vector<T>& tmp_r = z_proj_;
+  thrust::device_vector<T>& tmp_s = x_dual_;
+
+  // TODO: memset x_proj_ to zero or use warm-starting?!
+
+  // Minimize |Kx-d|^2 + |x|^2 for d = temp2_ - K temp_1 with cgls Method
+  cgls::Solve<T, GemvPrecondK<T> >(
+    hdl_, 
+    gemv, 
+    this->problem_->nrows(),
+    this->problem_->ncols(), 
+    tmp_proj_arg, 
+    x_proj_, 
+    1, 
+    cg_tol, 
+    opts_.cg_max_iter, 
+    true,
+    tmp_p, 
+    tmp_q, 
+    tmp_r, 
+    tmp_s);
+
+  // x_proj = Tau^{1/2} (x_proj + temp1_)
   thrust::for_each(
       thrust::make_zip_iterator(thrust::make_tuple(
           x_proj_.begin(),
@@ -374,19 +429,21 @@ void BackendADMM<T>::PerformIteration()
   // z_proj = K x_proj
   this->problem_->linop()->Eval(z_proj_, x_proj_);
   
-  // x_dual_ = temp1_ - x_proj_
+  // x_dual_ = temp1_ * Tau^{1/2} - x_proj_
   thrust::for_each(
       thrust::make_zip_iterator(thrust::make_tuple(
           x_dual_.begin(),
           temp1_.begin(),
-          x_proj_.begin())),
+          x_proj_.begin(),
+          this->problem_->scaling_right().begin())),
 
       thrust::make_zip_iterator(thrust::make_tuple(
           x_dual_.end(),
           temp1_.end(),
-          x_proj_.end())),
+          x_proj_.end(),
+          this->problem_->scaling_right().begin())),
 
-      difference_functor<T>());
+      x_dual_functor<T>());
 
   // z_dual_ = temp2_ / Sigma^{1/2} - z_proj_
   thrust::for_each(
@@ -404,31 +461,178 @@ void BackendADMM<T>::PerformIteration()
 
       z_dual_functor<T>());
 
+  // temp1_ = x_proj_ - x_dual_
+  thrust::for_each(
+      thrust::make_zip_iterator(thrust::make_tuple(
+          temp1_.begin(),
+          x_proj_.begin(),
+          x_dual_.begin())),
+
+      thrust::make_zip_iterator(thrust::make_tuple(
+          temp1_.end(),
+          x_proj_.end(),
+          x_dual_.end())),
+
+      difference_functor<T>());
+
+  // x_half_ = prox_g(temp_)
+  for(auto& p : prox_g_)
+    p->Eval(x_half_, temp1_, this->problem_->scaling_right(), 1 / rho_);
+
+  // temp2_ = z_proj_ - z_dual_
+  thrust::for_each(
+      thrust::make_zip_iterator(thrust::make_tuple(
+          temp2_.begin(),
+          z_proj_.begin(),
+          z_dual_.begin())),
+
+      thrust::make_zip_iterator(thrust::make_tuple(
+          temp2_.end(),
+          z_proj_.end(),
+          z_dual_.end())),
+
+      difference_functor<T>());
+
+  // z_half_ = prox_f(temp_)
+  for(auto& p : prox_f_)
+    p->Eval(z_half_, temp2_, this->problem_->scaling_left(), rho_, true); 
+
   iteration_++;
 
-  // TODO: move this after x^{k+1/2} and z^{k+1/2} update steps
   // compute residuals every "opts_.residual_iter" iterations and
   // adapt stepsizes for residual base adaptive schemes
   if(iteration_ == 0 || (iteration_ % opts_.residual_iter) == 0)
-  {
-    // TODO: compute dual residual |K^T y + w|^2 and norm |w|^2
-    
-    // TODO: compute primal residual |Kx - z|^2 and norm |z|^2
+  {   
+    double primal_residual;
+    double primal_var_norm;
+    double dual_residual;
+    double dual_var_norm;
 
-    // TODO: fill variables, adapt stepsizes, rescale tilde variables
+    thrust::copy(z_half_.begin(), z_half_.end(), temp2_.begin());
+    this->problem_->linop()->Eval(temp2_, x_half_, -1);
+
+    // scale with Sigma^{1/2}
+    thrust::transform(
+      this->problem_->scaling_left().begin(), 
+      this->problem_->scaling_left().end(), 
+      temp2_.begin(), 
+      temp2_.begin(),
+      gemv_functor1<T>());
+
+    nrm2(hdl_, this->problem_->nrows(), thrust::raw_pointer_cast(temp2_.data()), &primal_residual);
+
+    // scale with Sigma^{1/2}
+    thrust::transform(
+      this->problem_->scaling_left().begin(), 
+      this->problem_->scaling_left().end(), 
+      z_half_.begin(), 
+      temp2_.begin(),
+      gemv_functor1<T>());
+
+    nrm2(hdl_, this->problem_->nrows(), thrust::raw_pointer_cast(temp2_.data()), &primal_var_norm);
+
+    // Compute dual variable temp1_ = w
+    thrust::for_each(
+      thrust::make_zip_iterator(thrust::make_tuple(
+          temp1_.begin(),
+          x_half_.begin(),
+          x_proj_.begin(),
+          x_dual_.begin(),
+          this->problem_->scaling_right().begin())),
+
+      thrust::make_zip_iterator(thrust::make_tuple(
+          temp1_.end(),
+          x_half_.end(),
+          x_proj_.end(),
+          x_dual_.end(),
+          this->problem_->scaling_right().end())),
+
+      get_dual_functor<T>(rho_, -1));
+
+    // scale with Tau^{1/2}
+    thrust::transform(
+      this->problem_->scaling_right().begin(), 
+      this->problem_->scaling_right().end(), 
+      temp1_.begin(), 
+      temp2_.begin(),
+      gemv_functor1<T>());
+
+    // reduce temp2_ to get norm w
+    nrm2(hdl_, this->problem_->ncols(), thrust::raw_pointer_cast(temp2_.data()), &dual_var_norm);
+
+    // compute dual variable temp2_ = y
+    thrust::for_each(
+      thrust::make_zip_iterator(thrust::make_tuple(
+          temp2_.begin(),
+          z_half_.begin(),
+          z_proj_.begin(),
+          z_dual_.begin(),
+          this->problem_->scaling_left().begin())),
+
+      thrust::make_zip_iterator(thrust::make_tuple(
+          temp2_.end(),
+          z_half_.end(),
+          z_proj_.end(),
+          z_dual_.end(), 
+          this->problem_->scaling_left().end())),
+
+      get_dual_functor<T>(rho_, 1));
+
+    // Compute w + K^T y
+    this->problem_->linop()->EvalAdjoint(temp1_, temp2_, 1);
+
+    // scale with Tau^{1/2}
+    thrust::transform(
+      this->problem_->scaling_right().begin(), 
+      this->problem_->scaling_right().end(), 
+      temp1_.begin(), 
+      temp1_.begin(),
+      gemv_functor1<T>());
+
+    // reduce temp1_ to get residual
+    nrm2(hdl_, this->problem_->ncols(), thrust::raw_pointer_cast(temp1_.data()), &dual_residual);
+
+    // fill variables, adapt stepsizes, rescale tilde variables
+    this->primal_residual_ = primal_residual;
+    this->primal_var_norm_ = primal_var_norm;
+    this->dual_residual_ = dual_residual;
+    this->dual_var_norm_ = dual_var_norm;
+
+    T eps_primal = this->eps_primal();
+    T eps_dual = this->eps_dual();
   }
 }
 
 template<typename T>
 void BackendADMM<T>::Release()
 {
+  cublasDestroy_v2(hdl_);
 }
 
 template<typename T>
 void BackendADMM<T>::current_solution(
   vector<T>& primal, vector<T>& dual)
 {
-  // TODO: compute y and fill primal/dual
+  thrust::copy(x_half_.begin(), x_half_.end(), primal.begin());
+
+  thrust::for_each(
+    thrust::make_zip_iterator(thrust::make_tuple(
+        temp2_.begin(),
+        z_half_.begin(),
+        z_proj_.begin(),
+        z_dual_.begin(),
+        this->problem_->scaling_left().begin())),
+
+    thrust::make_zip_iterator(thrust::make_tuple(
+        temp2_.end(),
+        z_half_.end(),
+        z_proj_.end(),
+        z_dual_.end(), 
+        this->problem_->scaling_left().end())),
+    
+    get_dual_functor<T>(rho_, 1));
+
+  thrust::copy(temp2_.begin(), temp2_.end(), dual.begin());
 }
 
 template<typename T>
@@ -438,7 +642,45 @@ void BackendADMM<T>::current_solution(
   vector<T>& dual_y,
   vector<T>& dual_w)
 {
-  // TODO: compute y,w and fill primal/dual
+  thrust::for_each(
+    thrust::make_zip_iterator(thrust::make_tuple(
+        temp1_.begin(),
+        x_half_.begin(),
+        x_proj_.begin(),
+        x_dual_.begin(),
+        this->problem_->scaling_right().begin())),
+
+    thrust::make_zip_iterator(thrust::make_tuple(
+        temp1_.end(),
+        x_half_.end(),
+        x_proj_.end(),
+        x_dual_.end(),
+        this->problem_->scaling_right().end())),
+
+    get_dual_functor<T>(rho_, -1));
+
+  thrust::copy(temp1_.begin(), temp1_.end(), dual_w.begin());
+
+  thrust::for_each(
+    thrust::make_zip_iterator(thrust::make_tuple(
+        temp2_.begin(),
+        z_half_.begin(),
+        z_proj_.begin(),
+        z_dual_.begin(),
+        this->problem_->scaling_left().begin())),
+
+    thrust::make_zip_iterator(thrust::make_tuple(
+        temp2_.end(),
+        z_half_.end(),
+        z_proj_.end(),
+        z_dual_.end(), 
+        this->problem_->scaling_left().end())),
+
+    get_dual_functor<T>(rho_, 1));
+
+  thrust::copy(temp2_.begin(), temp2_.end(), dual_y.begin());
+  thrust::copy(x_half_.begin(), x_half_.end(), primal_x.begin());
+  thrust::copy(z_half_.begin(), z_half_.end(), primal_z.begin());
 }
 
 template<typename T>
@@ -447,7 +689,7 @@ size_t BackendADMM<T>::gpu_mem_amount() const
   size_t m = this->problem_->nrows();
   size_t n = this->problem_->ncols();
 
-  return 4 * (n + m) * sizeof(T);
+  return (4 * (n + m) + std::max(m, n)) * sizeof(T);
 }
 
 // Explicit template instantiation
