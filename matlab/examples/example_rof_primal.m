@@ -1,13 +1,14 @@
 %%
 % load input image
 im = imread('../../images/dog.png');
+im = imresize(im, 1);
 [ny, nx, nc] = size(im);
 f = double(im(:)) / 255.; % convert to [0, 1]
 
 %%
 % parameters
 grad = spmat_gradient2d(nx,ny,nc);
-lmb = 0.3;
+lmb = 1;
 
 %%
 % problem

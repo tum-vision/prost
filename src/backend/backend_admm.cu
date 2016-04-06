@@ -323,8 +323,10 @@ void BackendADMM<T>::Initialize()
   else
     prox_f_ = this->problem_->prox_f();
 
+  delta_ = opts_.arb_delta;
   rho_ = opts_.rho0;
   iteration_ = 0;
+  arb_u_ = arb_l_ = 0;
 
   cublasCreate_v2(&hdl_);
 }
@@ -394,6 +396,7 @@ void BackendADMM<T>::PerformIteration()
   thrust::device_vector<T>& tmp_s = x_dual_;
 
   // TODO: memset x_proj_ to zero or use warm-starting?!
+  //thrust::fill(x_proj_.begin(), x_proj_.end(), 0);
 
   // Minimize |Kx-d|^2 + |x|^2 for d = temp2_ - K temp_1 with cgls Method
   cgls::Solve<T, GemvPrecondK<T> >(
@@ -600,6 +603,36 @@ void BackendADMM<T>::PerformIteration()
 
     T eps_primal = this->eps_primal();
     T eps_dual = this->eps_dual();
+
+    T rho_prev = rho_;
+    if( (this->dual_residual_ < eps_dual) && (opts_.arb_tau * iteration_ > arb_l_) )
+    {
+      rho_ *= delta_;
+      delta_ *= opts_.arb_gamma;
+      arb_u_ = iteration_;
+    }
+    else if( (this->primal_residual_ < eps_primal) && (opts_.arb_tau * iteration_ > arb_u_) )
+    {
+      rho_ /= delta_;
+      delta_ *= opts_.arb_gamma;
+      arb_l_ = iteration_;
+    }
+
+    // rescale dual variables
+    if(std::abs(rho_ - rho_prev) > 1e-7)
+    {
+      thrust::transform(
+          x_dual_.begin(),
+          x_dual_.end(),
+          x_dual_.begin(),
+          (rho_prev / rho_) * thrust::placeholders::_1);
+
+      thrust::transform(
+          z_dual_.begin(),
+          z_dual_.end(),
+          z_dual_.begin(),
+          (rho_prev / rho_) * thrust::placeholders::_1);
+    }
   }
 }
 
