@@ -68,8 +68,11 @@ private:
   /// \brief ADMM-specific options.
   typename BackendADMM<T>::Options opts_;
 
-  // Current step size
+  // Current step size parameters
   T rho_;
+  T delta_;
+  int arb_u_;
+  int arb_l_;
 
   /// \brief Internal iteration counter.
   size_t iteration_;
