@@ -1,10 +1,10 @@
-function [block] = sparse(row, col, nrows, ncols, K)    
+function [func] = sparse(K)    
+% SPARSE  func = sparse(K)
+%
+% Implements a linear operator built of a sparse matrix K.
     
-    if (nrows ~= size(K, 1)) || (ncols ~= size(K, 2))
-        error('Block sparse does not fit size of variable');
-    end
-    
+    sz = { size(K, 1), size(K, 2) };
     data = { K };
-    block = { 'sparse', row, col, data };
+    
+    func = @(row, col, nrows, ncols) { { 'sparse', row, col, data }, sz };
 end
-

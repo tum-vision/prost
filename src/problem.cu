@@ -6,6 +6,7 @@
 #include "prost/linop/linearoperator.hpp"
 #include "prost/linop/dual_linearoperator.hpp"
 #include "prost/prox/prox.hpp"
+#include "prost/prox/prox_zero.hpp"
 #include "prost/prox/prox_separable_sum.hpp"
 #include "prost/exception.hpp"
 
@@ -40,7 +41,7 @@ void CheckDomainProx(const typename Problem<T>::ProxList& proxs, size_t n, const
     {
       stringstream ss;
 
-      ss << name << ": Prox operators are overlapping or have empty space: [";
+      ss << name << " (CheckDomainProx): Prox operators are overlapping: [";
       ss << sorted_proxs[i]->index() << ", " << sorted_proxs[i]->end() << "] and [";
       ss << sorted_proxs[i + 1]->index() << ", " << sorted_proxs[i + 1]->end() << "]." << endl;
       throw Exception(ss.str());
@@ -52,14 +53,68 @@ void CheckDomainProx(const typename Problem<T>::ProxList& proxs, size_t n, const
 
     if(sorted_proxs[num_proxs - 1]->end() < (n - 1)) 
     {
-      ss << name << ": Last prox operator ends too early: [";
+      ss << name << " (CheckDomainProx): Last prox operator ends too early: [";
       ss << sorted_proxs[num_proxs - 1]->index() << ", " << sorted_proxs[num_proxs - 1]->end() << "], end = ";
       ss << n - 1 << "." << endl;
       throw Exception(ss.str());
     }
     else
     {
-      ss << name << ": Last prox operator ends after the domain: [";
+      ss << name << " (CheckDomainProx): Last prox operator ends after the domain: [";
+      ss << sorted_proxs[num_proxs - 1]->index() << ", " << sorted_proxs[num_proxs - 1]->end() << "], end = ";
+      ss << n - 1 << "." << endl;
+      throw Exception(ss.str());
+    }
+  }
+}
+
+/// \brief Fills up domain with zero prox operators
+template<typename T>
+void AddZeroProx(typename Problem<T>::ProxList& proxs, size_t n, const std::string& name)
+{
+  size_t num_proxs = proxs.size();
+  
+  if(0 == num_proxs)
+    return;
+  
+  typename Problem<T>::ProxList sorted_proxs = proxs;
+  std::sort(sorted_proxs.begin(), sorted_proxs.end(), ProxCompare<T>());
+
+  for(size_t i = 0; i < num_proxs - 1; i++) 
+  {
+    if(sorted_proxs[i]->end() < (sorted_proxs[i + 1]->index() - 1))
+    {
+      size_t prox_start = sorted_proxs[i]->end() + 1;
+      size_t prox_size = sorted_proxs[i + 1]->index() - sorted_proxs[i]->end();
+
+      // fill with zero prox
+      proxs.push_back(shared_ptr<Prox<T>>(new ProxZero<T>(prox_start, prox_size)));
+    }
+    else if(sorted_proxs[i]->end() < (sorted_proxs[i + 1]->index() - 1))
+    {
+      stringstream ss;
+
+      ss << name << " (AddZeroProx): Prox operators are overlapping: [";
+      ss << sorted_proxs[i]->index() << ", " << sorted_proxs[i]->end() << "] and [";
+      ss << sorted_proxs[i + 1]->index() << ", " << sorted_proxs[i + 1]->end() << "]." << endl;
+      throw Exception(ss.str());
+    }
+  }
+
+  if(sorted_proxs[num_proxs - 1]->end() != (n - 1)) {
+    stringstream ss;
+
+    if(sorted_proxs[num_proxs - 1]->end() < (n - 1)) 
+    {
+      size_t prox_start = sorted_proxs[num_proxs - 1]->end() + 1;
+      size_t prox_size = (n - 1) - sorted_proxs[num_proxs - 1]->end();
+
+      // fill with zero prox
+      proxs.push_back(shared_ptr<Prox<T>>(new ProxZero<T>(prox_start, prox_size)));
+    }
+    else
+    {
+      ss << name << " (AddZeroProx): Last prox operator ends after the domain: [";
       ss << sorted_proxs[num_proxs - 1]->index() << ", " << sorted_proxs[num_proxs - 1]->end() << "], end = ";
       ss << n - 1 << "." << endl;
       throw Exception(ss.str());
@@ -120,6 +175,12 @@ void Problem<T>::Initialize()
 
   if(!prox_g_.empty() && !prox_gstar_.empty())
     throw Exception("Proximal operator for g AND gstar specified. Only set one!");
+
+  // Set zero prox where prox operators are not specified.
+  if(!prox_f_.empty()) AddZeroProx<T>(prox_f_, nrows_, "prox_f");
+  if(!prox_g_.empty()) AddZeroProx<T>(prox_g_, ncols_, "prox_g");
+  if(!prox_fstar_.empty()) AddZeroProx<T>(prox_fstar_, nrows_, "prox_fstar");
+  if(!prox_gstar_.empty()) AddZeroProx<T>(prox_gstar_, ncols_, "prox_gstar");
 
   // check if whole domain is covered by prox operators
   CheckDomainProx<T>(prox_g_, ncols_, "prox_g");

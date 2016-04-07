@@ -11,19 +11,50 @@ function [func] = sum_singular_nx2(dim, interleaved, fun, a, b, c, d, e, alpha, 
 %  sum_1d. (See 'help prost.function.sum_1d').
 
     switch nargin
-      case 9
+      case 3
+        a = 1;
+        b = 0;
+        c = 1;
+        d = 0;
+        e = 0;
+        alpha = 0;
+        beta = 0;
+        
+      case 4
+        b = 0;
+        c = 1;
+        d = 0;
+        e = 0;
+        alpha = 0;
+        beta = 0;
+        
+      case 5
+        c = 1;
+        d = 0;
+        e = 0;
+        alpha = 0;
+        beta = 0;
+
+      case 6
+        d = 0;
+        e = 0;
+        alpha = 0;
+        beta = 0;
+      
+      case 7
+        e = 0;
+        alpha = 0;
         beta = 0;
         
       case 8
         alpha = 0;
         beta = 0;
+      
+      case 9
+        beta = 0;
     end
     
-    func = @(idx, count) prost.prox.sum_singular_nx2(idx, count / ...
-                                                     dim, dim, ...
-                                                     interleaved, ...
-                                                     fun, a, b, c, ...
-                                                     d, e, alpha, ...
-                                                     beta);
- 
+    func = @(idx, count) { 'elem_operation:ind_simplex', idx, ...
+                        count, false, { count / dim, dim, interleaved } };
+    
 end

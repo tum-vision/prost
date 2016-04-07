@@ -1,17 +1,21 @@
-function [result] = get_all_variables(result, p_vars, pc_vars, d_vars, dc_vars)
-% GET_ALL_VARIABLES  Retrieves all variables from primal-dual
-%                    solution. The ordering is given by the problems
+function get_all_variables(result, p_vars, pc_vars, d_vars, dc_vars)
+% GET_ALL_VARIABLES get_all_variables(result, p_vars, pc_vars, d_vars, dc_vars)
+%
+% Retrieves all variables from primal-dual
+% solution. The ordering is given by the problems
 %                   
-%                    min_{x,z} f(z) + g(x) s.t. z = Ax
+% min_{x,z} f(z) + g(x) s.t. z = Ax
 %
-%                    and
+% and
 %
-%                    min_{y,w} f^*(y) + g^*(w) s.t. w = -A^T y
+% min_{y,w} f^*(y) + g^*(w) s.t. w = -A^T y
 %
-%                    x: p_vars
-%                    z: pc_vars
-%                    y: d_vars
-%                    w: dc_vars   
+% x: p_vars
+% z: pc_vars
+% y: d_vars
+% w: dc_vars   
+%
+% TODO: doesn't set subvariables yet.
     
     num_primals = prod(size(p_vars));
     num_con_primals = prod(size(pc_vars));

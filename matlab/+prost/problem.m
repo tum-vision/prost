@@ -1,18 +1,36 @@
-function [prob] = problem(varargin)
-
-    p = inputParser;
-    addOptional(p, 'linop', {});
-    addOptional(p, 'prox_f', {});
-    addOptional(p, 'prox_g', {});
-    addOptional(p, 'prox_fstar', {});
-    addOptional(p, 'prox_gstar', {});
-    addOptional(p, 'scaling', 'alpha');
-    addOptional(p, 'scaling_alpha', 1);
-    addOptional(p, 'scaling_left', 1);
-    addOptional(p, 'scaling_right', 1);
-
-    p.parse(varargin{:});
+classdef problem < handle
+    properties
+        data
+        nrows
+        ncols
+    end
     
-    prob = p.Results;
+    methods
+        function obj = problem()
+            obj.set_scaling_alpha(1);
+            obj.data.prox_f = {};
+            obj.data.prox_fstar = {};
+            obj.data.prox_g = {};
+            obj.data.prox_gstar = {};
+            obj.data.linop = {};
+            obj.nrows = 0;
+            obj.ncols = 0;
+        end   
+        
+        function obj = set_scaling_identity(obj)
+            obj.data.scaling = 'identity';
+        end
+        
+        function obj = set_scaling_alpha(obj, alpha)
+            obj.data.scaling = 'alpha';
+            obj.data.scaling_alpha = alpha;
+        end
+
+        function obj = set_scaling_custom(obj, left, right)
+            obj.data.scaling = 'custom';
+            obj.data.scaling_left = left;
+            obj.data.scaling_right = right;
+        end   
+    end
     
 end
