@@ -23,11 +23,19 @@ function [passed] = test_linop_sparse_zero()
                 
                 if randi([1,2]) == 1
                     K_mat = sparse(nrows,ncols);
-                    linop{idx, 1} = prost.block.zero(row, col, nrows, ...
-                                                     ncols);
+                
+                    block_fun = prost.block.zero();
+                    make_block_zero = block_fun(row, col, nrows, ncols);
+
+                    linop{idx, 1} = make_block_zero{1};
                 else
                     K_mat = sprand(nrows,ncols,0.01);
-                    linop{idx, 1} = prost.block.sparse(row, col, size(K_mat,1),size(K_mat,2),K_mat);
+                    
+                    block_fun = prost.block.sparse(K_mat);
+                    make_block_sparse = block_fun(row, col, size(K_mat, 1), ...
+                                                size(K_mat, 2));
+                    
+                    linop{idx, 1} = make_block_sparse{1};
                 end
                 
                 K_row = cat(2, K_row, K_mat);
@@ -38,6 +46,8 @@ function [passed] = test_linop_sparse_zero()
             row = row + nrows;
             K = cat(1, K, K_row);
         end
+        
+        
         
         inp2 = rand(nrows*By, 1);
         [y,rowsum,colsum] = prost.eval_linop(linop, inp2, true);

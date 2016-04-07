@@ -4,7 +4,10 @@ function [passed] = test_linop_gradient3d()
     ny = 291;
     L = 7;
 
-    linop_3d = { prost.block.gradient3d(0, 0, nx*ny*L*3, nx*ny*L, nx, ny, L, false) };
+    block_fun = prost.block.gradient3d(nx, ny, L, false);
+    make_block_grad = block_fun(0, 0, nx*ny*2*L, nx*ny*L);
+    
+    linop_3d = { make_block_grad{1} };
     K_3d = spmat_gradient3d(nx, ny, L);
 
     inp = rand(nx*ny*L, 1);

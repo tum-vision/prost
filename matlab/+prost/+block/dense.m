@@ -1,4 +1,4 @@
-function [block] = dense(K)    
+function [func] = dense(K)    
 % DENSE  func = dense(K)
 %
 % Implements a linear operator built of a full matrix K.

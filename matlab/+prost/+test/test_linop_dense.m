@@ -18,7 +18,10 @@ function [passed] = test_linop_dense()
     rs_mat = sum(abs(A),2);
     cs_mat = sum(abs(A),1)';
 
-    linop = { prost.block.dense(0, 0, size(A,1), size(A,2), A); };
+    block_fun = prost.block.dense(A);
+    make_block_dense = block_fun(0, 0, size(A,1), size(A,2));
+    
+    linop = { make_block_dense{1} };
 
     [fw_cuda, rs_cuda, cs_cuda, t_fw_cuda] = ...
         prost.eval_linop( linop, x, false );

@@ -12,14 +12,14 @@ function [passed] = test_prox_transform()
         Tau = rand(N, 1);
 
         %% evaluate prox directly
-        x = prost.eval_prox( prost.prox.moreau(prost.prox.sum_1d(0, N, 'abs', ...
+        x = prost.eval_prox( prost.function.conjugate(prost.function.sum_1d('abs', ...
                                            a, b, c, d, e)), y, ...
                              tau, Tau);
     
         %% evaluate prox via transformation
-        prox_1d = prost.prox.sum_1d(0, N, 'abs', 1, 0, 1, 0, 0);
+        prox_1d = prost.function.sum_1d('abs', 1, 0, 1, 0, 0);
         
-        x2 = prost.eval_prox( prost.prox.moreau(prost.prox.transform( ...
+        x2 = prost.eval_prox( prost.function.conjugate(prost.function.transform( ...
             prox_1d, a, b, c, d, e)), y, tau, Tau );
 
         %% check if result is the same
