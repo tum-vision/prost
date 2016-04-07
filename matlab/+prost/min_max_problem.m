@@ -177,7 +177,7 @@ classdef min_max_problem < prost.problem
             for i=1:obj.num_dual_vars
                 idx = obj.dual_vars{i}.idx;
                 obj.dual_vars{i}.val = result.y(idx+1:idx+ ...
-                                                obj.primal_vars{i}.dim);
+                                                obj.dual_vars{i}.dim);
                 
                 num_sub_vars = prod(size(obj.dual_vars{i}.sub_vars));
                 for j=1:num_sub_vars

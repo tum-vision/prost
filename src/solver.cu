@@ -95,8 +95,14 @@ typename Solver<T>::ConvergenceResult Solver<T>::Solve() {
       Solver<T>::ConvergenceResult::kStoppedMaxIters;
   
   // iterations to display
-  std::list<double> cb_iters =
-      linspace(0, opts_.max_iters - 1, opts_.num_cback_calls);
+  std::list<double> cb_iters;
+
+  if(opts_.num_cback_calls >= 2)
+    cb_iters = linspace(0, opts_.max_iters - 1, opts_.num_cback_calls);
+  else
+  {
+    cb_iters.push_back(1e8);
+  }
   
   for(int i = 0; i < opts_.max_iters; i++) {    
     backend_->PerformIteration();
@@ -114,27 +120,30 @@ typename Solver<T>::ConvergenceResult Solver<T>::Solve() {
       is_converged = true;
 
     // check if we should run the intermediate solution callback this iteration
-    if(i >= cb_iters.front() || is_converged || is_stopped) {
+    if(i >= cb_iters.front() || is_converged || is_stopped || i == (opts_.max_iters - 1)) {
       //backend_->current_solution(cur_primal_sol_, cur_dual_sol_);
       backend_->current_solution(cur_primal_sol_,
                                  cur_primal_constr_sol_,
                                  cur_dual_sol_,
                                  cur_dual_constr_sol_);
  
-      if(opts_.verbose) {
-        int digits = std::floor(std::log10( (double) opts_.max_iters )) + 1;
-        cout << "It " << std::setw(digits) << (i + 1) << ": " << std::scientific;
-        cout << "Feas_p=" << std::setprecision(2) << primal_res;
-        cout << ", Eps_p=" << std::setprecision(2) << eps_pri;
-        cout << ", Feas_d=" << std::setprecision(2) << dual_res;
-        cout << ", Eps_d=" << std::setprecision(2) << eps_dua << "; ";
-      }
+      if(opts_.num_cback_calls >= 1)
+      {
+        if(opts_.verbose) {
+          int digits = std::floor(std::log10( (double) opts_.max_iters )) + 1;
+          cout << "It " << std::setw(digits) << (i + 1) << ": " << std::scientific;
+          cout << "Feas_p=" << std::setprecision(2) << primal_res;
+          cout << ", Eps_p=" << std::setprecision(2) << eps_pri;
+          cout << ", Feas_d=" << std::setprecision(2) << dual_res;
+          cout << ", Eps_d=" << std::setprecision(2) << eps_dua << "; ";
+        }
 
-      // MATLAB callback
-      if(opts_.solve_dual_problem)
-        is_converged |= interm_cb_(i + 1, cur_dual_sol_, cur_primal_sol_);
-      else
-        is_converged |= interm_cb_(i + 1, cur_primal_sol_, cur_dual_sol_);
+        // MATLAB callback
+        if(opts_.solve_dual_problem)
+          is_converged |= interm_cb_(i + 1, cur_dual_sol_, cur_primal_sol_);
+        else
+          is_converged |= interm_cb_(i + 1, cur_primal_sol_, cur_dual_sol_);
+      }
       
       cb_iters.pop_front();
     }
@@ -164,7 +173,7 @@ typename Solver<T>::ConvergenceResult Solver<T>::Solve() {
   }
   
   if(opts_.verbose && (result == Solver<T>::ConvergenceResult::kStoppedMaxIters))
-    std::cout << "Reached maximum iterations." << std::endl;
+    std::cout << "Reached maximum of " << opts_.max_iters << " iterations." << std::endl;
 
   return result;
 }

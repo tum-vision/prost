@@ -5,7 +5,7 @@ prost_select_nvcc_arch_flags(PROST_NVCC_FLAGS)
 #message(${PROST_NVCC_FLAGS_readable})
 message("Detected NVCC flags:${PROST_NVCC_FLAGS}")
 
-set(PROST_VERSION "0.1-build-${VERSION}")
+set(PROST_VERSION "0.2-build-${VERSION}")
 add_definitions(-DPROST_VERSION=${PROST_VERSION})
 
 if(UNIX OR APPLE)

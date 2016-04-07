@@ -5,9 +5,9 @@ function [func] = identity(scal)
     
     switch nargin
       case 0
-        scal = 1
+        scal = 1;
     end
     
-    block = @(row, col, nrows, ncols) { { 'diags', row, col, { nrows, ...
+    func = @(row, col, nrows, ncols) { { 'diags', row, col, { nrows, ...
                         ncols, scal, 0 } }, { nrows, ncols } };
 end

@@ -48,58 +48,59 @@ q = prost.variable(2*nx*ny*L);
 p = prost.variable(2*nx*ny*k); 
 s = prost.variable(nx*ny);
 
+prob = prost.min_max_problem( {u, v}, {q, p, s} );
+
 % I(u >= 0) + <u, f>
-u.fun = prost.function.sum_1d('ind_geq0', 1, 0, 1, f, 0);
+prob.add_function(u, prost.function.sum_1d('ind_geq0', 1, 0, 1, f, 0));
 
 % |p_i| <= lmb
-p.fun = prost.function.sum_norm2(... 
-    2, false, 'ind_leq0', 1 / lmb, 1, 1, 0, 0);
+prob.add_function(p, prost.function.sum_norm2(... 
+    2, false, 'ind_leq0', 1 / lmb, 1, 1, 0, 0));
 
 % <s, -1>
-s.fun = prost.function.sum_1d('zero', 1, 0, 1, 1, 0);
+prob.add_function(s, prost.function.sum_1d('zero', 1, 0, 1, 1, 0));
 
 % Implementation with sparse matrices.
-% % <grad u, q>
-% prost.set_dual_pair(u, q, prost.linop.sparse(grad));
+% %<grad u, q>
+% prob.add_dual_pair(u, q, prost.block.sparse(grad));
 
 % % <sum_i u_i, s>
-% prost.set_dual_pair(u, s, prost.linop.sparse(sum_op));
+% prob.add_dual_pair(u, s, prost.block.sparse(sum_op));
 
 % % <v_ij, p_ij>
-% prost.set_dual_pair(v, p, prost.linop.sparse(speye(2*ny*nx*k)));
+% prob.add_dual_pair(v, p, prost.block.sparse(speye(2*ny*nx*k)));
 
 % % <v_ij, -(q_i - q_j)>
-% prost.set_dual_pair(v, q, prost.linop.sparse(pair_op));
+% prob.add_dual_pair(v, q, prost.block.sparse(pair_op));
 
 % Implementation with linear operators.
 % <grad u, q>
-prost.set_dual_pair(u, q, prost.linop.gradient2d(ny,nx,L));
+prob.add_dual_pair(u, q, prost.block.gradient2d(nx,ny,L));
 
 % <sum_i u_i, s>
-prost.set_dual_pair(u, s, prost.linop.sparse_kron_id(sparse(ones(1, L)), ny*nx));
+prob.add_dual_pair(u, s, prost.block.sparse_kron_id(sparse(ones(1, L)), ny*nx));
 
 % <v_ij, p_ij>
-prost.set_dual_pair(v, p, prost.linop.identity());
+prob.add_dual_pair(v, p, prost.block.identity());
 
 % <v_ij, -(q_i - q_j)>
-prost.set_dual_pair(v, q, prost.linop.sparse_kron_id(pair_local', ny*nx));
+prob.add_dual_pair(v, q, prost.block.sparse_kron_id(pair_local', ny*nx));
 
-prob = prost.min_max( {u, v}, {q, p, s} );
-%prob.data.scaling = 'identity';
+
 
 %%
 % options and solve
-%backend = prost.backend.pdhg('stepsize', 'boyd', ...
-%                             'residual_iter', 1);
+backend = prost.backend.pdhg('stepsize', 'boyd', ...
+                             'residual_iter', 10);
 
-backend = prost.backend.admm('rho0', 0.1);
+%backend = prost.backend.admm('rho0', 1);
 
-opts = prost.options('max_iters', 10000, ...
+opts = prost.options('max_iters', 20000, ...
                      'tol_rel_primal', 2e-6, ...
                      'tol_abs_primal', 2e-6, ...
                      'tol_rel_dual', 2e-6, ...
                      'tol_abs_dual', 2e-6, ...
-                     'num_cback_calls', 100, ...
+                     'num_cback_calls', 25, ...
                      'interm_cb', @(it, x, y) ...
                      example_multilabel_callback(it, x, y, ny, nx, ...
                                                  L, im));

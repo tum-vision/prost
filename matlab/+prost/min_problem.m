@@ -177,7 +177,7 @@ classdef min_problem < prost.problem
             for i=1:obj.num_constrained_vars
                 idx = obj.constrained_vars{i}.idx;
                 obj.constrained_vars{i}.val = result.z(idx+1:idx+ ...
-                                                obj.primal_vars{i}.dim);
+                                                obj.constrained_vars{i}.dim);
                 
                 num_sub_vars = prod(size(obj.constrained_vars{i}.sub_vars));
                 for j=1:num_sub_vars
