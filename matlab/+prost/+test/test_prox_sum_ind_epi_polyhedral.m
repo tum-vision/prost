@@ -24,7 +24,7 @@ function [passed] = test_prox_sum_ind_epi_polyhedral()
         end
         index_vec = cumsum(count_vec) - m;
 
-        prox = prost.prox.sum_ind_epi_polyhedral(0, N, d + 1, false, rep_a, rep_b, ...
+        prox = prost.function.sum_ind_epi_polyhedral(d + 1, false, rep_a, rep_b, ...
                                                  count_vec, index_vec);
 
         arg = [x0(:); y0];

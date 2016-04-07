@@ -11,7 +11,7 @@ function [passed] = test_linop_diags()
     linop = {};
     idx = 1;
     row = 0;
-
+   
     for i=1:By
         K_row = [];
         col = 0;
@@ -23,8 +23,10 @@ function [passed] = test_linop_diags()
             K_row = cat(2, K_row, spdiags(ones(nrows, 1) * factors', offsets, ...
                                           nrows, ncols));
 
-            linop{idx, 1} = prost.block.diags(row, col, nrows, ncols, factors, ...
-                                              offsets);
+            block_fun = prost.block.diags(nrows, ncols, factors, offsets);
+            make_block_diags = block_fun(row, col, nrows, ncols);
+            
+            linop{idx, 1} = make_block_diags{1};
 
             idx = idx + 1;
             col = col + ncols;

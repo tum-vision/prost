@@ -10,8 +10,7 @@ function [passed] = test_prox_sum_ind_simplex()
     tau = 1;
     Tau = ones(N * d, 1);
 
-    [Q, time] = prost.eval_prox( prost.prox.sum_ind_simplex(0, N, ...
-                                                      d, false), P, tau, Tau);
+    [Q, time] = prost.eval_prox( prost.function.sum_ind_simplex(d, false), P, tau, Tau);
     %fprintf('CUDA took %f ms\n', time);
     Q2 = zeros(size(P));
     tic;
