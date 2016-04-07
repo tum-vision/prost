@@ -25,29 +25,27 @@ u = prost.variable(nx*ny*L);
 q = prost.variable(2*nx*ny*L);
 s = prost.variable(nx*ny);
 
-% I(u >= 0) + <u, f>
-u.fun = prost.function.sum_1d('ind_geq0', 1, 0, 1, f, 0);
+prob = prost.min_max_problem( {u}, {q, s} );
 
-% |q_i| <= lmb
+% I(u >= 0) + <u, f>
+prob.add_function(u, prost.function.sum_1d('ind_geq0', 1, 0, 1, f, 0));
 
 %% Zach et al., VMV '08
-%q.fun = prost.function.sum_norm2(... 
-%    2, false, 'ind_leq0', 1 / lmb, 1, 1, 0, 0);
+prob.add_function(q, prost.function.sum_norm2(... 
+    2, false, 'ind_leq0', 1 / lmb, 1, 1, 0, 0));
 
 %% Lellmann et al., ICCV '09
-q.fun = prost.function.sum_norm2(... 
-    2 * L, false, 'ind_leq0', 1 / lmb, 1, 1, 0, 0);
+%prob.add_function(q, prost.function.sum_norm2(... 
+%    2 * L, false, 'ind_leq0', 1 / lmb, 1, 1, 0, 0));
 
 % <s, -1>
-s.fun = prost.function.sum_1d('zero', 1, 0, 1, 1, 0);
+prob.add_function(s, prost.function.sum_1d('zero', 1, 0, 1, 1, 0));
 
 % <grad u, q>
-prost.set_dual_pair(u, q, prost.linop.sparse(grad));
+prob.add_dual_pair(u, q, prost.block.sparse(grad));
 
 % <sum_i u_i, s>
-prost.set_dual_pair(u, s, prost.linop.sparse(sum_op));
-
-prob = prost.min_max( {u}, {q, s} );
+prob.add_dual_pair(u, s, prost.block.sparse(sum_op));
 
 %%
 % options and solve
