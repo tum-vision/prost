@@ -1,10 +1,9 @@
-function [block] = dense(row, col, nrows, ncols, K)    
+function [block] = dense(K)    
+% DENSE  func = dense(K)
+%
+% Implements a linear operator built of a full matrix K.
     
-    if (nrows ~= size(K, 1)) || (ncols ~= size(K,2))
-        error('Dense block does not fit size of variables.');
-    end
-    
+    sz = { size(K, 1), size(K, 2) };
     data = { K };
-    block = { 'dense', row, col, data };
+    func = @(row, col, nrows, ncols) { { 'dense', row, col, data }, sz };
 end
-

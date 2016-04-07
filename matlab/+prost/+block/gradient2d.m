@@ -1,8 +1,15 @@
-function [block] = gradient2d(row, col, nrows, ncols, nx, ny, L, label_first)  
-    if (nrows ~= nx*ny*L*2) || (ncols ~= nx*ny*L)
-        error('Block gradient2d does not fit size of variable.');
+function [func] = gradient2d(nx, ny, L, label_first)  
+% GRADIENT2D [func] = gradient2d(nx, ny, L, label_first)  
+%
+% Implements gradient operator with forward differences and
+% Neumann boundary conditions.
+    
+    switch nargin
+      case 3
+        label_first = false;
     end
     
+    sz = { nx*ny*L*2, nx*ny*L };
     data = { nx, ny, L, label_first  };
-    block = { 'gradient2d', row, col, data };
+    func = @(row, col, nrows, ncols) { { 'gradient2d', row, col, data }, sz };
 end

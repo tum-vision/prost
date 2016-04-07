@@ -31,12 +31,12 @@ u.fun = prost.function.sum_1d('ind_geq0', 1, 0, 1, f, 0);
 % |q_i| <= lmb
 
 %% Zach et al., VMV '08
-q.fun = prost.function.sum_norm2(... 
-    2, false, 'ind_leq0', 1 / lmb, 1, 1, 0, 0);
+%q.fun = prost.function.sum_norm2(... 
+%    2, false, 'ind_leq0', 1 / lmb, 1, 1, 0, 0);
 
 %% Lellmann et al., ICCV '09
-%q.fun = prost.function.sum_norm2(... 
-%    2 * L, false, 'ind_leq0', 1 / lmb, 1, 1, 0, 0);
+q.fun = prost.function.sum_norm2(... 
+    2 * L, false, 'ind_leq0', 1 / lmb, 1, 1, 0, 0);
 
 % <s, -1>
 s.fun = prost.function.sum_1d('zero', 1, 0, 1, 1, 0);

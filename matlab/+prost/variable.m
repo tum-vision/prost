@@ -1,21 +1,16 @@
 classdef variable < handle
     properties
         dim
-        idx
         val
-        fun
-        linop
-        pairing
-        subvars
+        sub_vars        
+        idx
     end
     
     methods
-        function h = variable(dim)
-            h.dim = dim;
-            h.pairing = {};
-            h.linop = {};
-            h.fun = prost.function.zero();
-            h.subvars = {};
+        function obj = variable(dim)
+            obj.dim = dim;
+            obj.val = zeros(dim, 1);
+            obj.sub_vars = {};
         end
     end
 end

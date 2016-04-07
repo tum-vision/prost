@@ -234,7 +234,8 @@ int Solve(
   thrust::device_vector<T>& p, // size=n
   thrust::device_vector<T>& q, // size=m
   thrust::device_vector<T>& r, // size=m
-  thrust::device_vector<T>& s) // size=n
+  thrust::device_vector<T>& s, // size=n
+  int& iterations) // number of iterations taken
 {
   // Variable declarations.
   double gamma, normp, normq, norms, norms0, normx, xmax;
@@ -364,7 +365,7 @@ int Solve(
   else if (shrink * shrink <= tol)
     flag = 4;
 
-  //printf("CG took %d iterations.\n", k); 
+  iterations = k;
 
   return flag;
 }

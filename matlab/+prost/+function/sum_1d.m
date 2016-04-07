@@ -22,8 +22,48 @@ function [func] = sum_1d(fun, a, b, c, d, e, alpha, beta)
 %   'max_pos0'  f(z) = max(0, z)
 %   'square'    f(z) = (1/2) z^2
 %   'zero'      f(z) = 0
+%
+%   Examples:
+%   - prost.function.sum_1d('square', 1, f): (1/2) |u-f|^2
+%   - prost.function.sum_1d('abs', lmb, f): lmb |u-f|
+%   - prost.function.sum_1d('ind_geq0', 1, 0, 1, f): I(u>=0) + <u, f>
     
     switch nargin
+      case 1
+        a = 1;
+        b = 0;
+        c = 1;
+        d = 0;
+        e = 0;
+        alpha = 0;
+        beta = 0;
+        
+      case 2
+        b = 0;
+        c = 1;
+        d = 0;
+        e = 0;
+        alpha = 0;
+        beta = 0;
+        
+      case 3
+        c = 1;
+        d = 0;
+        e = 0;
+        alpha = 0;
+        beta = 0;
+
+      case 4
+        d = 0;
+        e = 0;
+        alpha = 0;
+        beta = 0;
+      
+      case 5
+        e = 0;
+        alpha = 0;
+        beta = 0;
+        
       case 6
         alpha = 0;
         beta = 0;
@@ -32,7 +72,7 @@ function [func] = sum_1d(fun, a, b, c, d, e, alpha, beta)
         beta = 0;
     end
 
-    func = @(idx, count) prost.prox.sum_1d(idx, count, fun, a, b, c, d, e, ...
-                                           alpha, beta);
-
+    func = @(idx, count) { strcat('elem_operation:1d:', fun), idx, count, true, { ...
+        count, 1, false, { a, b, c, d, e, alpha, beta } } };
+    
 end

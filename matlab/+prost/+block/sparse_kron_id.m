@@ -1,12 +1,15 @@
-function [block] = sparse_kron_id(row, col, nrows, ncols, K, diaglength) 
+function [func] = sparse_kron_id(K, diaglength) 
+% SPARSE_KRON_ID  func = sparse_kron_id(K, diaglength) 
+%
+% Linear operator that implements Kronecker product between K and
+% an identity matrix of size diaglength. 
+%
+% Equivalent to prost.block.sparse(kron(K, speye(diaglength))) but
+% more efficient if K is small and diaglength is big.
         
-    if (nrows ~= size(K, 1) * diaglength) || (ncols ~= size(K,2) * ...
-                                              diaglength)
-        
-        error(['Block sparse_kron_id: size of variable doesnt fit ' ...
-               'size of block!']);        
-    end
-        
+
+    sz = { size(K, 1) * diaglength, size(K, 2) * diaglength };
     data = { K, diaglength };
-    block = { 'sparse_kron_id', row, col, data };
+    func = @(row, col, nrows, ncols) { { 'sparse_kron_id', row, col, ...
+                        data }, sz };
 end

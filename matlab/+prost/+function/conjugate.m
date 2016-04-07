@@ -4,6 +4,7 @@ function [func] = conjugate(fun)
 %   Returns the convex conjugate of the input function. Implemented
 %   via Moreau's identity.
 
-    func = @(idx, count) prost.prox.moreau( fun(idx, count) );
+    data = { child };   
+    func = @(idx, count) { 'moreau', 0, 0, false, data }; 
     
 end

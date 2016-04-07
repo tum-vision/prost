@@ -176,7 +176,7 @@ struct get_dual_functor
 };
 
 template<typename T>
-struct GemvPrecondK //: cgls::Gemv<T> {
+struct GemvPrecondK 
 {
   GemvPrecondK(const thrust::device_vector<T>& Sigma,
                const thrust::device_vector<T>& Tau,
@@ -379,6 +379,9 @@ void BackendADMM<T>::PerformIteration()
   thrust::copy(temp2_.begin(), temp2_.end(), z_dual_.begin());
   thrust::device_vector<T>& tmp_proj_arg = z_dual_;
 
+  // set x_proj_ to temp3_ for warm-starting
+  thrust::copy(temp3_.begin(), temp3_.begin() + x_proj_.size(), x_proj_.begin());
+
   // tmp_proj_arg = temp2_ - Sigma^{1/2} K Tau^{1/2} temp_1
   gemv('n', -1, temp1_, 1, tmp_proj_arg);
   
@@ -399,6 +402,7 @@ void BackendADMM<T>::PerformIteration()
   //thrust::fill(x_proj_.begin(), x_proj_.end(), 0);
 
   // Minimize |Kx-d|^2 + |x|^2 for d = temp2_ - K temp_1 with cgls Method
+  int num_cg_iters_taken;
   cgls::Solve<T, GemvPrecondK<T> >(
     hdl_, 
     gemv, 
@@ -413,7 +417,11 @@ void BackendADMM<T>::PerformIteration()
     tmp_p, 
     tmp_q, 
     tmp_r, 
-    tmp_s);
+    tmp_s,
+    num_cg_iters_taken);
+
+  // remember previous x_proj for warm-starting cg in the next iteration
+  thrust::copy(x_proj_.begin(), x_proj_.end(), temp3_.begin());
 
   // x_proj = Tau^{1/2} (x_proj + temp1_)
   thrust::for_each(

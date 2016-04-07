@@ -10,8 +10,8 @@ function [is_converged] = example_rof_pdgap(it, x, y, K, f, lmb, ny, nx, nc)
     en_dual = f' * div - (1 / (2 * lmb)) * sum(div.^2);
     
     en_gap = (en_prim - en_dual) / (nx * ny);
-    fprintf('it %5d: primal_dual_gap=%.2e.\n', it, en_gap);
+    fprintf('primal_dual_gap=%.2e.\n', en_gap);
     
-    is_converged = en_gap < 1e-4;
+    is_converged = en_gap < 1e-5;
     
 end

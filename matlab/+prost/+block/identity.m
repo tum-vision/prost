@@ -1,10 +1,13 @@
-function [block] = identity(row, col, nrows, ncols, scal)  
-    if nrows ~= ncols
-        error('Identity block is not rectangular!');
+function [func] = identity(scal)  
+% IDENTITY func = identity(scal)
+%
+% Implements identity matrix, optionally scaled by factor scal
+    
+    switch nargin
+      case 0
+        scal = 1
     end
     
-    n = nrows;
-    
-    data = { n, n, scal, 0 };
-    block = { 'diags', row, col, data };
+    block = @(row, col, nrows, ncols) { { 'diags', row, col, { nrows, ...
+                        ncols, scal, 0 } }, { nrows, ncols } };
 end
