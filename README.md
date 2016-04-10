@@ -1,2 +1,12 @@
-# prost
-Proximal Optimization for Structured Problems
+# Proximal Optimization for Structured Problems (prost)
+
+## Installation
+
+#### MacOSX
+
+#### Linux
+
+#### Windows
+
+## Usage
+
