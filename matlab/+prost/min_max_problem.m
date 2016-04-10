@@ -132,7 +132,7 @@ classdef min_max_problem < prost.problem
                 for j=1:num_sub_vars
                     if obj.dual_vars{i}.sub_vars{j} == dv
                         row = obj.dual_vars{i}.sub_vars{j}.idx;
-                        dual_dim = obj.dual_vars{i}.dim;
+                        dual_dim = obj.dual_vars{i}.sub_vars{j}.dim;
                     end
                 end
                 
@@ -185,6 +185,18 @@ classdef min_max_problem < prost.problem
                     obj.dual_vars{i}.sub_vars{j}.val = ...
                         obj.dual_vars{i}.val(abs_idx+1:abs_idx+obj.dual_vars{i}.sub_vars{j}.dim);
                 end
+            end
+        end
+        
+        function obj = finalize(obj)
+            zero_fn = prost.function.zero();
+            
+            if isempty(obj.data.prox_g)
+                obj.data.prox_g{end + 1} = zero_fn(0, obj.ncols);
+            end
+
+            if isempty(obj.data.prox_fstar)
+                obj.data.prox_fstar{end + 1} = zero_fn(0, obj.nrows);
             end
         end
     end

@@ -508,7 +508,11 @@ CreateProx(const mxArray *pm)
   const mwSize max_dim = std::max(dims[0], dims[1]);
 
   if(max_dim != 5)
-    throw Exception("Invalid prox description. Dim != 5.");
+  {
+    std::stringstream ss;
+    ss << "Invalid prox description. Dim = " << max_dim << " (should be 5).";
+    throw Exception(ss.str());
+  }
 
   std::string name(mxArrayToString(mxGetCell(pm, 0)));
   size_t idx = GetScalarFromCellArray<size_t>(pm, 1);

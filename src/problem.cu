@@ -98,7 +98,7 @@ void AddZeroProx(typename Problem<T>::ProxList& proxs, size_t n, const std::stri
     if(sorted_proxs[i]->end() < (sorted_proxs[i + 1]->index() - 1))
     {
       size_t prox_start = sorted_proxs[i]->end() + 1;
-      size_t prox_size = sorted_proxs[i + 1]->index() - sorted_proxs[i]->end();
+      size_t prox_size = sorted_proxs[i + 1]->index() - sorted_proxs[i]->end() - 1;
 
       // fill with zero prox
 //      std::cout << name << ": added zero prox [" << prox_start << ", " << prox_start + prox_size << "]." << std::endl;
@@ -180,10 +180,17 @@ void Problem<T>::Initialize()
   ncols_ = linop_->ncols();
 
   if(prox_f_.empty() && prox_fstar_.empty())
+  {
+    //prox_f_.push_back(shared_ptr<Prox<T>>(new ProxZero<T>(0, nrows_)));
     throw Exception("No proximal operator for f or fstar specified.");
+  }
 
   if(prox_g_.empty() && prox_gstar_.empty())
+  {
+    //prox_g_.push_back(shared_ptr<Prox<T>>(new ProxZero<T>(0, ncols_)));
+
     throw Exception("No proximal operator for g or gstar specified.");
+  }
 
   if(!prox_f_.empty() && !prox_fstar_.empty())
     throw Exception("Proximal operator for f AND fstar specified. Only set one!");

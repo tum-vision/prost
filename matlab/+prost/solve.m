@@ -1,6 +1,7 @@
 function [result] = solve(prob, backend, opts)
 % SOLVE  Solves the problem prob using the specified backend and
 %        options. 
+    prob.finalize();
     result = prost_('solve_problem', prob.data, backend, opts);
     prob.fill_variables( result );
     
