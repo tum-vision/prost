@@ -1,4 +1,4 @@
-# Proximal Optimization for Structured Problems (prost)
+# Proximal Optimization for Structured Problems
 
 ## Installation
 
