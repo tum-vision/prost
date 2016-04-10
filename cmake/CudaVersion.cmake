@@ -1,6 +1,8 @@
-# Copy&paste from:
+# Directly taken from
 # https://github.com/BVLC/caffe/blob/master/cmake/Cuda.cmake
-# https://github.com/BVLC/caffe/blob/master/cmake/Utils.cmake 
+# https://github.com/BVLC/caffe/blob/master/cmake/Utils.cmake
+#
+# All credit to the original authors.
 
 macro(prost_list_unique)
   foreach(__lst ${ARGN})
