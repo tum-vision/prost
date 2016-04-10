@@ -132,7 +132,7 @@ classdef min_problem < prost.problem
                 for j=1:num_sub_vars
                     if obj.constrained_vars{i}.sub_vars{j} == dv
                         row = obj.constrained_vars{i}.sub_vars{j}.idx;
-                        constrained_dim = obj.constrained_vars{i}.dim;
+                        constrained_dim = obj.constrained_vars{i}.sub_vars{j}.dim;
                     end
                 end
                 
@@ -187,5 +187,16 @@ classdef min_problem < prost.problem
                 end
             end
         end
+        
+        function obj = finalize(obj)
+            if isempty(data.prox_g)
+                data.prox_g{end + 1} = prost.function.zero(0, ncols);
+            end
+
+            if isempty(data.prox_f)
+                data.prox_fstar{end + 1} = prost.function.zero(0, nrows);
+            end
+        end
+
     end
 end
