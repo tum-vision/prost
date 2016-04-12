@@ -14,12 +14,12 @@ lmb = 0.3;
 q = prost.variable(2*nx*ny*nc);
 w = prost.variable(nx*ny*nc);
 
-prob = prost.min( {q}, {w} );
+prob = prost.min_problem( {q}, {w} );
 prob.add_function(q, prost.function.sum_norm2(... 
     2 * nc, false, 'ind_leq0', 1, 1, 1, 0, 0));
 prob.add_function(w, prost.function.sum_1d(...
     'square', 1, -f * lmb, 1 / lmb, 0, 0));
-prob.add_constraint(q, w, prost.linop.sparse(-grad'));
+prob.add_constraint(q, w, prost.block.sparse(-grad'));
 
 %%
 % specify solver options
