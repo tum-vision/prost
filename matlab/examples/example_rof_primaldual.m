@@ -25,6 +25,7 @@ prob.add_function(u, prost.function.sum_1d('square', 1, f, lmb));
 prob.add_function(q, prost.function.sum_norm2(2 * nc, false, ...
                                               'ind_leq0', 1, 1, 1));
 
+
 prob.add_dual_pair(u, q, prost.block.gradient2d(nx,ny,nc));
 % Equivalently:
 % prob.add_dual_pair(u, q, prost.block.sparse(grad));

@@ -31,6 +31,7 @@ classdef problem < handle
             obj.data.scaling_left = left;
             obj.data.scaling_right = right;
         end   
+
     end
     
 end
