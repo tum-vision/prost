@@ -214,14 +214,14 @@ classdef min_problem < prost.problem
         end
         
         function obj = finalize(obj)
-            zero_fn = prost.function.zero();
+            zero_fn = zero();
             
             if isempty(obj.data.prox_g)
                 obj.data.prox_g{end + 1} = zero_fn(0, obj.ncols);
             end
 
             if isempty(obj.data.prox_f)
-                obj.data.prox_fstar{end + 1} = zero_fn(0, obj.nrows);
+                obj.data.prox_f{end + 1} = zero_fn(0, obj.nrows);
             end
         end
 

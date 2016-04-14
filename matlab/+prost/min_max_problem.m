@@ -217,7 +217,7 @@ classdef min_max_problem < prost.problem
         end
         
         function obj = finalize(obj)
-            zero_fn = prost.function.zero();
+            zero_fn = zero();
             
             if isempty(obj.data.prox_g)
                 obj.data.prox_g{end + 1} = zero_fn(0, obj.ncols);
