@@ -71,15 +71,19 @@ classdef min_max_problem < prost.problem
                 num_sub_vars = prod(size(obj.primal_vars{i}.sub_vars));
                 for j=1:num_sub_vars
                     if obj.primal_vars{i}.sub_vars{j} == var
-                        obj.data.prox_g{end + 1} = ...
-                            func(obj.primal_vars{i}.sub_vars{j}.idx, obj.primal_vars{i}.sub_vars{j}.dim);
+                        obj.data.prox_g = add_prox(...
+                            func(obj.primal_vars{i}.sub_vars{j}.idx, ...
+                                 obj.primal_vars{i}.sub_vars{j}.dim), ...
+                            obj.data.prox_g);
                         return;
                     end
                 end
                 
                 if obj.primal_vars{i} == var
-                    obj.data.prox_g{end + 1} = ...
-                        func(obj.primal_vars{i}.idx, obj.primal_vars{i}.dim);
+                    obj.data.prox_g = add_prox(...
+                        func(obj.primal_vars{i}.idx, ...
+                             obj.primal_vars{i}.dim), ...
+                        obj.data.prox_g);
                     return;
                 end
             end
@@ -88,15 +92,18 @@ classdef min_max_problem < prost.problem
                 num_sub_vars = prod(size(obj.dual_vars{i}.sub_vars));
                 for j=1:num_sub_vars
                     if obj.dual_vars{i}.sub_vars{j} == var
-                        obj.data.prox_fstar{end + 1} = ...
-                            func(obj.dual_vars{i}.sub_vars{j}.idx, obj.dual_vars{i}.sub_vars{j}.dim);
+                        obj.data.prox_fstar = add_prox(...
+                            func(obj.dual_vars{i}.sub_vars{j}.idx, ...
+                                 obj.dual_vars{i}.sub_vars{j}.dim), ...
+                            obj.data.prox_fstar);
                         return;
                     end
                 end
                 
                 if obj.dual_vars{i} == var
-                    obj.data.prox_fstar{end + 1} = ...
-                        func(obj.dual_vars{i}.idx, obj.dual_vars{i}.dim);
+                    obj.data.prox_fstar = add_prox(...
+                        func(obj.dual_vars{i}.idx, obj.dual_vars{i}.dim), ...
+                        obj.data.prox_fstar);
                     return;
                 end
             end
@@ -151,7 +158,26 @@ classdef min_max_problem < prost.problem
             
             block_size_pair = block(row, col, nrows, ncols);
             
-            obj.data.linop{end + 1} = block_size_pair{1};
+            %obj.data.linop{end + 1} = block_size_pair{1};
+            
+            % Check if a constraint between pv and dv already exists
+            num_blocks = prod(size(obj.data.linop));
+            linop_idx = -1;
+            for i=1:num_blocks
+                linop = obj.data.linop{i};
+                
+                if (linop{2} == row) && (linop{3} == col)
+                    linop_idx = i;
+                    break;
+                end
+            end
+            
+            if linop_idx == -1 % No constraint present -> add
+                               % constraint
+                obj.data.linop{end + 1} = block_size_pair{1};
+            else % constraint is replaced.
+                obj.data.linop{linop_idx} = block_size_pair{1};
+            end
             
             sz = block_size_pair{2};
             if (sz{1} ~= dual_dim) || (sz{2} ~= primal_dim)
@@ -189,7 +215,7 @@ classdef min_max_problem < prost.problem
         end
         
         function obj = finalize(obj)
-            zero_fn = prost.function.zero();
+            zero_fn = zero();
             
             if isempty(obj.data.prox_g)
                 obj.data.prox_g{end + 1} = zero_fn(0, obj.ncols);

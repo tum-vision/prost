@@ -62,7 +62,7 @@ if(MSVC)
   set_property(TARGET prost_ PROPERTY LINK_FLAGS "/export:mexFunction")
   set_property(TARGET prost_ PROPERTY  _CRT_SECURE_NO_WARNINGS )
 else()
-  target_link_libraries( prost_ prost ut cusparse cublas )
+  target_link_libraries( prost_ prost ut ${CUDA_cusparse_LIBRARY} ${CUDA_cublas_LIBRARY}) #cusparse cublas )
   add_dependencies( prost_ prost ) #required.
 endif()
 

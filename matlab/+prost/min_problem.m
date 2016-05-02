@@ -65,21 +65,25 @@ classdef min_problem < prost.problem
             obj.nrows = constrained_idx;
             obj.ncols = primal_idx;            
         end
-        
+
         function obj = add_function(obj, var, func)
             for i=1:obj.num_primal_vars
                 num_sub_vars = prod(size(obj.primal_vars{i}.sub_vars));
                 for j=1:num_sub_vars
                     if obj.primal_vars{i}.sub_vars{j} == var
-                        obj.data.prox_g{end + 1} = ...
-                            func(obj.primal_vars{i}.sub_vars{j}.idx, obj.primal_vars{i}.sub_vars{j}.dim);
+                        obj.data.prox_g = ...
+                            add_prox(...
+                                func(obj.primal_vars{i}.sub_vars{j}.idx, obj.primal_vars{i}.sub_vars{j}.dim), ...
+                                obj.data.prox_g);
                         return;
                     end
                 end
                 
                 if obj.primal_vars{i} == var
-                    obj.data.prox_g{end + 1} = ...
-                        func(obj.primal_vars{i}.idx, obj.primal_vars{i}.dim);
+                    obj.data.prox_g = ...
+                        add_prox(...
+                            func(obj.primal_vars{i}.idx, obj.primal_vars{i}.dim), ...
+                            obj.data.prox_g);
                     return;
                 end
             end
@@ -88,15 +92,17 @@ classdef min_problem < prost.problem
                 num_sub_vars = prod(size(obj.constrained_vars{i}.sub_vars));
                 for j=1:num_sub_vars
                     if obj.constrained_vars{i}.sub_vars{j} == var
-                        obj.data.prox_f{end + 1} = ...
-                            func(obj.constrained_vars{i}.sub_vars{j}.idx, obj.constrained_vars{i}.sub_vars{j}.dim);
+                        obj.data.prox_f = ...
+                            add_prox(func(obj.constrained_vars{i}.sub_vars{j}.idx, obj.constrained_vars{i}.sub_vars{j}.dim), ...
+                                     obj.data.prox_f);
                         return;
                     end
                 end
                 
                 if obj.constrained_vars{i} == var
-                    obj.data.prox_f{end + 1} = ...
-                        func(obj.constrained_vars{i}.idx, obj.constrained_vars{i}.dim);
+                    obj.data.prox_f = ...
+                        add_prox(func(obj.constrained_vars{i}.idx, obj.constrained_vars{i}.dim), ...
+                                 obj.data.prox_f);
                     return;
                 end
             end
@@ -151,7 +157,24 @@ classdef min_problem < prost.problem
             
             block_size_pair = block(row, col, nrows, ncols);
             
-            obj.data.linop{end + 1} = block_size_pair{1};
+            % Check if a constraint between pv and dv already exists
+            num_blocks = prod(size(obj.data.linop));
+            linop_idx = -1;
+            for i=1:num_blocks
+                linop = obj.data.linop{i};
+                
+                if (linop{2} == row) && (linop{3} == col)
+                    linop_idx = i;
+                    break;
+                end
+            end
+            
+            if linop_idx == -1 % No constraint present -> add
+                               % constraint
+                obj.data.linop{end + 1} = block_size_pair{1};
+            else % constraint is replaced.
+                obj.data.linop{linop_idx} = block_size_pair{1};
+            end
             
             sz = block_size_pair{2};
             if (sz{1} ~= constrained_dim) || (sz{2} ~= primal_dim)
@@ -167,6 +190,7 @@ classdef min_problem < prost.problem
                                                   obj.primal_vars{i}.dim);
                 
                 num_sub_vars = prod(size(obj.primal_vars{i}.sub_vars));
+
                 for j=1:num_sub_vars
                     abs_idx = obj.primal_vars{i}.sub_vars{j}.idx - obj.primal_vars{i}.idx;
                     obj.primal_vars{i}.sub_vars{j}.val = ...
@@ -189,14 +213,14 @@ classdef min_problem < prost.problem
         end
         
         function obj = finalize(obj)
-            zero_fn = prost.function.zero();
+            zero_fn = zero();
             
             if isempty(obj.data.prox_g)
                 obj.data.prox_g{end + 1} = zero_fn(0, obj.ncols);
             end
 
             if isempty(obj.data.prox_f)
-                obj.data.prox_fstar{end + 1} = zero_fn(0, obj.nrows);
+                obj.data.prox_f{end + 1} = zero_fn(0, obj.nrows);
             end
         end
 

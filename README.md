@@ -46,4 +46,8 @@ Tested using Visual Studio 2013 Community (english version) and CUDA 7.5. Run `c
 - Set `CUDA_HOST_COMPILER` to the path where `cl.exe` is located
 - Set `Matlab_DIR` and `Matlab_ROOT_DIR` to the MATLAB directory
 
-Once these values have been set, run configure and generate once more in cmake. Finally, open the Visual Studio solution and compile as Release x64 and after compilation has finished build the project INSTALL in the solution, which copies the mex file to the correct directory.
+Once these values have been set, run configure and generate once more
+in cmake. Finally, open the Visual Studio solution and compile as
+Release x64 and after compilation has finished build the project
+INSTALL in the solution, which copies the mex file to the correct
+directory.
