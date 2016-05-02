@@ -35,7 +35,7 @@ To get an overview over the implemented proximal and linear operators look into 
 
 ## Troubleshooting / Hints
 #### MacOSX
-Compiled without errors using Apple LLVM version 7.0.2 (clang-700.1.81), CUDA 7.5 and matlab-R2015b. 
+Tested using Apple LLVM version 7.0.2 (clang-700.1.81), CUDA 7.5 and matlab-R2015b. 
 
 #### Linux
 Tested using gcc-4.8, matlab-R2016a and CUDA 7.5.
