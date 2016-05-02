@@ -58,7 +58,7 @@ toc;
 
 %%
 % show result
-imshow(reshape(u.val, [ny nx nc]));
+imshow([reshape(f, [ny nx nc]) reshape(u.val, [ny nx nc])]);
 
 Du = reshape(grad*u.val, [ny*nx, nc, 2]);
 norm_Du = sqrt(sum(sum(Du.^2,2), 3));
