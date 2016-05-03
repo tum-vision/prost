@@ -1,6 +1,6 @@
 function [passed] = test_linop_sparse_kron_id()
 
-    diaglength = 640 * 480;
+    diaglength = 64 * 48;
     nrows = 81;
     ncols = 64;
     K_mat = sprand(nrows, ncols, 0.001);
