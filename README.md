@@ -3,7 +3,7 @@ prost is a framework for solving large-scale problems with **pro**ximal **st**ru
 
 The general class of problems that can be solved is:
 
-<img align="middle" src="http://latex.codecogs.com/svg.latex?\min_{x%20\in\mathbb{R}^n}%20%20\max_{y%20\in%20\mathbb{R}^m}%20~%20g(x)%20+%20\langle%20Kx,%20y%20\rangle-%20f^*(y)," />
+![id](http://latex.codecogs.com/svg.latex?\\min_{x%20\\in\\mathbb{R}^n}%20%20\\max_{y%20\\in%20\\mathbb{R}^m}%20~%20g(x)%20+%20\\langle%20Kx,%20y%20\\rangle-%20f^*(y),)
 
 where g and f* are convex functions mapping to the extended real line, whose proximal mapping is cheap to evaluate and K is a linear operator.
 
@@ -35,7 +35,7 @@ To get an overview over the implemented proximal and linear operators look into 
 
 ## Troubleshooting / Hints
 #### MacOSX
-Compiled without errors using Apple LLVM version 7.0.2 (clang-700.1.81), CUDA 7.5 and matlab-R2015b. 
+Tested using Apple LLVM version 7.0.2 (clang-700.1.81), CUDA 7.5 and matlab-R2015b. 
 
 #### Linux
 Tested using gcc-4.8, matlab-R2016a and CUDA 7.5.
