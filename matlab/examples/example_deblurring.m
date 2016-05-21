@@ -10,19 +10,19 @@ f = double(im(:)) / 255.; % convert to [0, 1]
 grad = spmat_gradient2d(nx,ny,nc);
 lmb = 100;
 
-kernel = fspecial('motion', 15, 45);
+%kernel = fspecial('motion', 15, 45);
 
-B = convmtx2(kernel, ny, nx);
-B = kron(speye(nc), B);
+%B = convmtx2(kernel, ny, nx);
+%B = kron(speye(nc), B);
 
-kx = size(kernel, 2);
-ky = size(kernel, 1);
+%kx = size(kernel, 2);
+%ky = size(kernel, 1);
 
-nx2 = nx + kx - 1;
-ny2 = ny + ky - 1;
+%nx2 = nx + kx - 1;
+%ny2 = ny + ky - 1;
 
-f_blurred = B * f;
-f_blurred = f_blurred + 0.05 * randn(ny2*nx2*nc,1);
+%f_blurred = B * f;
+%f_blurred = f_blurred + 0.05 * randn(ny2*nx2*nc,1);
 
 %%
 % problem

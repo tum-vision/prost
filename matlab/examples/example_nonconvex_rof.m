@@ -1,6 +1,7 @@
 %%
 % load input image
-im = imread('../../images/cow.png');
+%im = imread('../../images/cow.png');
+im = imread('../../../nonconvexPDHG/talk-SIAM/albuquerque1.jpg');
 [ny, nx, nc] = size(im);
 f = double(im(:)) / 255.; % convert to [0, 1]
 
