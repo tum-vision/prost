@@ -18,8 +18,11 @@ function [func] = sum_norm2(dim, interleaved, fun, a, b, c, d, e, alpha, beta)
 %  'ind_geq0'  f(z) = I(z >= 0)
 %  'ind_eq0'   f(z) = I(z = 0)
 %  'l0'        f(z) = #nonzero(z)
+%  'lq'        f(z) = |z|^alpha, alpha >= 0
 %  'max_pos0'  f(z) = max(0, z)
 %  'square'    f(z) = (1/2) z^2
+%  'trunclin'  f(z) = min(alpha |z|, beta)
+%  'truncquad' f(z) = min(alpha z^2, beta)
 %  'zero'      f(z) = 0
 %
 %  If interleaved is set to true, the individual dim-dimensional

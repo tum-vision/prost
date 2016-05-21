@@ -45,6 +45,9 @@ template class ProxElemOperation<float, ElemOperation1D<float, Function1DIndBox0
 template class ProxElemOperation<float, ElemOperation1D<float, Function1DMaxPos0<float>>>;
 template class ProxElemOperation<float, ElemOperation1D<float, Function1DL0<float>>>;
 template class ProxElemOperation<float, ElemOperation1D<float, Function1DHuber<float>>>;
+template class ProxElemOperation<float, ElemOperation1D<float, Function1DLq<float>>>;
+template class ProxElemOperation<float, ElemOperation1D<float, Function1DTruncQuad<float>>>;
+template class ProxElemOperation<float, ElemOperation1D<float, Function1DTruncLinear<float>>>;
 
 // ElemOperationNorm2
 template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DZero<float>>>;
@@ -57,6 +60,9 @@ template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DIndB
 template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DMaxPos0<float>>>;
 template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DL0<float>>>;
 template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DHuber<float>>>;
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DLq<float>>>;
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DTruncQuad<float>>>;
+template class ProxElemOperation<float, ElemOperationNorm2<float, Function1DTruncLinear<float>>>;
 
 
 // ElemOperationSingularNx2<Function2DSum1D>
@@ -92,6 +98,9 @@ template class ProxElemOperation<double, ElemOperation1D<double, Function1DIndBo
 template class ProxElemOperation<double, ElemOperation1D<double, Function1DMaxPos0<double>>>;
 template class ProxElemOperation<double, ElemOperation1D<double, Function1DL0<double>>>;
 template class ProxElemOperation<double, ElemOperation1D<double, Function1DHuber<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DLq<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DTruncQuad<double>>>;
+template class ProxElemOperation<double, ElemOperation1D<double, Function1DTruncLinear<double>>>;
 
 // ElemOperationNorm2
 template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DZero<double>>>;
@@ -104,6 +113,9 @@ template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DIn
 template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DMaxPos0<double>>>;
 template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DL0<double>>>;
 template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DHuber<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DLq<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DTruncQuad<double>>>;
+template class ProxElemOperation<double, ElemOperationNorm2<double, Function1DTruncLinear<double>>>;
 
 // ElemOperationSingularNx2<Function2DSum1D>
 template class ProxElemOperation<double, ElemOperationSingularNx2<double, Function2DSum1D<double, Function1DZero<double>>>>;
