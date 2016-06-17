@@ -53,7 +53,7 @@ bool SolverIntermCallback(int iter, const vector<real>& primal, const vector<rea
 shared_ptr<prost::Prox<real>>    CreateProx(const mxArray *pm);
 shared_ptr<prost::Block<real>>   CreateBlock(const mxArray *pm);
 shared_ptr<prost::Backend<real>> CreateBackend(const mxArray *pm);
-shared_ptr<prost::Problem<real>> CreateProblem(const mxArray *pm);
+shared_ptr<prost::Problem<real>> CreateProblem(const mxArray *pm, size_t nrows, size_t ncols);
 prost::Solver<real>::Options     CreateSolverOptions(const mxArray *pm);
 
 map<string, function<prost::Prox<real>*(size_t, size_t, bool, const mxArray*)>>& get_prox_reg();

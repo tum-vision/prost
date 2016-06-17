@@ -196,8 +196,16 @@ template<typename T>
 void Problem<T>::Initialize()
 {
   linop_->Initialize();
-  nrows_ = linop_->nrows();
-  ncols_ = linop_->ncols();
+
+  if(linop_->nrows() != nrows_ || linop_->ncols() != ncols_)
+  {
+    std::cout << "Size of linear operator (ncols=" << linop_->ncols() << ", nrows=" << linop_->nrows() << ") doesn't match size of variables. There might be some unnecessary variables in the problem.\n";
+  }
+
+  /*
+    nrows_ = linop_->nrows();
+    ncols_ = linop_->ncols();
+  */
 
   if(prox_f_.empty() && prox_fstar_.empty())
   {

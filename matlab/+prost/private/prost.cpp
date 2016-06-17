@@ -73,9 +73,12 @@ static void SolveProblem(MEX_ARGS) {
 
   BlockDiags<real>::ResetConstMem();
 
-  std::shared_ptr<Problem<real> > problem = CreateProblem(prhs[0]);
-  std::shared_ptr<Backend<real> > backend = CreateBackend(prhs[1]);
-  Solver<real>::Options opts = CreateSolverOptions(prhs[2]);
+  size_t nrows = static_cast<size_t>(mxGetScalar(prhs[1]));
+  size_t ncols = static_cast<size_t>(mxGetScalar(prhs[2]));
+
+  std::shared_ptr<Problem<real> > problem = CreateProblem(prhs[0], nrows, ncols);
+  std::shared_ptr<Backend<real> > backend = CreateBackend(prhs[3]);
+  Solver<real>::Options opts = CreateSolverOptions(prhs[4]);
 
   if(opts.verbose) {
     std::cout << "prost v" << prost::get_version().c_str() << std::endl;
