@@ -640,7 +640,7 @@ CreateBackend(const mxArray *pm)
 }
 
 std::shared_ptr<Problem<real> >
-CreateProblem(const mxArray *pm)
+CreateProblem(const mxArray *pm, size_t nrows, size_t ncols)
 {
   Problem<real> *prob = new Problem<real>;
 
@@ -675,6 +675,8 @@ CreateProblem(const mxArray *pm)
   }
   else
     throw Exception("Problem scaling variant not recognized. Options are {'alpha', 'identity', 'custom'}.");
+
+  prob->SetDimensions(nrows, ncols);
 
   return std::shared_ptr<Problem<real> >(prob);
 }

@@ -89,6 +89,9 @@ public:
   /// \brief Set the preconditioners to Sigma = Tau = Identity.
   void SetScalingIdentity();
 
+  /// \brief
+  void SetDimensions(size_t nrows, size_t ncols) { nrows_ = nrows; ncols_ = ncols; }
+
   shared_ptr<LinearOperator<T>> linop() const { return linop_; }
   device_vector<T>& scaling_left() { return scaling_left_; }
   device_vector<T>& scaling_right() { return scaling_right_; }

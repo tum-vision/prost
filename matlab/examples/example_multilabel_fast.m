@@ -63,10 +63,10 @@ opts = prost.options('max_iters', 5000, ...
                                                  L, im));
 
 tic;
-prost.init();
-prost.set_gpu(0);
+%prost.init();
+%prost.set_gpu(0);
 result = prost.solve(prob, backend, opts);
-prost.release();
+%prost.release();
 toc;
 
 u = reshape(u.val, [ny nx L]);
