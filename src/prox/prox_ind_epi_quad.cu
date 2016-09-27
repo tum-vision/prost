@@ -63,7 +63,7 @@ void ProxIndEpiQuadKernel(
     
     T sq_norm_b = static_cast<T>(0);
     for(size_t i = 0; i < dim-1; i++) {
-      T val = b[i];10
+      T val = b[i];
       x[i] = x0[i] + (val / a);
       sq_norm_b += val * val;
     }
