@@ -69,6 +69,7 @@ const static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>>
   { "diags",          CreateBlockDiags        },
   { "gradient2d",     CreateBlockGradient2D   },
   { "gradient3d",     CreateBlockGradient3D   },
+  { "id_kron_sparse", CreateBlockIdKronSparse },
   { "sparse",         CreateBlockSparse       },
   { "sparse_kron_id", CreateBlockSparseKronId },
   { "zero",           CreateBlockZero         },
@@ -399,6 +400,42 @@ CreateBlockSparse(size_t row, size_t col, const mxArray *data)
   return BlockSparse<real>::CreateFromCSC(
     row, 
     col,
+    nrows,
+    ncols,
+    nnz,
+    vec_val,
+    vec_ptr,
+    vec_ind);
+}
+
+prost::BlockIdKronSparse<real>*
+CreateBlockIdKronSparse(size_t row, size_t col, const mxArray *data)
+{
+  mxArray *pm = mxGetCell(data, 0);
+
+  if(!mxIsSparse(pm))
+    throw Exception("Matrix must be sparse!");
+
+  double *val = mxGetPr(pm);
+  mwIndex *ind = mxGetIr(pm);
+  mwIndex *ptr = mxGetJc(pm);
+  const mwSize *dims = mxGetDimensions(pm);
+
+  int nrows = dims[0];
+  int ncols = dims[1];
+  int nnz = ptr[ncols];
+
+  size_t diaglength = GetScalarFromCellArray<size_t>(data, 1);
+
+  // convert from mwIndex -> int32_t, double -> real
+  std::vector<real> vec_val(val, val + nnz);
+  std::vector<int32_t> vec_ptr(ptr, ptr + (ncols + 1));
+  std::vector<int32_t> vec_ind(ind, ind + nnz); 
+
+  return BlockIdKronSparse<real>::CreateFromCSC(
+    row, 
+    col,
+    diaglength,
     nrows,
     ncols,
     nnz,

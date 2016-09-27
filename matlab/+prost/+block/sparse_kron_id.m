@@ -5,8 +5,7 @@ function [func] = sparse_kron_id(K, diaglength)
 % an identity matrix of size diaglength. 
 %
 % Equivalent to prost.block.sparse(kron(K, speye(diaglength))) but
-% more efficient if K is small and diaglength is big.
-        
+% more efficient if K is small and diaglength is big.       
 
     sz = { size(K, 1) * diaglength, size(K, 2) * diaglength };
     data = { K, diaglength };
