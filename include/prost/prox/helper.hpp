@@ -43,7 +43,7 @@ inline __host__ __device__ void swap(T& a, T& b)
 /// 
 template<typename T>
 inline __host__ __device__ void  ProjectEpiQuadNd(
-     Vector<T>& x0, const T y0, const T alpha, Vector<T>& x, T& y, size_t dim)
+     const Vector<T>& x0, const T y0, const T alpha, Vector<T>& x, T& y, size_t dim)
 {
 
   T sq_norm_x0 = static_cast<T>(0);

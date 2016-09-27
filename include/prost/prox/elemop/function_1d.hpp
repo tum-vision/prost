@@ -201,6 +201,7 @@ T solveLqHalfAnalytic(const T alpha)
   return s * s;
 }
 
+// TODO: doesn't work for q>1
 template<typename T>
 struct Function1DLq
 {
@@ -286,6 +287,21 @@ struct Function1DTruncQuad
       return x_sq;
     else
       return x0;
+  }
+};
+
+template<typename T>
+struct Function1DLqPlusEps
+{
+  // Semiconvex l^q norm, (|x| + beta)^alpha
+  inline __host__ __device__
+  T
+  operator()(T x0, T tau, T alpha, T beta) const
+  {
+    /*
+      TODO
+     */
+    return 0;
   }
 };
 

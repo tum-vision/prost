@@ -32,7 +32,8 @@
 namespace prost {
 
 ///
-/// \brief Implements projection onto epigraph of quadratic function s.t. a/2 x^T x + b^T x + c >= y
+/// \brief Implements projection onto epigraph of quadratic function
+///        min_{x,y} ||(x,y) - (u,v)|| s.t. a x^T x + b^T x + c <= y
 ///
 template<typename T>
 class ProxIndEpiQuad : public ProxSeparableSum<T> 

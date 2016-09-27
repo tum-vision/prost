@@ -35,7 +35,6 @@ struct Coefficients {
   const T* dev_b;
   const T* dev_c;
 
-
   T a;
   T c;
 };
@@ -61,22 +60,21 @@ void ProxIndEpiQuadKernel(
     const T a = coeffs.dev_a == nullptr ? coeffs.a : coeffs.dev_a[tx];
     const Vector<const T> b(count, dim-1, false, tx, coeffs.dev_b);
     const T c = coeffs.dev_c == nullptr ? coeffs.c : coeffs.dev_c[tx];
-
+    
     T sq_norm_b = static_cast<T>(0);
     for(size_t i = 0; i < dim-1; i++) {
-      T val = b[i];
-      x[i] = x0[i] + val / a;
+      T val = b[i];10
+      x[i] = x0[i] + (val / a);
       sq_norm_b += val * val;
     }
     
-
-    helper::ProjectEpiQuadNd<T>(x, y0 / a + (0.5 / (a*a)) * sq_norm_b - c / a, 0.5, x, y, dim-1);
+    helper::ProjectEpiQuadNd<T>(x, y0 - c + sq_norm_b / a, a, x, y, dim-1);
       
     for(size_t i = 0; i < dim-1; i++) {
       x[i] -= b[i] / a;
     }
 
-    y = y * a - (0.5 / a) * sq_norm_b + c;
+    y = y + c - sq_norm_b / a;
   }
 }
 
@@ -146,8 +144,9 @@ ProxIndEpiQuad<T>::Initialize()
         throw Exception("Wrong input: Coefficient a must be greater 0!");
     }
 
-    if(b_.size() != this->count_*(this->dim_-1) && b_.size() != this->dim_-1)
-      throw Exception("Wrong input: Coefficient b has to have dimension count*(dim-1) or dim-1!");
+    // right now b has to have size dim_ - 1, otherwise the code breaks
+    if(b_.size() != this->count_*(this->dim_-1))
+      throw Exception("Wrong input: Coefficient b has to have dimension count*(dim-1)!");
 
     if(c_.size() != this->count_ && c_.size() != 1)
       throw Exception("Wrong input: Coefficient c has to have dimension count or 1!");
