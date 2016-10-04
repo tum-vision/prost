@@ -1,3 +1,16 @@
+if(UNIX)
+  if (CMAKE_COMPILER_IS_GNUCC)
+    execute_process(COMMAND ${CMAKE_C_COMPILER} -dumpversion
+      OUTPUT_VARIABLE GCC_VERSION)
+    string(REGEX MATCHALL "[0-9]+" GCC_VERSION_COMPONENTS ${GCC_VERSION})
+    list(GET GCC_VERSION_COMPONENTS 0 GCC_MAJOR)
+    list(GET GCC_VERSION_COMPONENTS 1 GCC_MINOR)
+
+#    message(STATUS ${GCC_MAJOR})
+#    message(STATUS ${GCC_MINOR})
+  endif()
+endif()
+
 set(CMAKE_CXX_COMPILER ${Matlab_mex})
 set(CMAKE_C_COMPILER ${Matlab_mex})
 
@@ -22,9 +35,17 @@ set(CMAKE_SHARED_LIBRARY_PREFIX)
 if(APPLE OR MSVC)
   set(CMAKE_CXX_COMPILE_OBJECT
     "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -outdir <OBJECT_DIR> -c <SOURCE>; mv <OBJECT_DIR>/$$(basename <SOURCE> .cpp).o <OBJECT>")
-else() #somehow the above doesn't compile on some linux machines -> remove <INCLUDES>
-  set(CMAKE_CXX_COMPILE_OBJECT
-    "<CMAKE_CXX_COMPILER> <DEFINES> <FLAGS> -outdir <OBJECT_DIR> -c <SOURCE>; mv <OBJECT_DIR>/$$(basename <SOURCE> .cpp).o <OBJECT>")
+else() 
+
+  if(${GCC_MAJOR} GREATER 4)
+    set(CMAKE_CXX_COMPILE_OBJECT
+      "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -outdir <OBJECT_DIR> -c <SOURCE>; mv <OBJECT_DIR>/$$(basename <SOURCE> .cpp).o <OBJECT>")
+  else()
+    #somehow on GCC 4.x we have to remove <INCLUDES>
+    set(CMAKE_CXX_COMPILE_OBJECT
+      "<CMAKE_CXX_COMPILER> <DEFINES> <FLAGS> -outdir <OBJECT_DIR> -c <SOURCE>; mv <OBJECT_DIR>/$$(basename <SOURCE> .cpp).o <OBJECT>")
+  endif()
+
 endif()
 
 set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS) # remove -shared options as mex does not accept it
