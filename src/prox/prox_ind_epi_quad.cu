@@ -64,17 +64,17 @@ void ProxIndEpiQuadKernel(
     T sq_norm_b = static_cast<T>(0);
     for(size_t i = 0; i < dim-1; i++) {
       T val = b[i];
-      x[i] = x0[i] + (val / a);
+      x[i] = x0[i] + (val / (2 * a));
       sq_norm_b += val * val;
     }
     
-    helper::ProjectEpiQuadNd<T>(x, y0 - c + sq_norm_b / a, a, x, y, dim-1);
+    helper::ProjectEpiQuadNd<T>(x, y0 - c + (sq_norm_b / (4*a*a)), a, x, y, dim-1);
       
     for(size_t i = 0; i < dim-1; i++) {
-      x[i] -= b[i] / a;
+      x[i] -=  b[i] / (2 * a);
     }
 
-    y = y + c - sq_norm_b / a;
+    y = y + c - (sq_norm_b / (4*a*a));
   }
 }
 
