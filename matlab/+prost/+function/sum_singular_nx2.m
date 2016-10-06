@@ -10,51 +10,21 @@ function [func] = sum_singular_nx2(dim, interleaved, fun, a, b, c, d, e, alpha, 
 %  where h is parametrized by a, b, c, d, e, alpha, beta as in
 %  sum_1d. (See 'help prost.function.sum_1d').
 
-    switch nargin
-      case 3
-        a = 1;
-        b = 0;
-        c = 1;
-        d = 0;
-        e = 0;
-        alpha = 0;
-        beta = 0;
-        
-      case 4
-        b = 0;
-        c = 1;
-        d = 0;
-        e = 0;
-        alpha = 0;
-        beta = 0;
-        
-      case 5
-        c = 1;
-        d = 0;
-        e = 0;
-        alpha = 0;
-        beta = 0;
 
-      case 6
-        d = 0;
-        e = 0;
-        alpha = 0;
+    
+    switch nargin
+    case 9
         beta = 0;
-      
-      case 7
-        e = 0;
+    
+    case 8
         alpha = 0;
-        beta = 0;
-        
-      case 8
-        alpha = 0;
-        beta = 0;
-      
-      case 9
         beta = 0;
     end
+
+    coeffs = { a, b, c, d, e, alpha, beta };
+
+
     
-    func = @(idx, count) { 'elem_operation:ind_simplex', idx, ...
-                        count, false, { count / dim, dim, interleaved } };
+    func = @(idx, count) { strcat('elem_operation:singular_nx2:', fun), idx, count, false, { count / dim, dim, interleaved, coeffs } };
     
 end
