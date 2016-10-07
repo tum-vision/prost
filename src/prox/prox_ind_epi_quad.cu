@@ -68,13 +68,13 @@ void ProxIndEpiQuadKernel(
       sq_norm_b += val * val;
     }
     
-    helper::ProjectEpiQuadNd<T>(x, y0 - c + (sq_norm_b / (4*a*a)), a, x, y, dim-1);
+    helper::ProjectEpiQuadNd<T>(x, y0 - c + (sq_norm_b / (4*a)), a, x, y, dim-1);
       
     for(size_t i = 0; i < dim-1; i++) {
       x[i] -=  b[i] / (2 * a);
     }
 
-    y = y + c - (sq_norm_b / (4*a*a));
+    y = y + c - (sq_norm_b / (4*a));
   }
 }
 

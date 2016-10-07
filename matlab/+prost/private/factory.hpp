@@ -25,7 +25,6 @@
 #include "prost/prox/elemop/function_1d.hpp"
 #include "prost/prox/elemop/function_2d.hpp"
 #include "prost/prox/prox_ind_epi_quad.hpp"
-#include "prost/prox/prox_ind_epi_polyhedral.hpp"
 #include "prost/prox/prox_moreau.hpp"
 #include "prost/prox/prox_transform.hpp"
 #include "prost/prox/prox_zero.hpp"
@@ -63,10 +62,6 @@ map<string, function<prost::Block<real>*(size_t, size_t, const mxArray*)>>& get_
 // prox operator create functions
 prost::ProxIndEpiQuad<real>*
 CreateProxIndEpiQuad(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-
-prost::ProxIndEpiPolyhedral<real>*
-CreateProxIndEpiPolyhedral(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-
 prost::ProxElemOperation<real, prost::ElemOperationIndSimplex<real> >*
 CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
