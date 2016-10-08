@@ -48,6 +48,11 @@ one needs to add the line
  
 	edit ([matlabroot '/bin/maci64/mexopts/clang_maci64.xml'])
  	edit ([matlabroot '/bin/maci64/mexopts/clang++_maci64.xml'])
+	
+Finally, run from within MATLAB
+
+	mex -setup
+	mex -setup C++
 
 #### Linux
 Tested using gcc-4.8, matlab-R2016a and CUDA 7.5.
