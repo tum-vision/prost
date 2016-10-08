@@ -39,6 +39,16 @@ Tested using Apple LLVM version 7.0.2 (clang-700.1.81), CUDA 7.5 and matlab-R201
 
 For CUDA 8.0, use Apple LLVM version 7.3.0 (clang-703.0.31), Xcode 7.3.1. See also the installation guide [here](http://docs.nvidia.com/cuda/cuda-installation-guide-mac-os-x/#axzz4MVW0QgfH).
 
+In case of the error message "No supported compiler or SDK was found.", 
+one needs to add the line
+
+ 	<dirExists name="$$/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.11.sdk" />
+ 
+ to the clang and clang++ config files
+ 
+	edit ([matlabroot '/bin/maci64/mexopts/clang_maci64.xml'])
+ 	edit ([matlabroot '/bin/maci64/mexopts/clang++_maci64.xml'])
+
 #### Linux
 Tested using gcc-4.8, matlab-R2016a and CUDA 7.5.
 
