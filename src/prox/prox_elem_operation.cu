@@ -26,6 +26,7 @@
 #include "prost/prox/elemop/elem_operation_norm2.hpp"
 #include "prost/prox/elemop/elem_operation_ind_simplex.hpp"
 #include "prost/prox/elemop/elem_operation_singular_nx2.hpp"
+#include "prost/prox/elemop/elem_operation_ind_psd_cone_3x3.hpp"
 #include "prost/prox/elemop/function_1d.hpp"
 #include "prost/prox/elemop/function_2d.hpp"
 
@@ -85,6 +86,7 @@ template class ProxElemOperation<float, ElemOperationSingularNx2<float, Function
 
 // Other
 template class ProxElemOperation<float, ElemOperationIndSimplex<float>>;
+template class ProxElemOperation<float, ElemOperationIndPsdCone3x3<float>>;
 
 
 
@@ -140,5 +142,6 @@ template class ProxElemOperation<double, ElemOperationSingularNx2<double, Functi
 
 // other
 template class ProxElemOperation<double, ElemOperationIndSimplex<double>>;
+template class ProxElemOperation<double, ElemOperationIndPsdCone3x3<double>>;
 
 } // namespace prost
