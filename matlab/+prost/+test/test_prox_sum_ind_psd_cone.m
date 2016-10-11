@@ -1,6 +1,6 @@
 function [passed] = test_prox_sum_ind_psd_cone()
 
-    % generate random points and project them onto the simplex
+    % generate random points and project them onto the PSD cone
     N=300000;
     P = rand(6,N)*10;
 
@@ -38,9 +38,10 @@ function [passed] = test_prox_sum_ind_psd_cone()
     [Q, time] = prost.eval_prox( prost.function.sum_ind_psd_cone_3x3(true), P(:), tau, Tau);
    
     Q = reshape(Q,6,N);
+    
 
     passed = true;
-    if norm(Q-R, Inf) > 1e-5
+    if norm(Q(:)-R(:), Inf) > 1e-5
         passed = false;
     end
  end
