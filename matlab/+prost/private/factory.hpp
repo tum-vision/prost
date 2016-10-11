@@ -22,6 +22,8 @@
 #include "prost/prox/elemop/elem_operation_norm2.hpp"
 #include "prost/prox/elemop/elem_operation_ind_simplex.hpp"
 #include "prost/prox/elemop/elem_operation_singular_nx2.hpp"
+#include "prost/prox/elemop/elem_operation_ind_psd_cone_3x3.hpp"
+
 #include "prost/prox/elemop/function_1d.hpp"
 #include "prost/prox/elemop/function_2d.hpp"
 #include "prost/prox/prox_ind_epi_quad.hpp"
@@ -69,6 +71,11 @@ template<class FUN_2D>
 prost::ProxElemOperation<real, prost::ElemOperationSingularNx2<real, FUN_2D> >*
 CreateProxElemOperationSingularNx2(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
+    
+prost::ProxElemOperation<real, prost::ElemOperationIndPsdCone3x3<real> >*
+CreateProxElemOperationIndPsdCone3x3(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+
+    
 template<class FUN_1D>
 prost::ProxElemOperation<real, prost::ElemOperationNorm2<real, FUN_1D> >*
 CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxArray *data);

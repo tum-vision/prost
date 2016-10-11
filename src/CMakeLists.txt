@@ -74,6 +74,7 @@ set(SOURCES
   "../include/prost/prox/elemop/elem_operation_norm2.hpp"
   "../include/prost/prox/elemop/elem_operation_ind_simplex.hpp"
   "../include/prost/prox/elemop/elem_operation_singular_nx2.hpp"
+  "../include/prost/prox/elemop/elem_operation_ind_psd_cone_3x3.hpp"
   "../include/prost/prox/elemop/function_1d.hpp"
   "../include/prost/prox/elemop/function_2d.hpp"
 

@@ -17,6 +17,7 @@ mxArray *Solver_interm_cb_handle = nullptr;
 
 static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> default_prox_reg = {
   { "elem_operation:ind_simplex",                     CreateProxElemOperationIndSimplex                                                     },
+  { "elem_operation:ind_psd_cone_3x3",                CreateProxElemOperationIndPsdCone3x3                                                  },
   { "elem_operation:1d:zero",                         CreateProxElemOperation1D<Function1DZero<real>>                                       },
   { "elem_operation:1d:abs",                          CreateProxElemOperation1D<Function1DAbs<real>>                                        },
   { "elem_operation:1d:square",                       CreateProxElemOperation1D<Function1DSquare<real>>                                     },
@@ -307,7 +308,17 @@ CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const
 
   return new ProxElemOperation<real, ElemOperationIndSimplex<real> >(idx, count, dim, interleaved, diagsteps);   
 }
-
+    
+ProxElemOperation<real, ElemOperationIndPsdCone3x3<real> >*
+CreateProxElemOperationIndPsdCone3x3(size_t idx, size_t size, bool diagsteps, const mxArray *data)
+{
+    size_t count = GetScalarFromCellArray<size_t>(data, 0);
+    size_t dim = GetScalarFromCellArray<size_t>(data, 1);
+    bool interleaved = GetScalarFromCellArray<bool>(data, 2);
+        
+    return new ProxElemOperation<real, ElemOperationIndPsdCone3x3<real> >(idx, count, dim, interleaved, diagsteps);
+}
+    
 ProxIndEpiQuad<real>* 
 CreateProxIndEpiQuad(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
 {
