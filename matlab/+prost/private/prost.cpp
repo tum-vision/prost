@@ -280,7 +280,8 @@ static void Init(MEX_ARGS) {
 }
 
 static void Release(MEX_ARGS) {
-  mexUnlock(); 
+  mexUnlock();
+  cudaDeviceReset();
 }
 
 static void ListGPUs(MEX_ARGS) {
@@ -343,5 +344,4 @@ void mexFunction(MEX_ARGS)
     mexErrMsgTxt(e.what());
     Release(nlhs, plhs, nrhs - 1, prhs + 1);
   }
-
 } 

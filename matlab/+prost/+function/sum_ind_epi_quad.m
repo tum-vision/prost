@@ -2,7 +2,7 @@ function [func] = sum_ind_epi_quad(dim, interleaved, a, b, c)
 % SUM_IND_EPI_QUAD  func = sum_ind_epi_quad(dim, interleaved, a,b,c)
 %
 %   Computes projection onto epigraph of a parabola function given as
-%   a x^T x + b^T x + c
+%   a x^T x + b^T x + c, for a > 0.
 %
 %   Assumes that the input variables have the same ordering,
 %   the interleaved keyword is ignored by the prox.

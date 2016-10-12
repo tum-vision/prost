@@ -185,7 +185,7 @@ inline __host__ __device__ void ProjectEpiQuadGeneral1d(
   
 /// 
 /// \brief Computes projection of the d-dimensional vector v onto the
-///        halfspace described by { x | <n, x> <= t }.
+///        halfspace described by { x | <n, x> = t }.
 /// 
 template<typename T, typename ARRAY, typename CONST_ARRAY>
 inline __host__ __device__ void ProjectHalfspace(

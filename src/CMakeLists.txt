@@ -16,6 +16,10 @@ if(UNIX)
   list(APPEND CUDA_NVCC_FLAGS -std=c++11)
 endif()
 
+if(APPLE)
+  list(APPEND CUDA_NVCC_FLAGS -Wno-deprecated-gpu-targets)
+endif()
+
 #list(APPEND CUDA_NVCC_FLAGS "-gencode=arch=compute_52,code=sm_52 -gencode=arch=compute_20,code=sm_21")
 list(APPEND CUDA_NVCC_FLAGS ${PROST_NVCC_FLAGS})
 
@@ -36,6 +40,8 @@ set(SOURCES
   "prox/prox.cu"
   "prox/prox_elem_operation.cu"
   "prox/prox_ind_epi_quad.cu"
+  "prox/prox_ind_halfspace.cu"
+  "prox/prox_ind_soc.cu"
   "prox/prox_moreau.cu"
   "prox/prox_transform.cu"
   "prox/prox_zero.cu"
@@ -63,6 +69,8 @@ set(SOURCES
   "../include/prost/prox/prox_separable_sum.hpp"
   "../include/prost/prox/prox_elem_operation.hpp"
   "../include/prost/prox/prox_ind_epi_quad.hpp"
+  "../include/prost/prox/prox_ind_halfspace.hpp"
+  "../include/prost/prox/prox_ind_soc.hpp"
   "../include/prost/prox/prox_moreau.hpp"
   "../include/prost/prox/prox_transform.hpp"
   "../include/prost/prox/prox_zero.hpp"
