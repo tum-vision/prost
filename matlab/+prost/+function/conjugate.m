@@ -11,6 +11,6 @@ end
 function [prox] = prox_moreau(child)
 
     data = { child };
-    prox = { 'moreau', 0, 0, false, data };
+    prox = { 'moreau', child{2}, child{3}, child{4}, data };
 
 end

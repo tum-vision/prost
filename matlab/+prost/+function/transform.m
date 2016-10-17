@@ -38,7 +38,6 @@ function [func] = transform(fun, a, b, c, d, e)
         e = 0;
     end
         
-        
     func = @(idx, count) prox_transform( fun(idx, count), a, ...
                                          b, c, d, e );
 end
