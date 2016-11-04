@@ -55,7 +55,11 @@ Finally, run from within MATLAB
 	mex -setup C++
 
 #### Linux
-Tested using gcc-4.8, matlab-R2016a and CUDA 7.5.
+Tested using gcc-4.8, matlab-R2016a and CUDA 7.5, as well as gcc-5.4, matlab-R2016b and CUDA 8.0.
+
+In case of an invalid mex-file error, start MATLAB with the following preload command:
+
+	LD_PRELOAD="/usr/lib/x86_64-linux-gnu/libstdc++.so.6" matlab-R2015b
 
 #### Windows
 Tested using Visual Studio 2013 Community (english version) and CUDA 7.5. Run `cmake-gui` and select `Visual Studio 12 2013 Win64` as generator. The following values might need to be set manually
