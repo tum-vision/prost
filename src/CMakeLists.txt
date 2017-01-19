@@ -27,9 +27,11 @@ set(SOURCES
 
   "linop/block.cu"
   "linop/block_dense.cu"
+  "linop/block_dense_kron_id.cu"
   "linop/block_diags.cu"
   "linop/block_gradient2d.cu"
   "linop/block_gradient3d.cu"
+  "linop/block_id_kron_dense.cu"
   "linop/block_id_kron_sparse.cu"
   "linop/block_sparse.cu"
   "linop/block_sparse_kron_id.cu"
@@ -55,9 +57,11 @@ set(SOURCES
 
   "../include/prost/linop/block.hpp"
   "../include/prost/linop/block_dense.hpp"
+  "../include/prost/linop/block_dense_kron_id.hpp"
   "../include/prost/linop/block_diags.hpp"
   "../include/prost/linop/block_gradient2d.hpp"
   "../include/prost/linop/block_gradient3d.hpp"
+  "../include/prost/linop/block_id_kron_dense.hpp"
   "../include/prost/linop/block_id_kron_sparse.hpp"
   "../include/prost/linop/block_sparse.hpp"
   "../include/prost/linop/block_sparse_kron_id.hpp"

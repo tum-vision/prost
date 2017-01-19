@@ -29,9 +29,6 @@ function [passed] = test_prox_sum_ind_psd_cone()
         R(6, i) = J(3,3);
     end
 
-
-
-
     tau = 1;
     Tau = ones(N*6, 1);
 
@@ -41,7 +38,13 @@ function [passed] = test_prox_sum_ind_psd_cone()
     
 
     passed = true;
-    if norm(Q(:)-R(:), Inf) > 1e-5
+    
+    norm_diff = norm(Q(:)-R(:), Inf);
+    
+    if norm_diff > 1e-4
+        fprintf('failed! Reason: norm_diff > 1e-4: %f\n', norm_diff);
         passed = false;
+        
+        return;
     end
  end

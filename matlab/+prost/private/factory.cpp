@@ -71,8 +71,10 @@ const static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>>
   { "diags",          CreateBlockDiags        },
   { "gradient2d",     CreateBlockGradient2D   },
   { "gradient3d",     CreateBlockGradient3D   },
+  { "id_kron_dense",  CreateBlockIdKronDense  },
   { "id_kron_sparse", CreateBlockIdKronSparse },
   { "sparse",         CreateBlockSparse       },
+  { "dense_kron_id",  CreateBlockDenseKronId  },
   { "sparse_kron_id", CreateBlockSparseKronId },
   { "zero",           CreateBlockZero         },
 };
@@ -480,6 +482,26 @@ CreateBlockIdKronSparse(size_t row, size_t col, const mxArray *data)
     vec_val,
     vec_ptr,
     vec_ind);
+}
+
+prost::BlockIdKronDense<real>*
+CreateBlockIdKronDense(size_t row, size_t col, const mxArray *pm)
+{
+  size_t nrows = mxGetM(mxGetCell(pm, 0));
+  size_t ncols = mxGetN(mxGetCell(pm, 0));
+  double *data = reinterpret_cast<double *>(mxGetData(mxGetCell(pm, 0)));
+  std::vector<real> r_data(data, data + nrows * ncols);
+  size_t diaglength = GetScalarFromCellArray<size_t>(pm, 1);
+
+  return BlockIdKronDense<real>::CreateFromColFirstData(diaglength, row, col, nrows, ncols, r_data);
+}
+
+prost::BlockDenseKronId<real>*
+CreateBlockDenseKronId(size_t row, size_t col, const mxArray *pm)
+{
+  throw Exception("BlockDenseKronId not implemented yet!");
+  
+  return nullptr;
 }
 
 prost::BlockSparseKronId<real>*

@@ -4,9 +4,11 @@
 #include "prost/linop/linearoperator.hpp"
 #include "prost/linop/block.hpp"
 #include "prost/linop/block_dense.hpp"
+#include "prost/linop/block_dense_kron_id.hpp"
 #include "prost/linop/block_diags.hpp"
 #include "prost/linop/block_gradient2d.hpp"
 #include "prost/linop/block_gradient3d.hpp"
+#include "prost/linop/block_id_kron_dense.hpp"
 #include "prost/linop/block_id_kron_sparse.hpp"
 #include "prost/linop/block_sparse.hpp"
 #include "prost/linop/block_sparse_kron_id.hpp"
@@ -53,7 +55,7 @@ using std::shared_ptr;
 using std::map;
 
 bool SolverIntermCallback(int iter, const vector<real>& primal, const vector<real>& dual);
-     
+
 shared_ptr<prost::Prox<real>>    CreateProx(const mxArray *pm);
 shared_ptr<prost::Block<real>>   CreateBlock(const mxArray *pm);
 shared_ptr<prost::Backend<real>> CreateBackend(const mxArray *pm);
@@ -126,6 +128,12 @@ CreateBlockGradient2D(size_t row, size_t col, const mxArray *pm);
 
 prost::BlockGradient3D<real>*
 CreateBlockGradient3D(size_t row, size_t col, const mxArray *pm);  
+
+prost::BlockIdKronDense<real>*
+CreateBlockIdKronDense(size_t row, size_t col, const mxArray *pm);
+
+prost::BlockDenseKronId<real>*
+CreateBlockDenseKronId(size_t row, size_t col, const mxArray *pm);
   
 // backends
 prost::BackendPDHG<real>* 
