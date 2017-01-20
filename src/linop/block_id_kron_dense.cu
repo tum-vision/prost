@@ -181,7 +181,7 @@ void BlockIdKronDense<T>::EvalAdjointLocalAdd(
   {
     // print the CUDA error message and throw exception
     std::stringstream ss;
-    ss << "BlockIdKronDense (forward): CUDA error: " << cudaGetErrorString(error) << std::endl;
+    ss << "BlockIdKronDense (adjoint): CUDA error: " << cudaGetErrorString(error) << std::endl;
     throw Exception(ss.str());
   }
 }

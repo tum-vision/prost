@@ -29,10 +29,57 @@
 namespace prost {
 
 /// 
-/// \brief Linear operator based on dense matrix.
+/// \brief Linear operator based on Kronecker product of dense matrix with
+///        diagonal matrix
 /// 
 template<typename T>
 class BlockDenseKronId : public Block<T> {
+  BlockDenseKronId(size_t row, size_t col, size_t nrows, size_t ncols);
+
+public:
+  static BlockDenseKronId<T> *CreateFromColFirstData(
+    size_t diaglength,
+    size_t row,
+    size_t col,
+    size_t nrows,
+    size_t ncols,
+    const std::vector<T>& data);
+
+  virtual ~BlockDenseKronId() {}
+
+  virtual void Initialize();
+
+  virtual T row_sum(size_t row, T alpha) const;
+  virtual T col_sum(size_t col, T alpha) const;
+
+  virtual size_t gpu_mem_amount() const;
+
+protected:
+  virtual void EvalLocalAdd(
+    const typename device_vector<T>::iterator& res_begin,
+    const typename device_vector<T>::iterator& res_end,
+    const typename device_vector<T>::const_iterator& rhs_begin,
+    const typename device_vector<T>::const_iterator& rhs_end);
+
+  virtual void EvalAdjointLocalAdd(
+    const typename device_vector<T>::iterator& res_begin,
+    const typename device_vector<T>::iterator& res_end,
+    const typename device_vector<T>::const_iterator& rhs_begin,
+    const typename device_vector<T>::const_iterator& rhs_end);
+
+private:
+  /// \brief Size of diagonal identity matrix Id for kron(M, Id).
+  size_t diaglength_;
+
+  /// \brief Number of rows in small dense matrix M.
+  size_t mat_nrows_;
+
+  /// \brief Number of columns in small dense matrix M.
+  size_t mat_ncols_;
+
+  /// \brief GPU/CPU data for dense matrix M
+  device_vector<T> data_;
+  vector<T> host_data_;
 };
 
 } // namespace prost

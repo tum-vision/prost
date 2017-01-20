@@ -499,9 +499,13 @@ CreateBlockIdKronDense(size_t row, size_t col, const mxArray *pm)
 prost::BlockDenseKronId<real>*
 CreateBlockDenseKronId(size_t row, size_t col, const mxArray *pm)
 {
-  throw Exception("BlockDenseKronId not implemented yet!");
-  
-  return nullptr;
+  size_t nrows = mxGetM(mxGetCell(pm, 0));
+  size_t ncols = mxGetN(mxGetCell(pm, 0));
+  double *data = reinterpret_cast<double *>(mxGetData(mxGetCell(pm, 0)));
+  std::vector<real> r_data(data, data + nrows * ncols);
+  size_t diaglength = GetScalarFromCellArray<size_t>(pm, 1);
+
+  return BlockDenseKronId<real>::CreateFromColFirstData(diaglength, row, col, nrows, ncols, r_data);
 }
 
 prost::BlockSparseKronId<real>*
