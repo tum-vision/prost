@@ -1,8 +1,8 @@
 function [func] = dense_kron_id(K, diaglength) 
 % DENSE_KRON_ID  func = dense_kron_id(K, diaglength) 
 %
-% Linear operator that implements Kronecker product between an 
-% identity matrix of size diaglength and K.
+% Linear operator that implements Kronecker product between K and an 
+% identity matrix of size diaglength.
 %
 % Equivalent to prost.block.dense(full(kron(K, speye(diaglength)))) but
 % more efficient if K is small and diaglength is big.
