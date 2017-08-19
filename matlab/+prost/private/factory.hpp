@@ -25,6 +25,7 @@
 #include "prost/prox/elemop/elem_operation_ind_simplex.hpp"
 #include "prost/prox/elemop/elem_operation_singular_nx2.hpp"
 #include "prost/prox/elemop/elem_operation_ind_psd_cone_3x3.hpp"
+#include "prost/prox/elemop/elem_operation_mass_norm.hpp"
 
 #include "prost/prox/elemop/function_1d.hpp"
 #include "prost/prox/elemop/function_2d.hpp"
@@ -82,10 +83,8 @@ template<class FUN_2D>
 prost::ProxElemOperation<real, prost::ElemOperationSingularNx2<real, FUN_2D> >*
 CreateProxElemOperationSingularNx2(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
-    
 prost::ProxElemOperation<real, prost::ElemOperationIndPsdCone3x3<real> >*
 CreateProxElemOperationIndPsdCone3x3(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-
     
 template<class FUN_1D>
 prost::ProxElemOperation<real, prost::ElemOperationNorm2<real, FUN_1D> >*
@@ -94,7 +93,15 @@ CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxAr
 template<class FUN_1D>
 prost::ProxElemOperation<real, prost::ElemOperation1D<real, FUN_1D> >*
 CreateProxElemOperation1D(size_t idx, size_t size, bool diagsteps, const mxArray *data);
- 
+
+  template<bool conjugate>
+  prost::ProxElemOperation<real, prost::ElemOperationMass4<real, conjugate> >*
+  CreateProxElemOperationMass4(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+  
+  template<bool conjugate>
+  prost::ProxElemOperation<real, prost::ElemOperationMass5<real, conjugate> >*
+  CreateProxElemOperationMass5(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+  
 prost::ProxMoreau<real>*
 CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 

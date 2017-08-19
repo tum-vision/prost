@@ -268,8 +268,6 @@ inline __host__ __device__ bool IsPointInHalfspace(
   return IsPointInHalfspace<T, const T*>(v, p, n, dim);
 }
 
-/*
-
 /// 
 /// \brief Computes the singular value decomposition of a 2x2 matrix
 ///        See: http://ieeexplore.ieee.org/document/486688/
@@ -277,14 +275,14 @@ inline __host__ __device__ bool IsPointInHalfspace(
 ///        (Assume "column-first" ordering)
 /// 
 template<typename T>
-inline void computeSVD2x2(T *a, T *U, T *S, T *V) {
+inline  __host__ __device__ void computeSVD2x2(const T *a, T *U, T *S, T *V) {
   const T E = (a[0]+a[3]) / 2;
   const T F = (a[0]-a[3]) / 2;
   const T G = (a[2]+a[1]) / 2;
   const T H = (a[2]-a[1]) / 2;
 
-  const T Q = std::sqrt(E*E+H*H);
-  const T R = std::sqrt(F*F+G*G);
+  const T Q = sqrt(E*E+H*H);
+  const T R = sqrt(F*F+G*G);
 
   const T a1 = atan2(G, F);
   const T a2 = atan2(H, E);
@@ -307,7 +305,7 @@ inline void computeSVD2x2(T *a, T *U, T *S, T *V) {
 ///        X = A * B;
 /// 
 template<typename T>
-inline void matMult4(T *X, const T *A, const T *B) {
+inline  __host__ __device__ void matMult4(T *X, const T *A, const T *B) {
   X[0] = A[0]*B[0] + A[4]*B[1] + A[8]*B[2] + A[12]*B[3];
   X[1] = A[1]*B[0] + A[5]*B[1] + A[9]*B[2] + A[13]*B[3];
   X[2] = A[2]*B[0] + A[6]*B[1] + A[10]*B[2] + A[14]*B[3];
@@ -329,8 +327,12 @@ inline void matMult4(T *X, const T *A, const T *B) {
   X[15] = A[3]*B[12] + A[7]*B[13] + A[11]*B[14] + A[15]*B[15];
 }
 
+/// 
+/// \brief Multiplies two 4x4 matrices (assume column-first ordering)
+///        X = A^T * B;
+/// 
 template<typename T>
-inline void matMult4_AT(T *X, const T *A, const T *B) {
+inline  __host__ __device__ void matMult4_AT(T *X, const T *A, const T *B) {
   X[0] = A[0]*B[0] + A[1]*B[1] + A[2]*B[2] + A[3]*B[3];
   X[1] = A[4]*B[0] + A[5]*B[1] + A[6]*B[2] + A[7]*B[3];
   X[2] = A[8]*B[0] + A[9]*B[1] + A[10]*B[2] + A[11]*B[3];
@@ -352,8 +354,12 @@ inline void matMult4_AT(T *X, const T *A, const T *B) {
   X[15] = A[12]*B[12] + A[13]*B[13] + A[14]*B[14] + A[15]*B[15];
 }
 
-templAte<typenAme T>
-inline void matMult4_BT(T *X, T *A, T *B) {
+/// 
+/// \brief Multiplies two 4x4 matrices (assume column-first ordering)
+///        X = A * B^T;
+/// 
+template<typename T>
+inline __host__ __device__ void matMult4_BT(T *X, const T *A, const T *B) {
   X[0] = A[0]*B[0] + A[4]*B[4] + A[8]*B[8] + A[12]*B[12];
   X[1] = A[1]*B[0] + A[5]*B[4] + A[9]*B[8] + A[13]*B[12];
   X[2] = A[2]*B[0] + A[6]*B[4] + A[10]*B[8] + A[14]*B[12];
@@ -375,58 +381,60 @@ inline void matMult4_BT(T *X, T *A, T *B) {
   X[15] = A[3]*B[3] + A[7]*B[7] + A[11]*B[11] + A[15]*B[15];
 }
 
+/// 
+/// \brief Reduce a 4x4 skew-symmetric matrix to tridiagonal form
+///        A = Q * D * Q';
+///
 template<typename T>
-void SkewReduce4x4(const T *a, T *Q, T *t) {
-  Q[0] = 1;  Q[1] = 0;  Q[2] = 0;  Q[3] = 0;
-  Q[4] = 0;  Q[5] = 1;  Q[6] = 0;  Q[7] = 0;
-  Q[8] = 0;  Q[9] = 0;  Q[10] = 1; Q[11] = 0;
-  Q[12] = 0; Q[13] = 0; Q[14] = 0; Q[15] = 1;
+inline __host__ __device__ void skewReduce4(const T *A, T *Q, T *D) {
+  T v[3], f, denom;
+  T t1[16], t2[16]; // temporary variables
 
-  for(int i = 0; i < 16; i++) t[i] = a[i];
-
-  T v[3], P[16], r, q, f;
-  T Q2[16], t2[16];
+  v[0] = A[1];
+  v[1] = A[2];
+  v[2] = A[3];
+  v[0] += sqrt(v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
   
-  // k=1 loop
-  v[0] = t[1];
-  v[1] = t[2];
-  v[2] = t[3];
-  r = std::sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
-  v[0] += r;
-  q = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
-  P[0]=1; P[1] = 0; P[2] = 0; P[3]=0;
-  P[4]=0; P[8] = 0; P[12] = 0;
+  denom = (v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+  if(denom > 0)
+    f = 2.0 / denom;
+  else
+    f = 0.;
 
-  f=2.0/q;
-  P[5]=1.0-f*v[0]*v[0]; P[9]=-f*v[0]*v[1];     P[13]=-f*v[0]*v[2];
-  P[6]=-f*v[1]*v[0];    P[10]=1.0-f*v[1]*v[1]; P[14]=-f*v[1]*v[2];
-  P[7]=-f*v[2]*v[0];    P[11]=-f*v[2]*v[1];    P[15]=1.0-f*v[2]*v[2];
+  t1[0] = 1; t1[4] = 0; t1[8] = 0; t1[12] = 0;
+  t1[1] = 0;
+  t1[2] = 0;
+  t1[3] = 0;
   
-  mult4x4<T>(Q2, P, Q);
-  mult4x4<T>(t2, t, P);
-  mult4x4<T>(t, P, t2);
+  t1[5] = 1. - f * v[0] * v[0]; t1[9] = -f * v[0] * v[1];      t1[13] = -f * v[0] * v[2];
+  t1[6] = -f * v[1] * v[0];     t1[10] = 1. - f * v[1] * v[1]; t1[14] = -f * v[1] * v[2];
+  t1[7] = -f * v[2] * v[0];     t1[11]= -f * v[2] * v[1];      t1[15] = 1. - f * v[2] * v[2];
 
-  // k=2 loop
-  v[0] = t[6];
-  v[1] = t[7];
-  r = std::sqrt(v[0]*v[0] + v[1]*v[1]);
-  v[0] += r;
-  q = v[0]*v[0] + v[1]*v[1];
-  P[0]=1; P[4] = 0; P[8] = 0;  P[12]=0;
-  P[1]=0; P[5] = 1; P[9] = 0;  P[13]=0;
-  P[2]=0; P[6] = 0; 
-  P[3]=0; P[7] = 0;
+  matMult4<T>(t2, A, t1);
+  matMult4<T>(D, t1, t2);
 
-  f=2.0/q;
-  P[10] = 1 - f * v[0] * v[0]; P[14]=-f*v[1]*v[0];
-  P[11] = -f*v[0]*v[1];        P[15]=1 - f*v[1]*v[1];
+  v[0] = D[6];
+  v[1] = D[7];
+  v[0] += sqrt(v[0] * v[0] + v[1] * v[1]);
+
+  denom = (v[0] * v[0] + v[1] * v[1]);
+  if(denom > 0)
+    f = 2.0 / denom;
+  else
+    f = 0.;
+
+  t2[0] = 1; t2[4] = 0; t2[8] = 0; t2[12] = 0;
+  t2[1] = 0; t2[5] = 1; t2[9] = 0; t2[13] = 0;
+  t2[2] = 0; t2[6] = 0; 
+  t2[3] = 0; t2[7] = 0;
+
+  t2[10] = 1 - f * v[0] * v[0]; t2[14] = -f * v[1] * v[0];
+  t2[11] = -f * v[0] * v[1];    t2[15] = 1 - f * v[1] * v[1];
  
-  mult4x4<T>(Q, P, Q2);
-  mult4x4<T>(t2, t, P);
-  mult4x4<T>(t, P, t2);
+  matMult4<T>(Q, t2, t1);
+  matMult4<T>(t1, D, t2);
+  matMult4<T>(D, t2, t1);
 }
-*/
-
 
 } // namespace helper
 } // namespace prost 

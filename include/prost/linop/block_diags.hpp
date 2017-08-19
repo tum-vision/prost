@@ -85,6 +85,9 @@ protected:
   static size_t cmem_counter_;
 };
 
+  template<> size_t BlockDiags<float>::cmem_counter_;
+  template<> size_t BlockDiags<double>::cmem_counter_;
+  
 }
 
 #endif // PROST_BLOCK_DIAGS_HPP_

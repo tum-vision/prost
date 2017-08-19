@@ -30,6 +30,9 @@ namespace prost {
 ///        Implements linear operator for kron(speye(diaglength), M),
 ///        where M is a small sparse matrix.
 ///
+/// TODO: * add option to explicitly store transpose (less memory efficient
+///         but faster)
+///       * compare against running cublas*gemv in parallel
 template<typename T>
 class BlockIdKronDense : public Block<T>
 {
