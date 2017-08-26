@@ -28,6 +28,9 @@ struct ElemOperationMass4 : public ElemOperation<6, 0>
     
     T M[16], Q[16], D[16];
     T U[4], S[2], V[4], FinalU[16];
+
+    // TODO: implement multiplications with P and P^T more efficiently 
+    // this is simply swapping of rows/cols
     const T P[16] = { 1, 0, 0, 0,
 			   0, 0, 1, 0,
 			   0, 1, 0, 0,
@@ -52,6 +55,7 @@ struct ElemOperationMass4 : public ElemOperation<6, 0>
 		       0, 0, U[0], U[1],
 		       0, 0, U[2], U[3] };
     
+    // TODO: the first two can be trivially avoided
     helper::matMult4_BT<T>(FinalU, Blk, P);
     helper::matMult4<T>(Blk, P, FinalU);
     helper::matMult4_AT<T>(FinalU, Q, Blk);
@@ -103,12 +107,73 @@ struct ElemOperationMass5 : public ElemOperation<10, 0>
     T tau_scal,
     bool invert_tau)
   {
-    // TODO
+    const T tau = invert_tau ? (1. / (tau_scal * tau_diag[0])) : (tau_scal * tau_diag[0]);
+    
+    T M[25], Q[25], D[25];
+    T U[4], S[4], V[4];
+    T Givens1[25], Givens2[25];
+
+    // construct skew symmetric matrix
+    M[ 0] = 0;       M[ 5] = arg[0];  M[10] = arg[1];  M[15] = arg[2];  M[20] = arg[3];
+    M[ 1] = -arg[0]; M[ 6] = 0;       M[11] = arg[4];  M[16] = arg[5];  M[21] = arg[6];
+    M[ 2] = -arg[1]; M[ 7] = -arg[4]; M[12] = 0;       M[17] = arg[7];  M[22] = arg[8];
+    M[ 3] = -arg[2]; M[ 8] = -arg[5]; M[13] = -arg[7]; M[18] = 0;       M[23] = arg[9];
+    M[ 4] = -arg[3]; M[ 9] = -arg[6]; M[14] = -arg[8]; M[19] = -arg[9]; M[24] = 0;
+
+    // bring into tri-diagonal form
+    helper::skewReduce5<T>(M, Q, D);    
+
+    // reduce to 4x4 case using Givens rotations
+    helper::givens5<T>(D, 4, 2, 3, Givens1);
+    helper::givens5<T>(D, 4, 0, 1, Givens2);
+
+    // perform SVD on reduced 2x2 matrix
+    T J[4] = { D[5], 0, D[7], D[17] };
+    helper::computeSVD2x2<T>(J, U, S, V);
+    
+    // compute U matrix
+    T Blk[25] = { V[0], 0, V[1], 0, 0,
+                  0, U[0], 0, U[1], 0,
+                  V[2], 0, V[3], 0, 0,
+                  0, U[2], 0, U[3], 0, 
+                  0, 0, 0, 0, 1 };
+
+    // Input = M * Xi * M';
+    helper::matMultn<T, 5>(M, Givens2, Blk);
+    helper::matMultn<T, 5>(Blk, Givens1, M);
+    helper::matMultn_AT<T, 5>(M, Q, Blk);
     
     if(conjugate) {
+      S[0] = min(max(S[0], static_cast<T>(-1.)), static_cast<T>(1.));
+      S[1] = min(max(S[1], static_cast<T>(-1.)), static_cast<T>(1.));
     }
     else {
+      const Function1DAbs<T> shrink;
+      S[0] = shrink(S[0], tau, 0., 0.);
+      S[1] = shrink(S[1], tau, 0., 0.);
     }
+
+    // reconstruct result
+    T Xi[25] = { 0, -S[0], 0, 0, 0, 
+		 S[0], 0, 0, 0, 0, 
+		 0, 0, 0, S[1], 0,  
+		 0, 0, -S[1], 0, 0,
+		 0, 0, 0, 0, 0 };
+
+    helper::matMultn_BT<T, 5>(Blk, Xi, M); // TODO: optimize this
+    helper::matMultn<T, 5>(Q, M, Blk);
+
+    // convert back into 2-vector
+    res[0] = Q[5];
+    res[1] = Q[10];
+    res[2] = Q[15];
+    res[3] = Q[20];
+    res[4] = Q[11];
+    res[5] = Q[16];
+    res[6] = Q[21];
+    res[7] = Q[17];
+    res[8] = Q[22];
+    res[9] = Q[23];
   }
 
 };

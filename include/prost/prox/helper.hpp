@@ -436,6 +436,169 @@ inline __host__ __device__ void skewReduce4(const T *A, T *Q, T *D) {
   matMult4<T>(D, t2, t1);
 }
 
+/// 
+/// \brief Multiplies two n x n matrices (assume column-first ordering)
+///        X = A * B;
+/// 
+template<typename T, int n>
+inline  __host__ __device__ void matMultn(T *X, const T *A, const T *B) {
+  for(int i=0;i<n;i++)
+    for(int j=0;j<n;j++) {
+      T ip = 0;
+      for(int k=0;k<n;k++)
+        ip += A[i+k*n] * B[k+j*n];
+
+      X[i+j*n] = ip;
+    }
+}
+template<typename T, int n>
+inline  __host__ __device__ void matMultn_AT(T *X, const T *A, const T *B) {
+  for(int i=0;i<n;i++)
+    for(int j=0;j<n;j++) {
+      T ip = 0;
+      for(int k=0;k<n;k++)
+        ip += A[k+i*n] * B[k+j*n];
+
+      X[i+j*n] = ip;
+    }
+}
+  template<typename T, int n>
+inline  __host__ __device__ void matMultn_BT(T *X, const T *A, const T *B) {
+  for(int i=0;i<n;i++)
+    for(int j=0;j<n;j++) {
+      T ip = 0;
+      for(int k=0;k<n;k++)
+        ip += A[i+k*n] * B[j+k*n];
+
+      X[i+j*n] = ip;
+    }
+}
+
+/// 
+/// \brief Reduce a 5x5 skew-symmetric matrix to tridiagonal form
+///        A = Q * D * Q';
+///
+template<typename T>
+inline __host__ __device__ void skewReduce5(const T *A, T *Q, T *D) {
+  T v[4], f, denom;
+  T tmp1[25], tmp2[25]; // temporary variables
+
+  // loop (k=1)
+  T r = sqrt(A[1]*A[1] + A[2]*A[2] + A[3]*A[3] + A[4]*A[4]);
+  for(int i = 0; i < 4; i++) v[i] = A[i + 1];
+  v[0] += r;
+
+  denom = v[0]*v[0] + v[1]*v[1] + v[2]*v[2] + v[3]*v[3];
+  f = (denom > 0) ? (2. / denom) : (0.);
+
+  Q[0] = 1; Q[5] = 0; Q[10] = 0; Q[15] = 0; Q[20] = 0;
+  Q[1] = 0; Q[2] = 0; Q[3] = 0; Q[4] = 0;
+
+  Q[ 6] = 1.-f*v[0]*v[0]; Q[11] = 0.-f*v[1]*v[0]; Q[16] = 0.-f*v[2]*v[0]; Q[21] = 0.-f*v[3]*v[0];            
+  Q[ 7] = 0.-f*v[1]*v[0]; Q[12] = 1.-f*v[1]*v[1]; Q[17] = 0.-f*v[2]*v[1]; Q[22] = 0.-f*v[3]*v[1];            
+  Q[ 8] = 0.-f*v[2]*v[0]; Q[13] = 0.-f*v[2]*v[1]; Q[18] = 1.-f*v[2]*v[2]; Q[23] = 0.-f*v[3]*v[2];            
+  Q[ 9] = 0.-f*v[3]*v[0]; Q[14] = 0.-f*v[3]*v[1]; Q[19] = 0.-f*v[2]*v[3]; Q[24] = 1.-f*v[3]*v[3];            
+
+  matMultn<T, 5>(tmp2, A, Q);
+  matMultn<T, 5>(D, Q, tmp2);
+
+  // loop (k=2)
+  for(int i = 0; i < 3; i++) v[i] = D[5 + (i + 2)];
+  r = sqrt(v[0]*v[0] + v[1]*v[1] + v[2]*v[2]);
+  v[0] += r;
+
+  denom = v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
+  f = (denom > 0) ? (2. / denom) : (0.);
+
+  tmp1[0] = 1; tmp1[5] = 0; tmp1[10] = 0; tmp1[15] = 0; tmp1[20] = 0;
+  tmp1[1] = 0; tmp1[6] = 1; tmp1[11] = 0; tmp1[16] = 0; tmp1[21] = 0;
+  tmp1[2] = 0; tmp1[7] = 0; 
+  tmp1[3] = 0; tmp1[8] = 0; 
+  tmp1[4] = 0; tmp1[9] = 0; 
+
+  tmp1[12] = 1.-f*v[0]*v[0]; tmp1[17] = 0.-f*v[0]*v[1]; tmp1[22] = 0.-f*v[0]*v[2];
+  tmp1[13] = 0.-f*v[1]*v[0]; tmp1[18] = 1.-f*v[1]*v[1]; tmp1[23] = 0.-f*v[1]*v[2];
+  tmp1[14] = 0.-f*v[2]*v[0]; tmp1[19] = 0.-f*v[2]*v[1]; tmp1[24] = 1.-f*v[2]*v[2];  
+
+  matMultn<T, 5>(tmp2, D, tmp1);
+  matMultn<T, 5>(D, tmp1, tmp2);
+  matMultn<T, 5>(tmp2, tmp1, Q); 
+  
+  // loop (k=3)
+  for(int i = 0; i < 2; i++) v[i] = D[10 + (i + 3)];
+  r = sqrt(v[0]*v[0] + v[1]*v[1]);
+  v[0] += r;
+
+  denom = v[0]*v[0] + v[1]*v[1];
+  f = (denom > 0) ? (2. / denom) : (0.);
+
+  tmp1[0] = 1; tmp1[5] = 0; tmp1[10] = 0; tmp1[15] = 0; tmp1[20] = 0;
+  tmp1[1] = 0; tmp1[6] = 1; tmp1[11] = 0; tmp1[16] = 0; tmp1[21] = 0;
+  tmp1[2] = 0; tmp1[7] = 0; tmp1[12] = 1; tmp1[17] = 0; tmp1[22] = 0;
+  tmp1[3] = 0; tmp1[8] = 0; tmp1[13] = 0;
+  tmp1[4] = 0; tmp1[9] = 0; tmp1[14] = 0;
+
+  tmp1[18] = 1.-f*v[0]*v[0]; tmp1[23] = 0.-f*v[0]*v[1]; 
+  tmp1[19] = 0.-f*v[1]*v[0]; tmp1[24] = 1.-f*v[1]*v[1]; 
+
+  matMultn<T, 5>(Q, tmp1, tmp2); 
+  matMultn<T, 5>(tmp2, D, tmp1);
+  matMultn<T, 5>(D, tmp1, tmp2);
+}
+
+template<typename T>
+inline __host__ __device__ void givens5(T *X, int i, int j, int k, T *M) {
+
+  T temp[25];
+  const T x1 = X[k + j * 5];
+  const T x2 = X[k + i * 5];
+  
+  T ga = 1, gb = 0, gc = 0, gd = 1;
+
+  if(std::abs(x2) > 0) {
+    const T nm = sqrt(x1*x1+x2*x2);
+    ga = x1 / nm;
+    gc = x2 / nm;
+    gb = -gc;
+    gd = ga;
+  }
+
+  M[ 0] = 1.; M[ 5] = 0.; M[10] = 0.; M[15] = 0.; M[20] = 0.; 
+  M[ 1] = 0.; M[ 6] = 1.; M[11] = 0.; M[16] = 0.; M[21] = 0.; 
+  M[ 2] = 0.; M[ 7] = 0.; M[12] = 1.; M[17] = 0.; M[22] = 0.; 
+  M[ 3] = 0.; M[ 8] = 0.; M[13] = 0.; M[18] = 1.; M[23] = 0.; 
+  M[ 4] = 0.; M[ 9] = 0.; M[14] = 0.; M[19] = 0.; M[24] = 1.; 
+
+  M[i + i * 5] = ga;
+  M[j + j * 5] = gd;
+  M[i + j * 5] = gc;
+  M[j + i * 5] = gb;
+  
+  int c, r;
+
+  for(c = 0; c < 5; c++) 
+    if(c == i) 
+      for(r=0;r<5;r++) 
+	temp[r + c * 5] = ga * X[r + i * 5] + gb * X[r + j * 5];
+    else if(c == j) 
+      for(r=0;r<5;r++) 
+	temp[r + c * 5] = gc * X[r + i * 5] + gd * X[r + j * 5];
+    else 
+      for(r=0;r<5;r++) 
+	temp[r + c * 5] = X[r + c * 5];    
+  
+  for(c = 0; c < 5; c++) 
+    if(c == i) 
+      for(r=0;r<5;r++) 
+	X[c + r * 5] = ga * temp[i + r * 5] + gb * temp[j + r * 5];
+    else if(c == j) 
+      for(r=0;r<5;r++) 
+	X[c + r * 5] = gc * temp[i + r * 5] + gd * temp[j + r * 5];
+    else 
+      for(r=0;r<5;r++) 
+	X[c + r * 5] = temp[c + r * 5];    
+}
+
 } // namespace helper
 } // namespace prost 
 
