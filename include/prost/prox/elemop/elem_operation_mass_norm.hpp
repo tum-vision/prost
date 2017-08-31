@@ -61,11 +61,11 @@ struct ElemOperationMass4 : public ElemOperation<6, 0>
     helper::matMult4_AT<double>(FinalU, Q, Blk);
 
     if(conjugate) {
-      S[0] = fmin(fmax(S[0], (double)-0.5), (double)0.5);
-      S[1] = fmin(fmax(S[1], (double)-0.5), (double)0.5);
+      S[0] = fmin(fmax(S[0], (double)-1), (double)1);
+      S[1] = fmin(fmax(S[1], (double)-1), (double)1);
     }
     else {
-      const Function1DAbs<double> shrink;
+      Function1DAbs<double> shrink;
       S[0] = shrink(S[0], tau, 0., 0.);
       S[1] = shrink(S[1], tau, 0., 0.);
     }
@@ -144,11 +144,11 @@ struct ElemOperationMass5 : public ElemOperation<10, 0>
     helper::matMultn_AT<double, 5>(M, Q, Blk);
     
     if(conjugate) {
-      S[0] = fmin(fmax(S[0], (double)-0.5), (double)0.5);
-      S[1] = fmin(fmax(S[1], (double)-0.5), (double)0.5);
+      S[0] = fmin(fmax(S[0], (double)-1), (double)1);
+      S[1] = fmin(fmax(S[1], (double)-1), (double)1);
     }
     else {
-      const Function1DAbs<double> shrink;
+      Function1DAbs<double> shrink;
       S[0] = shrink(S[0], tau, 0., 0.);
       S[1] = shrink(S[1], tau, 0., 0.);
     }
