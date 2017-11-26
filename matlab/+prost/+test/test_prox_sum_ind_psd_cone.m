@@ -21,7 +21,7 @@ function [passed] = test_prox_sum_ind_psd_cone()
         [V, S, Y] =eig(M);
        
         J = V*max(0,S)*Y';
-	R(1, i) = J(1,1);
+	    R(1, i) = J(1,1);
         R(2, i) = J(2,1);
         R(3, i) = J(3,1);
         R(4, i) = J(2,2);
