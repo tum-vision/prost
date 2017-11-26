@@ -4,9 +4,11 @@
 #include "prost/linop/linearoperator.hpp"
 #include "prost/linop/block.hpp"
 #include "prost/linop/block_dense.hpp"
+#include "prost/linop/block_dense_kron_id.hpp"
 #include "prost/linop/block_diags.hpp"
 #include "prost/linop/block_gradient2d.hpp"
 #include "prost/linop/block_gradient3d.hpp"
+#include "prost/linop/block_id_kron_dense.hpp"
 #include "prost/linop/block_id_kron_sparse.hpp"
 #include "prost/linop/block_sparse.hpp"
 #include "prost/linop/block_sparse_kron_id.hpp"
@@ -23,10 +25,13 @@
 #include "prost/prox/elemop/elem_operation_ind_simplex.hpp"
 #include "prost/prox/elemop/elem_operation_singular_nx2.hpp"
 #include "prost/prox/elemop/elem_operation_ind_psd_cone_3x3.hpp"
+#include "prost/prox/elemop/elem_operation_mass_norm.hpp"
 
 #include "prost/prox/elemop/function_1d.hpp"
 #include "prost/prox/elemop/function_2d.hpp"
 #include "prost/prox/prox_ind_epi_quad.hpp"
+#include "prost/prox/prox_ind_halfspace.hpp"
+#include "prost/prox/prox_ind_soc.hpp"
 #include "prost/prox/prox_moreau.hpp"
 #include "prost/prox/prox_transform.hpp"
 #include "prost/prox/prox_zero.hpp"
@@ -51,7 +56,7 @@ using std::shared_ptr;
 using std::map;
 
 bool SolverIntermCallback(int iter, const vector<real>& primal, const vector<real>& dual);
-     
+
 shared_ptr<prost::Prox<real>>    CreateProx(const mxArray *pm);
 shared_ptr<prost::Block<real>>   CreateBlock(const mxArray *pm);
 shared_ptr<prost::Backend<real>> CreateBackend(const mxArray *pm);
@@ -62,8 +67,15 @@ map<string, function<prost::Prox<real>*(size_t, size_t, bool, const mxArray*)>>&
 map<string, function<prost::Block<real>*(size_t, size_t, const mxArray*)>>& get_block_reg();
 
 // prox operator create functions
+prost::ProxIndSOC<real>*
+CreateProxIndSOC(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+
+prost::ProxIndHalfspace<real>*
+CreateProxIndHalfspace(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+
 prost::ProxIndEpiQuad<real>*
 CreateProxIndEpiQuad(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+
 prost::ProxElemOperation<real, prost::ElemOperationIndSimplex<real> >*
 CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
@@ -71,10 +83,8 @@ template<class FUN_2D>
 prost::ProxElemOperation<real, prost::ElemOperationSingularNx2<real, FUN_2D> >*
 CreateProxElemOperationSingularNx2(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
-    
 prost::ProxElemOperation<real, prost::ElemOperationIndPsdCone3x3<real> >*
 CreateProxElemOperationIndPsdCone3x3(size_t idx, size_t size, bool diagsteps, const mxArray *data);
-
     
 template<class FUN_1D>
 prost::ProxElemOperation<real, prost::ElemOperationNorm2<real, FUN_1D> >*
@@ -83,7 +93,15 @@ CreateProxElemOperationNorm2(size_t idx, size_t size, bool diagsteps, const mxAr
 template<class FUN_1D>
 prost::ProxElemOperation<real, prost::ElemOperation1D<real, FUN_1D> >*
 CreateProxElemOperation1D(size_t idx, size_t size, bool diagsteps, const mxArray *data);
- 
+
+  template<bool conjugate>
+  prost::ProxElemOperation<real, prost::ElemOperationMass4<real, conjugate> >*
+  CreateProxElemOperationMass4(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+  
+  template<bool conjugate>
+  prost::ProxElemOperation<real, prost::ElemOperationMass5<real, conjugate> >*
+  CreateProxElemOperationMass5(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+  
 prost::ProxMoreau<real>*
 CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
@@ -117,6 +135,12 @@ CreateBlockGradient2D(size_t row, size_t col, const mxArray *pm);
 
 prost::BlockGradient3D<real>*
 CreateBlockGradient3D(size_t row, size_t col, const mxArray *pm);  
+
+prost::BlockIdKronDense<real>*
+CreateBlockIdKronDense(size_t row, size_t col, const mxArray *pm);
+
+prost::BlockDenseKronId<real>*
+CreateBlockDenseKronId(size_t row, size_t col, const mxArray *pm);
   
 // backends
 prost::BackendPDHG<real>* 

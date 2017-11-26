@@ -35,8 +35,7 @@ set(CMAKE_SHARED_LIBRARY_PREFIX)
 if(APPLE OR MSVC)
   set(CMAKE_CXX_COMPILE_OBJECT
     "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -outdir <OBJECT_DIR> -c <SOURCE>; mv <OBJECT_DIR>/$$(basename <SOURCE> .cpp).o <OBJECT>")
-else() 
-
+else()
   if(${GCC_MAJOR} GREATER 4)
     set(CMAKE_CXX_COMPILE_OBJECT
       "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -outdir <OBJECT_DIR> -c <SOURCE>; mv <OBJECT_DIR>/$$(basename <SOURCE> .cpp).o <OBJECT>")
@@ -53,6 +52,8 @@ set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS) # remove -shared options as mex does 
 if(APPLE)
   # this hack is necessary, as FindCUDA adds rpath under MacOSX and mex does not accept it
   set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> -cxx <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -output <TARGET> <OBJECTS> -lut -lcudart -lcusparse -lcublas -lprost -L${CMAKE_BINARY_DIR}/src")
+elseif(UNIX)
+  set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> -cxx <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -output <TARGET> <OBJECTS> -lprost -lcublas -lcusparse -lcudart -lut -L${CMAKE_BINARY_DIR}/src")
 else()
   set(CMAKE_CXX_CREATE_SHARED_LIBRARY "<CMAKE_CXX_COMPILER> -cxx <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS> -output <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 endif()
@@ -83,7 +84,7 @@ if(MSVC)
   set_property(TARGET prost_ PROPERTY LINK_FLAGS "/export:mexFunction")
   set_property(TARGET prost_ PROPERTY  _CRT_SECURE_NO_WARNINGS )
 else()
-  target_link_libraries( prost_ prost ut ${CUDA_cusparse_LIBRARY} ${CUDA_cublas_LIBRARY}) #cusparse cublas )
+  target_link_libraries( prost_ prost libut ${CUDA_cusparse_LIBRARY} ${CUDA_cublas_LIBRARY}) #cusparse cublas )
   add_dependencies( prost_ prost ) #required.
 endif()
 

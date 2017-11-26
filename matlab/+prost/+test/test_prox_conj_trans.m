@@ -1,26 +1,23 @@
-function [passed] = test_prox_transform()
+function [passed] = test_prox_conj_trans()
 
     for i=1:10
-        N=5000;
-        a = rand(N, 1);
+        N=500;
         b = rand(N, 1);
-        c = rand(N, 1);
-        d = rand(N, 1);
-        e = rand(N, 1);
+
         y = rand(N, 1);
         tau = rand(1, 1);
         Tau = rand(N, 1);
 
-        %% evaluate prox directly
+        %% evaluate shifted prox directly
         x = prost.eval_prox( prost.function.conjugate(prost.function.sum_1d('abs', ...
-                                           a, b, c, d, e)), y, ...
-                             tau, Tau);
+                                                          1, b, 1, 0, 0)), ...
+                             y, tau, Tau);
     
-        %% evaluate prox via transformation
+        %% evaluate using the conjugate shifting formula
         prox_1d = prost.function.sum_1d('abs', 1, 0, 1, 0, 0);
         
-        x2 = prost.eval_prox( prost.function.conjugate(prost.function.transform( ...
-            prox_1d, a, b, c, d, e)), y, tau, Tau );
+        x2 = prost.eval_prox( prost.function.transform(...
+            prost.function.conjugate(prox_1d), 1, 0, 1, b, 0), y, tau, Tau );
 
         %% check if result is the same
         diff = x - x2;

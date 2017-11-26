@@ -10,10 +10,9 @@ namespace prost {
     
     ///
     /// \brief Provides proximal operator for the indicator function of the cone of positive semidefinite matrices.
-    /// The input has to be a real symmetric 3x3 matrix, where the lower triangluar matrix is handed over as a 6d vector.
-    ///
+    /// The input has to be a vectorized real 3x3 matrix.
     template<typename T>
-    struct ElemOperationIndPsdCone3x3 : public ElemOperation<6, 0>
+    struct ElemOperationIndPsdCone3x3 : public ElemOperation<9, 0>
     {
         
         __host__ __device__
@@ -294,18 +293,18 @@ namespace prost {
                         T tau_scal,
                         bool invert_tau)
         {
-            // compute A^T * A
+            // compute A^T + A
             //Eigen::Matrix3f ata;
             double A[3][3];
-            A[0][0] = arg[0];
-            A[1][0] = arg[1];
-            A[2][0] = arg[2];
-            A[0][1] = arg[1];
-            A[1][1] = arg[3];
-            A[2][1] = arg[4];
-            A[0][2] = arg[2];
-            A[1][2] = arg[4];
-            A[2][2] = arg[5];
+            A[0][0] = arg[0] + arg[0];
+            A[1][0] = arg[1] + arg[3];
+            A[2][0] = arg[2] + arg[6];
+            A[0][1] = arg[3] + arg[1];
+            A[1][1] = arg[4] + arg[4];
+            A[2][1] = arg[5] + arg[7];
+            A[0][2] = arg[6] + arg[2];
+            A[1][2] = arg[7] + arg[5];
+            A[2][2] = arg[8] + arg[8];
             
             double V[3][3];
             double eig[3];
@@ -313,9 +312,9 @@ namespace prost {
             //dsyevv3(A, V, eig);
             eigen_decomposition(A, V, eig);
             
-            eig[0] = eig[0] < 0 ? 0.0 : eig[0];
-            eig[1] = eig[1] < 0 ? 0.0 : eig[1];
-            eig[2] = eig[2] < 0 ? 0.0 : eig[2];
+            eig[0] = eig[0] < 0 ? 0.0 : 0.5*eig[0];
+            eig[1] = eig[1] < 0 ? 0.0 : 0.5*eig[1];
+            eig[2] = eig[2] < 0 ? 0.0 : 0.5*eig[2];
             
             // compute T = V * S * V^T
             double t11 = V[0][0] * V[0][0] * eig[0] + V[0][1] * V[0][1] * eig[1] + V[0][2] * V[0][2] * eig[2];
@@ -333,9 +332,12 @@ namespace prost {
             res[0] = t11;
             res[1] = t21;
             res[2] = t31;
-            res[3] = t22;
-            res[4] = t32;
-            res[5] = t33;
+            res[3] = t12;
+            res[4] = t22;
+            res[5] = t32;
+            res[6] = t13;
+            res[7] = t23;
+            res[8] = t33;
         }
     };
     

@@ -16,6 +16,10 @@ if(UNIX)
   list(APPEND CUDA_NVCC_FLAGS -std=c++11)
 endif()
 
+if(APPLE)
+  list(APPEND CUDA_NVCC_FLAGS -Wno-deprecated-gpu-targets)
+endif()
+
 #list(APPEND CUDA_NVCC_FLAGS "-gencode=arch=compute_52,code=sm_52 -gencode=arch=compute_20,code=sm_21")
 list(APPEND CUDA_NVCC_FLAGS ${PROST_NVCC_FLAGS})
 
@@ -23,9 +27,11 @@ set(SOURCES
 
   "linop/block.cu"
   "linop/block_dense.cu"
+  "linop/block_dense_kron_id.cu"
   "linop/block_diags.cu"
   "linop/block_gradient2d.cu"
   "linop/block_gradient3d.cu"
+  "linop/block_id_kron_dense.cu"
   "linop/block_id_kron_sparse.cu"
   "linop/block_sparse.cu"
   "linop/block_sparse_kron_id.cu"
@@ -36,6 +42,8 @@ set(SOURCES
   "prox/prox.cu"
   "prox/prox_elem_operation.cu"
   "prox/prox_ind_epi_quad.cu"
+  "prox/prox_ind_halfspace.cu"
+  "prox/prox_ind_soc.cu"
   "prox/prox_moreau.cu"
   "prox/prox_transform.cu"
   "prox/prox_zero.cu"
@@ -49,9 +57,11 @@ set(SOURCES
 
   "../include/prost/linop/block.hpp"
   "../include/prost/linop/block_dense.hpp"
+  "../include/prost/linop/block_dense_kron_id.hpp"
   "../include/prost/linop/block_diags.hpp"
   "../include/prost/linop/block_gradient2d.hpp"
   "../include/prost/linop/block_gradient3d.hpp"
+  "../include/prost/linop/block_id_kron_dense.hpp"
   "../include/prost/linop/block_id_kron_sparse.hpp"
   "../include/prost/linop/block_sparse.hpp"
   "../include/prost/linop/block_sparse_kron_id.hpp"
@@ -63,6 +73,8 @@ set(SOURCES
   "../include/prost/prox/prox_separable_sum.hpp"
   "../include/prost/prox/prox_elem_operation.hpp"
   "../include/prost/prox/prox_ind_epi_quad.hpp"
+  "../include/prost/prox/prox_ind_halfspace.hpp"
+  "../include/prost/prox/prox_ind_soc.hpp"
   "../include/prost/prox/prox_moreau.hpp"
   "../include/prost/prox/prox_transform.hpp"
   "../include/prost/prox/prox_zero.hpp"

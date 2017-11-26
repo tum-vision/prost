@@ -1,4 +1,4 @@
-function [passed] = test_prox_transform()
+function [passed] = test_prox_conjugate()
 
     for i=1:10
         N=5000;
@@ -12,15 +12,15 @@ function [passed] = test_prox_transform()
         Tau = rand(N, 1);
 
         %% evaluate prox directly
-        x = prost.eval_prox( prost.function.conjugate(prost.function.sum_1d('abs', ...
-                                           a, b, c, d, e)), y, ...
-                             tau, Tau);
+        x = prost.eval_prox( prost.function.sum_1d('abs', ...
+                                                   a, b, c, d, e), ...
+                             y, tau, Tau);
     
-        %% evaluate prox via transformation
-        prox_1d = prost.function.sum_1d('abs', 1, 0, 1, 0, 0);
+        %% evaluate the biconjugate
+        prox_1d = prost.function.sum_1d('abs', a, b, c, d, e);
         
-        x2 = prost.eval_prox( prost.function.conjugate(prost.function.transform( ...
-            prox_1d, a, b, c, d, e)), y, tau, Tau );
+        x2 = prost.eval_prox( prost.function.conjugate(prost.function.conjugate( ...
+            prox_1d)), y, tau, Tau );
 
         %% check if result is the same
         diff = x - x2;

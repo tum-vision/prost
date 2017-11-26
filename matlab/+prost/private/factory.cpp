@@ -58,7 +58,13 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
   { "elem_operation:singular_nx2:sum_1d:huber",       CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DHuber<real>>>      },
   { "elem_operation:singular_nx2:ind_l1_ball",        CreateProxElemOperationSingularNx2<Function2DIndL1Ball<real>>                         },
   { "elem_operation:singular_nx2:moreau:ind_l1_ball", CreateProxElemOperationSingularNx2<Function2DMoreau<real, Function2DIndL1Ball<real>>> },
+  { "elem_operation:mass4",                           CreateProxElemOperationMass4<false>                                                   },
+  { "elem_operation:ind_comass4_ball",                CreateProxElemOperationMass4<true>                                                    },
+  { "elem_operation:mass5",                           CreateProxElemOperationMass5<false>                                                   },
+  { "elem_operation:ind_comass5_ball",                CreateProxElemOperationMass5<true>                                                    },
   { "ind_epi_quad",                                   CreateProxIndEpiQuad                                                                  },
+  { "ind_halfspace",                                  CreateProxIndHalfspace                                                                },
+  { "ind_soc",                                        CreateProxIndSOC                                                                      },
   { "moreau",                                         CreateProxMoreau                                                                      },
   { "transform",                                      CreateProxTransform                                                                   },
   { "zero",                                           CreateProxZero                                                                        },
@@ -69,8 +75,10 @@ const static map<string, function<Block<real>*(size_t, size_t, const mxArray*)>>
   { "diags",          CreateBlockDiags        },
   { "gradient2d",     CreateBlockGradient2D   },
   { "gradient3d",     CreateBlockGradient3D   },
+  { "id_kron_dense",  CreateBlockIdKronDense  },
   { "id_kron_sparse", CreateBlockIdKronSparse },
   { "sparse",         CreateBlockSparse       },
+  { "dense_kron_id",  CreateBlockDenseKronId  },
   { "sparse_kron_id", CreateBlockSparseKronId },
   { "zero",           CreateBlockZero         },
 };
@@ -334,6 +342,64 @@ CreateProxIndEpiQuad(size_t idx, size_t size, bool diagsteps, const mxArray *dat
   return new ProxIndEpiQuad<real>(idx, count, dim, interleaved, diagsteps, a, b, c);   
 }
 
+prost::ProxIndSOC<real>*
+CreateProxIndSOC(size_t idx, size_t size, bool diagsteps, const mxArray *data)
+{
+  size_t count = GetScalarFromCellArray<size_t>(data, 0);
+  size_t dim = GetScalarFromCellArray<size_t>(data, 1);
+  bool interleaved = GetScalarFromCellArray<bool>(data, 2);
+
+  real alpha = GetScalarFromCellArray<real>(data, 3);
+
+  return new ProxIndSOC<real>(idx, count, dim, interleaved, diagsteps, alpha);
+}
+
+prost::ProxIndHalfspace<real>*
+CreateProxIndHalfspace(size_t idx, size_t size, bool diagsteps, const mxArray *data)
+{
+  size_t count = GetScalarFromCellArray<size_t>(data, 0);
+  size_t dim = GetScalarFromCellArray<size_t>(data, 1);
+  bool interleaved = GetScalarFromCellArray<bool>(data, 2);
+  const mxArray *coeffs = mxGetCell(data, 3);
+
+  std::vector<real> a = GetVector<real>(mxGetCell(coeffs, 0));
+  std::vector<real> b = GetVector<real>(mxGetCell(coeffs, 1));
+  
+  return new ProxIndHalfspace<real>(idx, count, dim, interleaved, diagsteps, a, b);   
+}
+
+template<bool conjugate>
+ProxElemOperation<real, ElemOperationMass4<real, conjugate> >*
+CreateProxElemOperationMass4(size_t idx, size_t size, bool diagsteps, const mxArray *data) {
+
+  size_t count = GetScalarFromCellArray<size_t>(data, 0);
+  size_t dim = GetScalarFromCellArray<size_t>(data, 1);
+  bool interleaved = GetScalarFromCellArray<bool>(data, 2);
+
+  if(dim != 6)
+    throw Exception("Wrong dimension in mass norm prox");
+
+  return new ProxElemOperation<real, ElemOperationMass4<real, conjugate>>(
+    idx, count, dim, interleaved, diagsteps);
+  
+}
+  
+template<bool conjugate>
+ProxElemOperation<real, ElemOperationMass5<real, conjugate> >*
+CreateProxElemOperationMass5(size_t idx, size_t size, bool diagsteps, const mxArray *data) {
+
+  size_t count = GetScalarFromCellArray<size_t>(data, 0);
+  size_t dim = GetScalarFromCellArray<size_t>(data, 1);
+  bool interleaved = GetScalarFromCellArray<bool>(data, 2);
+
+  if(dim != 10)
+    throw Exception("Wrong dimension in mass norm prox");
+
+  return new ProxElemOperation<real, ElemOperationMass5<real, conjugate>>(
+    idx, count, dim, interleaved, diagsteps);
+
+}
+
 BlockDiags<real>*
 CreateBlockDiags(size_t row, size_t col, const mxArray *pm)
 {
@@ -452,6 +518,30 @@ CreateBlockIdKronSparse(size_t row, size_t col, const mxArray *data)
     vec_val,
     vec_ptr,
     vec_ind);
+}
+
+prost::BlockIdKronDense<real>*
+CreateBlockIdKronDense(size_t row, size_t col, const mxArray *pm)
+{
+  size_t nrows = mxGetM(mxGetCell(pm, 0));
+  size_t ncols = mxGetN(mxGetCell(pm, 0));
+  double *data = reinterpret_cast<double *>(mxGetData(mxGetCell(pm, 0)));
+  std::vector<real> r_data(data, data + nrows * ncols);
+  size_t diaglength = GetScalarFromCellArray<size_t>(pm, 1);
+
+  return BlockIdKronDense<real>::CreateFromColFirstData(diaglength, row, col, nrows, ncols, r_data);
+}
+
+prost::BlockDenseKronId<real>*
+CreateBlockDenseKronId(size_t row, size_t col, const mxArray *pm)
+{
+  size_t nrows = mxGetM(mxGetCell(pm, 0));
+  size_t ncols = mxGetN(mxGetCell(pm, 0));
+  double *data = reinterpret_cast<double *>(mxGetData(mxGetCell(pm, 0)));
+  std::vector<real> r_data(data, data + nrows * ncols);
+  size_t diaglength = GetScalarFromCellArray<size_t>(pm, 1);
+
+  return BlockDenseKronId<real>::CreateFromColFirstData(diaglength, row, col, nrows, ncols, r_data);
 }
 
 prost::BlockSparseKronId<real>*

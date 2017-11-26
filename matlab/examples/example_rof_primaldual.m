@@ -49,19 +49,21 @@ tic;
 result = prost.solve(prob, backend, opts);
 toc;
 
+prost.release();
+
 %%
 % show result
-imshow(reshape(u.val, [ny nx nc]));
+%imshow(reshape(u.val, [ny nx nc]));
 
 %%
 % Sanity check: compute residuals "by hand"
-g = prost.variable(2*nx*ny*nc);
-w = prost.variable(nx*ny*nc);
-prost.get_all_variables(result, {u}, {g}, {q}, {w});
+% g = prost.variable(2*nx*ny*nc);
+% w = prost.variable(nx*ny*nc);
+% prost.get_all_variables(result, {u}, {g}, {q}, {w});
 
-Sigma12 = (sum(abs(grad), 2)+eps).^(-1/2);
-Tau12 = sum(abs(grad), 1)'.^(-1/2);
+% Sigma12 = (sum(abs(grad), 2)+eps).^(-1/2);
+% Tau12 = sum(abs(grad), 1)'.^(-1/2);
 
-norm(Sigma12 .* (grad * u.val - g.val), 'fro')
-norm(Tau12 .* (grad' * q.val + w.val), 'fro')
+% norm(Sigma12 .* (grad * u.val - g.val), 'fro')
+% norm(Tau12 .* (grad' * q.val + w.val), 'fro')
 

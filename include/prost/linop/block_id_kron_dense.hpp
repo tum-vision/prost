@@ -1,7 +1,7 @@
 /**
 * This file is part of prost.
 *
-* Copyright 2016 Thomas Möllenhoff <thomas dot moellenhoff at in dot tum dot de> 
+* Copyright 2016 Thomas Möllenhoff <thomas dot moellenhoff at in dot tum dot de>
 * and Emanuel Laude <emanuel dot laude at in dot tum dot de> (Technical University of Munich)
 *
 * prost is free software: you can redistribute it and/or modify
@@ -18,43 +18,43 @@
 * along with prost. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef PROST_BLOCK_DIAGS_HPP_
-#define PROST_BLOCK_DIAGS_HPP_
+#ifndef PROST_BLOCK_ID_KRON_DENSE_HPP_
+#define PROST_BLOCK_ID_KRON_DENSE_HPP_
 
 #include "prost/linop/block.hpp"
 
 namespace prost {
 
 ///
-/// \brief Linear operator implementation of the MATLAB command speye and
-///        to some extend spdiags.
+/// \brief Linear operator composed of many small dense matrices.
+///        Implements linear operator for kron(speye(diaglength), M),
+///        where M is a small sparse matrix.
 ///
-/// \param ndiags: number of diagonals
-/// \param offsets: array of size ndiags, starting position of diagonals
-/// \param factors: array of size ndiags, constant factor each diagonal
-///                 is multiplied with
-
+/// TODO: * add option to explicitly store transpose (less memory efficient
+///         but faster)
+///       * compare against running cublas*gemv in parallel
 template<typename T>
-class BlockDiags : public Block<T> {
+class BlockIdKronDense : public Block<T>
+{
+  BlockIdKronDense(size_t row, size_t col, size_t nrows, size_t ncols);
+
 public:
-  BlockDiags(size_t row,
-	     size_t col,
-	     size_t nrows,
-	     size_t ncols,
-	     size_t ndiags,
-	     const std::vector<ssize_t>& offsets,
-	     const std::vector<T>& factors);
-  
-  virtual ~BlockDiags() {}
+  static BlockIdKronDense<T> *CreateFromColFirstData(
+    size_t diaglength,
+    size_t row,
+    size_t col,
+    size_t nrows,
+    size_t ncols,
+    const std::vector<T>& data);
+
+  virtual ~BlockIdKronDense() {}
 
   virtual void Initialize();
 
-  virtual size_t gpu_mem_amount() const { return 0; }
   virtual T row_sum(size_t row, T alpha) const;
   virtual T col_sum(size_t col, T alpha) const;
 
-  /// \brief Important: has to be called once during initializaiton.
-  static void ResetConstMem() { cmem_counter_ = 0; }
+  virtual size_t gpu_mem_amount() const;
 
 protected:
   virtual void EvalLocalAdd(
@@ -69,25 +69,21 @@ protected:
     const typename device_vector<T>::const_iterator& rhs_begin,
     const typename device_vector<T>::const_iterator& rhs_end);
 
-  /// \brief Start index in constant memory.
-  size_t cmem_offset_;
+private:
+  /// \brief Size of diagonal identity matrix Id for kron(M, Id).
+  size_t diaglength_;
 
-  /// \brief Number of diagonals.
-  size_t ndiags_;
+  /// \brief Number of rows in small dense matrix M.
+  size_t mat_nrows_;
 
-  /// \brief Diagonal offsets.
-  std::vector<ssize_t> offsets_;
+  /// \brief Number of columns in small dense matrix M.
+  size_t mat_ncols_;
 
-  /// \brief Diagonal factors.
-  std::vector<float> factors_;
-
-  /// \brief Allows to handle several BlockDiags.
-  static size_t cmem_counter_;
+  /// \brief GPU/CPU data for dense matrix M
+  device_vector<T> data_;
+  vector<T> host_data_;
 };
 
-  template<> size_t BlockDiags<float>::cmem_counter_;
-  template<> size_t BlockDiags<double>::cmem_counter_;
-  
-}
+} // namespace prost
 
-#endif // PROST_BLOCK_DIAGS_HPP_
+#endif //PROST_BLOCK_ID_KRON_DENSE_HPP_
