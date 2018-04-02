@@ -419,6 +419,9 @@ CreateProxIndRange(size_t idx, size_t size, bool diagsteps, const mxArray *data)
   int nrows = dims[0];
   int ncols = dims[1];
   int nnz = ptr[ncols];
+
+  if(size != nrows)
+    throw Exception("Matrix A does not fit size of the variable!");
   
   // convert from mwIndex -> int32_t, double -> real
   std::vector<real> vec_val(val, val + nnz);
