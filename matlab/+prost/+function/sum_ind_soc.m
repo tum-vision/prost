@@ -1,5 +1,5 @@
 function [func] = sum_ind_soc(dim, interleaved, alpha)
-% SUM_IND_EPI_QUAD  func = sum_ind_soc(dim, interleaved, alpha)
+% SUM_IND_SOC  func = sum_ind_soc(dim, interleaved, alpha)
 %
 %   Computes projection onto the second order cone
 %   \alpha ||x|| \leq y

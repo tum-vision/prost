@@ -43,6 +43,7 @@ set(SOURCES
   "prox/prox_elem_operation.cu"
   "prox/prox_ind_epi_quad.cu"
   "prox/prox_ind_halfspace.cu"
+  "prox/prox_ind_range.cu"
   "prox/prox_ind_soc.cu"
   "prox/prox_moreau.cu"
   "prox/prox_transform.cu"

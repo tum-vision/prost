@@ -55,7 +55,7 @@ double Prox<T>::Eval(
   thrust::device_vector<T> d_res;
   d_res.resize(arg.size());
   const thrust::device_vector<T> d_tau(tau_diag.begin(), tau_diag.end());
-
+  
   const clock_t begin_time = clock();
   for(int i = 0; i < repeats; i++)
   {

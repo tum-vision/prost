@@ -64,6 +64,7 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
   { "elem_operation:ind_comass5_ball",                CreateProxElemOperationMass5<true>                                                    },
   { "ind_epi_quad",                                   CreateProxIndEpiQuad                                                                  },
   { "ind_halfspace",                                  CreateProxIndHalfspace                                                                },
+  { "ind_range",                                      CreateProxIndRange                                                                    },
   { "ind_soc",                                        CreateProxIndSOC                                                                      },
   { "moreau",                                         CreateProxMoreau                                                                      },
   { "transform",                                      CreateProxTransform                                                                   },
@@ -398,6 +399,46 @@ CreateProxElemOperationMass5(size_t idx, size_t size, bool diagsteps, const mxAr
   return new ProxElemOperation<real, ElemOperationMass5<real, conjugate>>(
     idx, count, dim, interleaved, diagsteps);
 
+}
+
+prost::ProxIndRange<real>*
+CreateProxIndRange(size_t idx, size_t size, bool diagsteps, const mxArray *data)
+{
+  ProxIndRange<real> *prox = new ProxIndRange<real>(idx, size, false);
+
+  mxArray *pm = mxGetCell(data, 0);
+
+  if(!mxIsSparse(pm))
+    throw Exception("Matrix A must be sparse!");
+  
+  double *val = mxGetPr(pm);
+  mwIndex *ind = mxGetIr(pm);
+  mwIndex *ptr = mxGetJc(pm);
+  const mwSize *dims = mxGetDimensions(pm);
+
+  int nrows = dims[0];
+  int ncols = dims[1];
+  int nnz = ptr[ncols];
+  
+  // convert from mwIndex -> int32_t, double -> real
+  std::vector<real> vec_val(val, val + nnz);
+  std::vector<int32_t> vec_ptr(ptr, ptr + (ncols + 1));
+  std::vector<int32_t> vec_ind(ind, ind + nnz); 
+  
+  prox->setA(nrows, ncols, nnz, vec_val, vec_ptr, vec_ind);
+
+  pm = mxGetCell(data, 1);
+  if(mxIsSparse(pm))
+    throw Exception("Matrix AA must be dense!");
+  
+  nrows = mxGetM(pm);
+  ncols = mxGetN(pm);
+  double *vals = reinterpret_cast<double *>(mxGetData(pm));  
+  std::vector<real> dense_vals(vals, vals + nrows * ncols);
+
+  prox->setAA(nrows, ncols, dense_vals);
+
+  return prox;
 }
 
 BlockDiags<real>*

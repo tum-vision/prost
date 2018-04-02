@@ -53,7 +53,7 @@ prost.release();
 
 %%
 % show result
-%imshow(reshape(u.val, [ny nx nc]));
+imshow(reshape(u.val, [ny nx nc]));
 
 %%
 % Sanity check: compute residuals "by hand"

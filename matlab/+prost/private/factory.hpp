@@ -31,6 +31,7 @@
 #include "prost/prox/elemop/function_2d.hpp"
 #include "prost/prox/prox_ind_epi_quad.hpp"
 #include "prost/prox/prox_ind_halfspace.hpp"
+#include "prost/prox/prox_ind_range.hpp"
 #include "prost/prox/prox_ind_soc.hpp"
 #include "prost/prox/prox_moreau.hpp"
 #include "prost/prox/prox_transform.hpp"
@@ -67,6 +68,9 @@ map<string, function<prost::Prox<real>*(size_t, size_t, bool, const mxArray*)>>&
 map<string, function<prost::Block<real>*(size_t, size_t, const mxArray*)>>& get_block_reg();
 
 // prox operator create functions
+prost::ProxIndRange<real>*
+CreateProxIndRange(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+  
 prost::ProxIndSOC<real>*
 CreateProxIndSOC(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
