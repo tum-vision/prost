@@ -45,7 +45,6 @@ template<typename T>
 inline __host__ __device__ void  ProjectEpiQuadNd(
      const Vector<T>& x0, const T y0, const T alpha, Vector<T>& x, T& y, size_t dim)
 {
-
   T sq_norm_x0 = static_cast<T>(0);
   for(size_t i = 0; i < dim; i++) {
     sq_norm_x0 += x0[i] * x0[i];

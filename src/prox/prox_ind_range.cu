@@ -73,7 +73,59 @@ namespace prost {
   template<>
   void ProxIndRange<double>::Initialize()
   {
-    throw Exception("ProxIndRange not implemented for double yet!");
+    cusparseCreate(&cusp_handle_);
+    cusolverDnCreate(&cusolver_handle_);
+    
+    cusparseCreateMatDescr(&descr_);
+    cusparseSetMatType(descr_, CUSPARSE_MATRIX_TYPE_GENERAL);
+    cusparseSetMatIndexBase(descr_, CUSPARSE_INDEX_BASE_ZERO);
+
+    // forward
+    ind_.resize(nnz_);
+    val_.resize(nnz_);
+    ptr_.resize(nrows_ + 1);
+
+    // transpose
+    ind_t_.resize(nnz_);
+    val_t_.resize(nnz_);
+    ptr_t_.resize(ncols_ + 1);
+
+    // copy to GPU
+    thrust::copy(host_ind_t_.begin(), host_ind_t_.end(), ind_t_.begin());
+    thrust::copy(host_ptr_t_.begin(), host_ptr_t_.end(), ptr_t_.begin());
+    thrust::copy(host_val_t_.begin(), host_val_t_.end(), val_t_.begin());
+
+    thrust::copy(host_ind_.begin(), host_ind_.end(), ind_.begin());
+    thrust::copy(host_ptr_.begin(), host_ptr_.end(), ptr_.begin());
+    thrust::copy(host_val_.begin(), host_val_.end(), val_.begin());
+
+    // factorize AA
+    AA_fac_.resize(ncols_ * ncols_);
+    AA_val_.resize(ncols_ * ncols_);
+    thrust::copy(host_AA_val_.begin(), host_AA_val_.end(), AA_fac_.begin());
+    thrust::copy(host_AA_val_.begin(), host_AA_val_.end(), AA_val_.begin());
+
+    int bufferSize = 0;
+    cusolverDnDpotrf_bufferSize(cusolver_handle_,
+				CUBLAS_FILL_MODE_LOWER,
+				ncols_,
+				thrust::raw_pointer_cast(AA_val_.data()),
+				ncols_,
+				&bufferSize);
+
+    info_.resize(1);
+    buffer_.resize(bufferSize);
+
+    cusolverDnDpotrf(cusolver_handle_,
+		     CUBLAS_FILL_MODE_LOWER,
+		     ncols_,
+		     thrust::raw_pointer_cast(AA_fac_.data()),
+		     ncols_,
+		     thrust::raw_pointer_cast(buffer_.data()),
+		     bufferSize,
+		     thrust::raw_pointer_cast(info_.data()));
+          
+    temp_.resize(ncols_);
   }
   
   template<>
@@ -151,50 +203,49 @@ namespace prost {
     float tau,
     bool invert_tau)
   {
-  const float alpha = 1;
-  const float beta = 0;
+    const float alpha = 1;
+    const float beta = 0;
 
-  // apply A'
-  cusparseScsrmv(cusp_handle_,
-		 CUSPARSE_OPERATION_NON_TRANSPOSE,
-		 ncols_,
-		 nrows_,
-		 nnz_,
-		 &alpha,
-		 descr_,
-		 thrust::raw_pointer_cast(val_t_.data()),
-		 thrust::raw_pointer_cast(ptr_t_.data()),
-		 thrust::raw_pointer_cast(ind_t_.data()),
-		 thrust::raw_pointer_cast(&(*arg_beg)),
-		 &beta,
-		 thrust::raw_pointer_cast(temp_.data()));
+    // apply A'
+    cusparseScsrmv(cusp_handle_,
+		   CUSPARSE_OPERATION_NON_TRANSPOSE,
+		   ncols_,
+		   nrows_,
+		   nnz_,
+		   &alpha,
+		   descr_,
+		   thrust::raw_pointer_cast(val_t_.data()),
+		   thrust::raw_pointer_cast(ptr_t_.data()),
+		   thrust::raw_pointer_cast(ind_t_.data()),
+		   thrust::raw_pointer_cast(&(*arg_beg)),
+		   &beta,
+		   thrust::raw_pointer_cast(temp_.data()));
     
   // solve system
-  cusolverDnSpotrs(cusolver_handle_,
-		   CUBLAS_FILL_MODE_LOWER,
-		   temp_.size(),
-		   1,
-		   thrust::raw_pointer_cast(AA_fac_.data()),
-		   temp_.size(),
-		   thrust::raw_pointer_cast(temp_.data()),
-		   temp_.size(),
-		   thrust::raw_pointer_cast(info_.data()));
+    cusolverDnSpotrs(cusolver_handle_,
+		     CUBLAS_FILL_MODE_LOWER,
+		     temp_.size(),
+		     1,
+		     thrust::raw_pointer_cast(AA_fac_.data()),
+		     temp_.size(),
+		     thrust::raw_pointer_cast(temp_.data()),
+		     temp_.size(),
+		     thrust::raw_pointer_cast(info_.data()));
       
-  // apply A
-  cusparseScsrmv(cusp_handle_,
-		 CUSPARSE_OPERATION_NON_TRANSPOSE,
-		 nrows_,
-		 ncols_,
-		 nnz_,
-		 &alpha,
-		 descr_,
-		 thrust::raw_pointer_cast(val_.data()),
-		 thrust::raw_pointer_cast(ptr_.data()),
-		 thrust::raw_pointer_cast(ind_.data()),
-		 thrust::raw_pointer_cast(temp_.data()),
-		 &beta,
-		 thrust::raw_pointer_cast(&(*result_beg)));
-
+    // apply A
+    cusparseScsrmv(cusp_handle_,
+		   CUSPARSE_OPERATION_NON_TRANSPOSE,
+		   nrows_,
+		   ncols_,
+		   nnz_,
+		   &alpha,
+		   descr_,
+		   thrust::raw_pointer_cast(val_.data()),
+		   thrust::raw_pointer_cast(ptr_.data()),
+		   thrust::raw_pointer_cast(ind_.data()),
+		   thrust::raw_pointer_cast(temp_.data()),
+		   &beta,
+		   thrust::raw_pointer_cast(&(*result_beg)));
   }
 
   template<>
@@ -208,9 +259,50 @@ namespace prost {
     double tau,
     bool invert_tau)
   {
-    throw Exception("ProxIndRange for double not implemented yet");
-  }
+    const double alpha = 1;
+    const double beta = 0;
 
+    // apply A'
+    cusparseDcsrmv(cusp_handle_,
+		   CUSPARSE_OPERATION_NON_TRANSPOSE,
+		   ncols_,
+		   nrows_,
+		   nnz_,
+		   &alpha,
+		   descr_,
+		   thrust::raw_pointer_cast(val_t_.data()),
+		   thrust::raw_pointer_cast(ptr_t_.data()),
+		   thrust::raw_pointer_cast(ind_t_.data()),
+		   thrust::raw_pointer_cast(&(*arg_beg)),
+		   &beta,
+		   thrust::raw_pointer_cast(temp_.data()));
+    
+    // solve system
+    cusolverDnDpotrs(cusolver_handle_,
+		     CUBLAS_FILL_MODE_LOWER,
+		     temp_.size(),
+		     1,
+		     thrust::raw_pointer_cast(AA_fac_.data()),
+		     temp_.size(),
+		     thrust::raw_pointer_cast(temp_.data()),
+		     temp_.size(),
+		     thrust::raw_pointer_cast(info_.data()));
+      
+    // apply A
+    cusparseDcsrmv(cusp_handle_,
+		   CUSPARSE_OPERATION_NON_TRANSPOSE,
+		   nrows_,
+		   ncols_,
+		   nnz_,
+		   &alpha,
+		   descr_,
+		   thrust::raw_pointer_cast(val_.data()),
+		   thrust::raw_pointer_cast(ptr_.data()),
+		   thrust::raw_pointer_cast(ind_.data()),
+		   thrust::raw_pointer_cast(temp_.data()),
+		   &beta,
+		   thrust::raw_pointer_cast(&(*result_beg)));
+  }
 
   // Explicit template instantiation
   template class ProxIndRange<float>;
