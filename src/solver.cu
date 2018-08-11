@@ -37,6 +37,12 @@ namespace prost {
 using std::cout;
 using std::endl;
 
+template<typename CharT>
+struct Sep : public std::numpunct<CharT>
+{
+  virtual std::string do_grouping()      const   {return "\003";}
+};
+
 template<typename T>
 Solver<T>::Solver(std::shared_ptr<Problem<T> > problem, std::shared_ptr<Backend<T> > backend) 
     : problem_(problem), backend_(backend)
@@ -98,8 +104,12 @@ void Solver<T>::Initialize() {
     mem_avail /= 1024 * 1024;
     mem_total /= 1024 * 1024;
 
+    std::locale loc("");
+    std::cout.imbue(std::locale(std::cout.getloc(), new Sep <char>()));
     std::cout << "# primal variables: " << problem_->ncols() << std::endl;
     std::cout << "# dual variables: " << problem_->nrows() << std::endl;
+    std::cout.imbue(std::locale());
+    
     std::cout << "Memory requirements: " << mem / (1024 * 1024) << "MB (" << mem_avail << "/" << mem_total << "MB available)." << std::endl;
   }
 

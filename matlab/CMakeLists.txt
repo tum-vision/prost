@@ -74,7 +74,7 @@ endif()
 
 if(APPLE)
   set(CMAKE_MACOSX_RPATH 1)
-  set(CMAKE_SHARED_LINKER_FLAGS "LDFLAGS='\$LDFLAGS -Wl,-rpath,${CUDA_TOOLKIT_ROOT_DIR}/lib'") 
+  set(CMAKE_SHARED_LINKER_FLAGS "LDFLAGS='\$LDFLAGS -Wl,-rpath,${CUDA_TOOLKIT_ROOT_DIR}/lib' -L/usr/local/cuda/lib") 
 endif()
 
 add_library( prost_ SHARED ${SOURCES} ${MATLAB_CUSTOM_SOURCES})
@@ -84,7 +84,7 @@ if(MSVC)
   set_property(TARGET prost_ PROPERTY LINK_FLAGS "/export:mexFunction")
   set_property(TARGET prost_ PROPERTY  _CRT_SECURE_NO_WARNINGS )
 else()
-  target_link_libraries( prost_ prost libut ${CUDA_cusolver_LIBRARY} ${CUDA_cusparse_LIBRARY} ${CUDA_cublas_LIBRARY}) #cusparse cublas )
+  target_link_libraries( prost_ prost libut ${CUDA_LIBRARIES} ${CUDA_cusolver_LIBRARY} ${CUDA_cusparse_LIBRARY} ${CUDA_cublas_LIBRARY} ) #cusparse cublas )
   add_dependencies( prost_ prost ) #required.
 endif()
 

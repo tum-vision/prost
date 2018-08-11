@@ -85,7 +85,7 @@ static void SolveProblem(MEX_ARGS) {
     cudaDeviceProp prop;
     cudaGetDeviceProperties(&prop, current_gpu_device);
     int sm_per_multiproc = _ConvertSMVer2Cores(prop.major, prop.minor);
-    printf("Running on device number %d: %s (%.1f GB, %d Cores).\n", current_gpu_device, prop.name, (double)prop.totalGlobalMem/(1024.*1024*1024), prop.multiProcessorCount * sm_per_multiproc);
+    printf("Running on device number %d: %s (%.1f GB, %d Cores), float precision: %d bit.\n", current_gpu_device, prop.name, (double)prop.totalGlobalMem/(1024.*1024*1024), prop.multiProcessorCount * sm_per_multiproc, sizeof(real) * 8);
   }
 
   std::shared_ptr<Solver<real> > solver( new Solver<real>(problem, backend) );
