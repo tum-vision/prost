@@ -46,6 +46,7 @@ set(SOURCES
   "prox/prox_ind_range.cu"
   "prox/prox_ind_soc.cu"
   "prox/prox_moreau.cu"
+  "prox/prox_permute.cu"
   "prox/prox_transform.cu"
   "prox/prox_zero.cu"
   
@@ -77,6 +78,7 @@ set(SOURCES
   "../include/prost/prox/prox_ind_halfspace.hpp"
   "../include/prost/prox/prox_ind_soc.hpp"
   "../include/prost/prox/prox_moreau.hpp"
+  "../include/prost/prox/prox_permute.hpp"
   "../include/prost/prox/prox_transform.hpp"
   "../include/prost/prox/prox_zero.hpp"
   "../include/prost/prox/shared_mem.hpp"
@@ -86,6 +88,7 @@ set(SOURCES
   "../include/prost/prox/elemop/elem_operation_1d.hpp"
   "../include/prost/prox/elemop/elem_operation_norm2.hpp"
   "../include/prost/prox/elemop/elem_operation_ind_simplex.hpp"
+  "../include/prost/prox/elemop/elem_operation_ind_sum.hpp"
   "../include/prost/prox/elemop/elem_operation_singular_nx2.hpp"
   "../include/prost/prox/elemop/elem_operation_ind_psd_cone_3x3.hpp"
   "../include/prost/prox/elemop/function_1d.hpp"

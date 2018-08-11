@@ -29,6 +29,7 @@ namespace prost {
 using thrust::device_vector;
 
 template<typename T> class ProxMoreau;
+template<typename T> class ProxPermute;
 template<typename T> class ProxTransform;
 
 ///
@@ -37,6 +38,7 @@ template<typename T> class ProxTransform;
 template<typename T>
 class Prox {
   friend class ProxMoreau<T>;
+  friend class ProxPermute<T>;
   friend class ProxTransform<T>;
   
 public:

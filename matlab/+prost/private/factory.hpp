@@ -23,6 +23,7 @@
 #include "prost/prox/elemop/elem_operation_1d.hpp"
 #include "prost/prox/elemop/elem_operation_norm2.hpp"
 #include "prost/prox/elemop/elem_operation_ind_simplex.hpp"
+#include "prost/prox/elemop/elem_operation_ind_sum.hpp"
 #include "prost/prox/elemop/elem_operation_singular_nx2.hpp"
 #include "prost/prox/elemop/elem_operation_ind_psd_cone_3x3.hpp"
 #include "prost/prox/elemop/elem_operation_mass_norm.hpp"
@@ -34,6 +35,7 @@
 #include "prost/prox/prox_ind_range.hpp"
 #include "prost/prox/prox_ind_soc.hpp"
 #include "prost/prox/prox_moreau.hpp"
+#include "prost/prox/prox_permute.hpp"
 #include "prost/prox/prox_transform.hpp"
 #include "prost/prox/prox_zero.hpp"
 
@@ -83,6 +85,9 @@ CreateProxIndEpiQuad(size_t idx, size_t size, bool diagsteps, const mxArray *dat
 prost::ProxElemOperation<real, prost::ElemOperationIndSimplex<real> >*
 CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
+prost::ProxElemOperation<real, prost::ElemOperationIndSum<real> >* 
+CreateProxElemOperationIndSum(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+  
 template<class FUN_2D>
 prost::ProxElemOperation<real, prost::ElemOperationSingularNx2<real, FUN_2D> >*
 CreateProxElemOperationSingularNx2(size_t idx, size_t size, bool diagsteps, const mxArray *data);
@@ -98,16 +103,19 @@ template<class FUN_1D>
 prost::ProxElemOperation<real, prost::ElemOperation1D<real, FUN_1D> >*
 CreateProxElemOperation1D(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
-  template<bool conjugate>
-  prost::ProxElemOperation<real, prost::ElemOperationMass4<real, conjugate> >*
-  CreateProxElemOperationMass4(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+template<bool conjugate>
+prost::ProxElemOperation<real, prost::ElemOperationMass4<real, conjugate> >*
+CreateProxElemOperationMass4(size_t idx, size_t size, bool diagsteps, const mxArray *data);
   
-  template<bool conjugate>
-  prost::ProxElemOperation<real, prost::ElemOperationMass5<real, conjugate> >*
-  CreateProxElemOperationMass5(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+template<bool conjugate>
+prost::ProxElemOperation<real, prost::ElemOperationMass5<real, conjugate> >*
+CreateProxElemOperationMass5(size_t idx, size_t size, bool diagsteps, const mxArray *data);
   
 prost::ProxMoreau<real>*
 CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+
+prost::ProxPermute<real>*
+CreateProxPermute(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
 prost::ProxTransform<real>*
 CreateProxTransform(size_t idx, size_t size, bool diagsteps, const mxArray *data);

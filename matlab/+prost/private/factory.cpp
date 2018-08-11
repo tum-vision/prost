@@ -17,6 +17,7 @@ mxArray *Solver_interm_cb_handle = nullptr;
 
 static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> default_prox_reg = {
   { "elem_operation:ind_simplex",                     CreateProxElemOperationIndSimplex                                                     },
+  { "elem_operation:ind_sum",                         CreateProxElemOperationIndSum                                                         },
   { "elem_operation:ind_psd_cone_3x3",                CreateProxElemOperationIndPsdCone3x3                                                  },
   { "elem_operation:1d:zero",                         CreateProxElemOperation1D<Function1DZero<real>>                                       },
   { "elem_operation:1d:abs",                          CreateProxElemOperation1D<Function1DAbs<real>>                                        },
@@ -67,6 +68,7 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
   { "ind_range",                                      CreateProxIndRange                                                                    },
   { "ind_soc",                                        CreateProxIndSOC                                                                      },
   { "moreau",                                         CreateProxMoreau                                                                      },
+  { "permute",                                        CreateProxPermute                                                                     },
   { "transform",                                      CreateProxTransform                                                                   },
   { "zero",                                           CreateProxZero                                                                        },
 };
@@ -246,6 +248,14 @@ CreateProxMoreau(size_t idx, size_t size, bool diagsteps, const mxArray *data)
   return new ProxMoreau<real>(CreateProx(mxGetCell(data, 0)));
 }
 
+ProxPermute<real>* 
+CreateProxPermute(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+{
+  vector<int> perm = GetVector<int>(mxGetCell(data, 1));
+  
+  return new ProxPermute<real>(CreateProx(mxGetCell(data, 0)), perm);
+}
+
 ProxTransform<real>*
 CreateProxTransform(size_t idx, size_t size, bool diagsteps, const mxArray *data)
 {
@@ -316,6 +326,16 @@ CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const
   bool interleaved = GetScalarFromCellArray<bool>(data, 2);
 
   return new ProxElemOperation<real, ElemOperationIndSimplex<real> >(idx, count, dim, interleaved, diagsteps);   
+}
+
+ProxElemOperation<real, ElemOperationIndSum<real> >* 
+CreateProxElemOperationIndSum(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
+{
+  size_t count = GetScalarFromCellArray<size_t>(data, 0);
+  size_t dim = GetScalarFromCellArray<size_t>(data, 1);
+  bool interleaved = GetScalarFromCellArray<bool>(data, 2);
+
+  return new ProxElemOperation<real, ElemOperationIndSum<real> >(idx, count, dim, interleaved, diagsteps);   
 }
     
 ProxElemOperation<real, ElemOperationIndPsdCone3x3<real> >*
