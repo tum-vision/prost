@@ -28,6 +28,7 @@ function [passed] = test_prox_sum_ind_simplex()
 
     if norm(Q-Q2, Inf) > 1e-5
         passed = false;
+        return;
     end
     
     passed = true;

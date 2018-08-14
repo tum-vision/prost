@@ -44,7 +44,17 @@ struct ElemOperationIndSum : public ElemOperation<0, 0, T>
     T tau_scal,
     bool invert_tau) 
   {
-    // TODO: set everything to average; diagsteps?
+    T tl = 0;
+
+    for(size_t i = 0; i < dim_; i++) {
+      tl += arg[i];
+    }
+
+    tl = (tl - 1.) / static_cast<T>(dim_);
+
+    for(size_t i = 0; i < dim_; i++) {
+      res[i] = arg[i] - tl; 
+    }
   }
     
  private:

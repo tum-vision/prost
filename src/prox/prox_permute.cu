@@ -61,10 +61,12 @@ ProxPermute<T>::~ProxPermute()
 template<typename T>
 void ProxPermute<T>::Initialize() 
 {
+  /*
   for(int i = 0; i < perm_host_.size(); i++) {
     std::cout << perm_host_[i] << " ";
   }
   std::cout << std::endl;
+  */
   
   try 
   {
