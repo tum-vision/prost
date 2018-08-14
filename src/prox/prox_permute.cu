@@ -22,10 +22,31 @@
 #include <thrust/for_each.h>
 #include <thrust/iterator/zip_iterator.h>
 #include "prost/prox/prox_permute.hpp"
+#include "prost/config.hpp"
 #include "prost/exception.hpp"
 
 namespace prost {
 
+template<typename T>
+__global__
+void ProxPermuteKernel(
+  T *d_res,
+  const T *d_arg,
+  const int *d_perm,
+  size_t count,
+  bool inverse)
+{
+  size_t tx = threadIdx.x + blockDim.x * blockIdx.x;
+
+  if(tx < count)
+  {
+    if(inverse)
+      d_res[d_perm[tx]] = d_arg[tx];
+    else
+      d_res[tx] = d_arg[d_perm[tx]];
+  }
+}
+  
 template<typename T>
 ProxPermute<T>::ProxPermute(std::shared_ptr<Prox<T> > base_prox, const std::vector<int>& perm)
   : Prox<T>(*base_prox), base_prox_(base_prox), perm_host_(perm)
@@ -40,6 +61,11 @@ ProxPermute<T>::~ProxPermute()
 template<typename T>
 void ProxPermute<T>::Initialize() 
 {
+  for(int i = 0; i < perm_host_.size(); i++) {
+    std::cout << perm_host_[i] << " ";
+  }
+  std::cout << std::endl;
+  
   try 
   {
     permuted_arg_.resize(this->size_);
@@ -47,11 +73,19 @@ void ProxPermute<T>::Initialize()
   } 
   catch(const std::bad_alloc &e)
   {
-	std::stringstream ss;
-	ss << "Out of memory: " << e.what();
+    std::stringstream ss;
+    ss << "Out of memory: " << e.what();
 
     throw Exception(ss.str());
   }
+
+  if(perm_host_.size() != base_prox_->size()) {
+    std::stringstream ss;
+    ss << "Permutation vector has wrong size (" << perm_host_.size() << ") instead of " << base_prox_->size() << ".";
+      
+    throw Exception(ss.str());
+  }
+
 
   base_prox_->Initialize();
 }
@@ -73,20 +107,39 @@ void ProxPermute<T>::EvalLocal(
   T tau,
   bool invert_tau)
 {
-  // TODO: permute argument
+  dim3 block(kBlockSizeCUDA, 1, 1);
+  dim3 grid((perm_host_.size() + block.x - 1) / block.x, 1, 1);
 
-  // compute prox with scaled argument
+  // permute argument
+  ProxPermuteKernel<T>
+    <<<grid, block>>>(
+      thrust::raw_pointer_cast(&(*result_beg)),
+      thrust::raw_pointer_cast(&(*arg_beg)),
+      thrust::raw_pointer_cast(&perm_[0]),
+      perm_host_.size(),
+      false);
+  cudaDeviceSynchronize();
+
+  // compute prox with permuted argument
   base_prox_->EvalLocal(
-    result_beg, 
-    result_end,
-    permuted_arg_.begin(),
+    permuted_arg_.begin(), 
     permuted_arg_.end(),
+    result_beg,
+    result_end,
     tau_beg,
     tau_end,
     tau, 
-    !invert_tau);
+    invert_tau);
 
-  // TODO: permute result
+  // permute result back
+  ProxPermuteKernel<T>
+    <<<grid, block>>>(
+      thrust::raw_pointer_cast(&(*result_beg)),
+      thrust::raw_pointer_cast(&permuted_arg_[0]),
+      thrust::raw_pointer_cast(&perm_[0]),
+      perm_host_.size(),
+      true);
+  cudaDeviceSynchronize();
 }
 
 template<typename T>
