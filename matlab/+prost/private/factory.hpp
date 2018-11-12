@@ -34,6 +34,7 @@
 #include "prost/prox/prox_ind_halfspace.hpp"
 #include "prost/prox/prox_ind_range.hpp"
 #include "prost/prox/prox_ind_soc.hpp"
+#include "prost/prox/prox_ind_sum.hpp"
 #include "prost/prox/prox_moreau.hpp"
 #include "prost/prox/prox_permute.hpp"
 #include "prost/prox/prox_transform.hpp"
@@ -75,6 +76,9 @@ CreateProxIndRange(size_t idx, size_t size, bool diagsteps, const mxArray *data)
   
 prost::ProxIndSOC<real>*
 CreateProxIndSOC(size_t idx, size_t size, bool diagsteps, const mxArray *data);
+
+prost::ProxIndSum<real>*
+CreateProxIndSum(size_t idx, size_t size, bool diagsteps, const mxArray *data);
 
 prost::ProxIndHalfspace<real>*
 CreateProxIndHalfspace(size_t idx, size_t size, bool diagsteps, const mxArray *data);

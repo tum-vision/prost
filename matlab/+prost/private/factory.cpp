@@ -67,6 +67,7 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
   { "ind_halfspace",                                  CreateProxIndHalfspace                                                                },
   { "ind_range",                                      CreateProxIndRange                                                                    },
   { "ind_soc",                                        CreateProxIndSOC                                                                      },
+  { "ind_sum",                                        CreateProxIndSum                                                                      },
   { "moreau",                                         CreateProxMoreau                                                                      },
   { "permute",                                        CreateProxPermute                                                                     },
   { "transform",                                      CreateProxTransform                                                                   },
@@ -374,6 +375,20 @@ CreateProxIndSOC(size_t idx, size_t size, bool diagsteps, const mxArray *data)
 
   return new ProxIndSOC<real>(idx, count, dim, interleaved, diagsteps, alpha);
 }
+
+prost::ProxIndSum<real>*
+CreateProxIndSum(size_t idx, size_t size, bool diagsteps, const mxArray *data)
+{  
+  size_t dim = GetScalarFromCellArray<size_t>(data, 0);  
+  std::vector<size_t> inds = GetVector<size_t>(mxGetCell(data, 1));
+
+  size_t count = inds.size() / dim; // hacky
+
+  //mexPrintf("CreateProxIndSum %d %d\n", count, dim);
+  
+  return new ProxIndSum<real>(idx, size, count, dim, inds);
+}
+
 
 prost::ProxIndHalfspace<real>*
 CreateProxIndHalfspace(size_t idx, size_t size, bool diagsteps, const mxArray *data)
@@ -730,7 +745,7 @@ CreateProx(const mxArray *pm)
   mxArray *data = mxGetCell(pm, 4);
   
   Prox<real> *prox = nullptr;
-
+  
   try
   {
     for(auto& p : get_prox_reg())
