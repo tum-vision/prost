@@ -378,15 +378,25 @@ CreateProxIndSOC(size_t idx, size_t size, bool diagsteps, const mxArray *data)
 
 prost::ProxIndSum<real>*
 CreateProxIndSum(size_t idx, size_t size, bool diagsteps, const mxArray *data)
-{  
+{ 
+  const mwSize *nargs = mxGetDimensions(data);
+
   size_t dim = GetScalarFromCellArray<size_t>(data, 0);  
   std::vector<size_t> inds = GetVector<size_t>(mxGetCell(data, 1));
-
   size_t count = inds.size() / dim; // hacky
 
-  //mexPrintf("CreateProxIndSum %d %d\n", count, dim);
-  
-  return new ProxIndSum<real>(idx, size, count, dim, inds);
+  if(nargs[1] == 2)  
+    return new ProxIndSum<real>(idx, size, count, dim, inds);
+
+  if(nargs[1] == 4) {
+    size_t dim2 = GetScalarFromCellArray<size_t>(data, 2);  
+    std::vector<size_t> inds2 = GetVector<size_t>(mxGetCell(data, 3));
+    size_t count2 = inds2.size() / dim2; // hacky
+
+    return new ProxIndSum<real>(idx, size, count, dim, inds, count2, dim2, inds2);
+  }
+
+  return nullptr;
 }
 
 

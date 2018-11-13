@@ -76,6 +76,14 @@ void ProxIndSum<T>::Initialize() {
   
   d_inds_.resize(inds_.size());
   d_inds_ = inds_;
+
+  if(two_) {
+    if(count_2_ * dim_2_ != inds_2_.size())
+      throw Exception("ProxIndSum: dimensions dont fit");
+  
+    d_inds_2_.resize(inds_2_.size());
+    d_inds_2_ = inds_2_;
+  }
 }
 
 template<typename T>
@@ -117,6 +125,22 @@ void ProxIndSum<T>::EvalLocal(
       invert_tau);
   
   cudaDeviceSynchronize();
+
+  if(two_) {
+    dim3 grid2((count_ + block.x - 1) / block.x, 1, 1);
+    
+    ProxIndSumKernel<T>
+      <<<grid2, block>>>(thrust::raw_pointer_cast(&(*result_beg)),
+			 thrust::raw_pointer_cast(&(*arg_beg)),
+			 thrust::raw_pointer_cast(&(*tau_beg)),
+			 thrust::raw_pointer_cast(&d_inds_2_[0]),
+      count_2_,
+      dim_2_,
+      tau,
+      invert_tau);
+  
+    cudaDeviceSynchronize();    
+  }
 }
 
 // Explicit template instantiation
