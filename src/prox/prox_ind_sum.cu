@@ -38,6 +38,7 @@ void ProxIndSumKernel(
   const size_t *d_inds,
   size_t count,
   size_t dim,
+  const T total_sum,
   T tau,
   bool inv_tau)
 {
@@ -61,7 +62,7 @@ void ProxIndSumKernel(
       if(inv_tau) mytau = 1. / mytau;
 
       d_res[d_inds[tx * dim + i]] =
-        d_arg[d_inds[tx * dim + i]] - mytau * (sum_arg - 1.) / sum_tau;
+        d_arg[d_inds[tx * dim + i]] - mytau * (sum_arg - total_sum) / sum_tau;
       
     }
     
@@ -121,6 +122,7 @@ void ProxIndSum<T>::EvalLocal(
       thrust::raw_pointer_cast(&d_inds_[0]),
       count_,
       dim_,
+      sum_,
       tau,
       invert_tau);
   
@@ -134,11 +136,12 @@ void ProxIndSum<T>::EvalLocal(
 			 thrust::raw_pointer_cast(&(*arg_beg)),
 			 thrust::raw_pointer_cast(&(*tau_beg)),
 			 thrust::raw_pointer_cast(&d_inds_2_[0]),
-      count_2_,
-      dim_2_,
-      tau,
-      invert_tau);
-  
+			 count_2_,
+			 dim_2_,
+			 sum_2_,
+			 tau,
+			 invert_tau);
+    
     cudaDeviceSynchronize();    
   }
 }

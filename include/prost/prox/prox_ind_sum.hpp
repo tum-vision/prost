@@ -38,19 +38,22 @@ public:
       size_t index, 
       size_t size,
       size_t count,
-      size_t dim, 
-      std::vector<size_t>& inds)
-    : Prox<T>(index, size, true) { inds_ = inds; dim_ = dim; count_ = count; two_ = false; }
+      size_t dim,
+      std::vector<size_t>& inds,
+      T sum)
+    : Prox<T>(index, size, true) { inds_ = inds; dim_ = dim; count_ = count; two_ = false; sum_ = sum; }
 
   ProxIndSum(size_t index, 
 	     size_t size,
 	     size_t count,
 	     size_t dim, 
 	     std::vector<size_t>& inds,
+	     T sum,
 	     size_t count2,
 	     size_t dim2,
-	     std::vector<size_t>& inds2)
-    : Prox<T>(index, size, true) { inds_ = inds; dim_ = dim; count_ = count; two_ = true; dim_2_ = dim2; count_2_ = count2; inds_2_ = inds2; }
+	     std::vector<size_t>& inds2,
+	     T sum2)
+    : Prox<T>(index, size, true) { inds_ = inds; dim_ = dim; count_ = count; two_ = true; dim_2_ = dim2; count_2_ = count2; inds_2_ = inds2; sum_ = sum; sum_2_ = sum2; }
 
   
   virtual ~ProxIndSum() {}
@@ -77,6 +80,7 @@ private:
   std::vector<size_t> inds_, inds_2_;
   device_vector<size_t> d_inds_, d_inds_2_;
   bool two_;
+  T sum_, sum_2_;
 };
 
 } // namespace prost

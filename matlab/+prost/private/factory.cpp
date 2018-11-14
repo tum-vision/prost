@@ -383,17 +383,19 @@ CreateProxIndSum(size_t idx, size_t size, bool diagsteps, const mxArray *data)
 
   size_t dim = GetScalarFromCellArray<size_t>(data, 0);  
   std::vector<size_t> inds = GetVector<size_t>(mxGetCell(data, 1));
+  real sum = GetScalarFromCellArray<real>(data, 2);
   size_t count = inds.size() / dim; // hacky
 
-  if(nargs[1] == 2)  
-    return new ProxIndSum<real>(idx, size, count, dim, inds);
+  if(nargs[1] == 3)  
+    return new ProxIndSum<real>(idx, size, count, dim, inds, sum);
 
-  if(nargs[1] == 4) {
-    size_t dim2 = GetScalarFromCellArray<size_t>(data, 2);  
-    std::vector<size_t> inds2 = GetVector<size_t>(mxGetCell(data, 3));
+  if(nargs[1] == 6) {
+    size_t dim2 = GetScalarFromCellArray<size_t>(data, 3);  
+    std::vector<size_t> inds2 = GetVector<size_t>(mxGetCell(data, 4));
+    real sum2 = GetScalarFromCellArray<real>(data, 5);
     size_t count2 = inds2.size() / dim2; // hacky
 
-    return new ProxIndSum<real>(idx, size, count, dim, inds, count2, dim2, inds2);
+    return new ProxIndSum<real>(idx, size, count, dim, inds, sum, count2, dim2, inds2, sum2);
   }
 
   return nullptr;
@@ -422,12 +424,13 @@ CreateProxElemOperationMass4(size_t idx, size_t size, bool diagsteps, const mxAr
   size_t dim = GetScalarFromCellArray<size_t>(data, 1);
   bool interleaved = GetScalarFromCellArray<bool>(data, 2);
 
+  std::array<std::vector<real>, 1> coeffs;
+  GetCoefficients<1>(coeffs, mxGetCell(data, 3), count);
+  
   if(dim != 6)
     throw Exception("Wrong dimension in mass norm prox");
 
-  return new ProxElemOperation<real, ElemOperationMass4<real, conjugate>>(
-    idx, count, dim, interleaved, diagsteps);
-  
+  return new ProxElemOperation<real, ElemOperationMass4<real, conjugate>>(idx, count, dim, interleaved, diagsteps, coeffs);
 }
   
 template<bool conjugate>

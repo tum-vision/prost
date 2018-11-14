@@ -11,10 +11,10 @@ namespace prost {
 /// \brief Provides proximal operator of the mass norm for 2-vectors in R^4 
 ///
 template<typename T, bool conjugate>
-struct ElemOperationMass4 : public ElemOperation<6, 0>
+struct ElemOperationMass4 : public ElemOperation<6, 1>
 {
   __host__ __device__
-  ElemOperationMass4(size_t dim, SharedMem<SharedMemType, GetSharedMemCount>& shared_mem) { }
+  ElemOperationMass4(T* coeffs, size_t dim, SharedMem<SharedMemType, GetSharedMemCount>& shared_mem) : coeffs_(coeffs) { }
 
   inline __host__ __device__
   void operator()(
@@ -24,6 +24,7 @@ struct ElemOperationMass4 : public ElemOperation<6, 0>
     T tau_scal,
     bool invert_tau)
   {
+    tau_scal *= coeffs_[0]; // weighted mass norm
     const double tau = invert_tau ? (1. / (tau_scal * tau_diag[0])) : (tau_scal * tau_diag[0]);
     
     double M[16], Q[16], D[16];
@@ -87,7 +88,9 @@ struct ElemOperationMass4 : public ElemOperation<6, 0>
     res[4] = M[13];
     res[5] = M[14];
   }
-  
+
+private:
+  T* coeffs_;  
 };
 
 ///
