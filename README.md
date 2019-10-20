@@ -72,10 +72,3 @@ in cmake. Finally, open the Visual Studio solution and compile as
 Release x64 and after compilation has finished build the project
 INSTALL in the solution, which copies the mex file to the correct
 directory.
-
-## How to Cite
-If you use prost in your scientific publication, please cite the paper
-
-   **Sublabel-Accurate Relaxation of Nonconvex Energies**
-     (T. Möllenhoff, E. Laude, M. Moeller, J. Lellmann, D. Cremers),
-     In IEEE Conference on Computer Vision and Pattern Recognition (CVPR), 2016.
