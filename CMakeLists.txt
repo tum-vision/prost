@@ -17,7 +17,7 @@ if(MSVC)
 endif()
 
 find_package(MatlabMex REQUIRED)
-find_package(CUDA REQUIRED)
+find_package(CUDA 10.2 EXACT REQUIRED)
 
 include_directories("include")
 	

@@ -18,7 +18,6 @@ mxArray *Solver_interm_cb_handle = nullptr;
 static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> default_prox_reg = {
   { "elem_operation:ind_simplex",                     CreateProxElemOperationIndSimplex                                                     },
   { "elem_operation:ind_sum",                         CreateProxElemOperationIndSum                                                         },
-  { "elem_operation:ind_psd_cone_3x3",                CreateProxElemOperationIndPsdCone3x3                                                  },
   { "elem_operation:1d:zero",                         CreateProxElemOperation1D<Function1DZero<real>>                                       },
   { "elem_operation:1d:abs",                          CreateProxElemOperation1D<Function1DAbs<real>>                                        },
   { "elem_operation:1d:square",                       CreateProxElemOperation1D<Function1DSquare<real>>                                     },
@@ -59,6 +58,34 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
   { "elem_operation:singular_nx2:sum_1d:huber",       CreateProxElemOperationSingularNx2<Function2DSum1D<real, Function1DHuber<real>>>      },
   { "elem_operation:singular_nx2:ind_l1_ball",        CreateProxElemOperationSingularNx2<Function2DIndL1Ball<real>>                         },
   { "elem_operation:singular_nx2:moreau:ind_l1_ball", CreateProxElemOperationSingularNx2<Function2DMoreau<real, Function2DIndL1Ball<real>>> },
+  { "elem_operation:eigen_2x2:zero",                  CreateProxElemOperationEigen2x2<Function1DZero<real>>                                 },
+  { "elem_operation:eigen_2x2:abs",                   CreateProxElemOperationEigen2x2<Function1DAbs<real>>                                  },
+  { "elem_operation:eigen_2x2:square",                CreateProxElemOperationEigen2x2<Function1DSquare<real>>                               },
+  { "elem_operation:eigen_2x2:ind_leq0",              CreateProxElemOperationEigen2x2<Function1DIndLeq0<real>>                              },
+  { "elem_operation:eigen_2x2:ind_geq0",              CreateProxElemOperationEigen2x2<Function1DIndGeq0<real>>                              },
+  { "elem_operation:eigen_2x2:ind_eq0",               CreateProxElemOperationEigen2x2<Function1DIndEq0<real>>                               },
+  { "elem_operation:eigen_2x2:ind_box01",             CreateProxElemOperationEigen2x2<Function1DIndBox01<real>>                             },
+  { "elem_operation:eigen_2x2:max_pos0",              CreateProxElemOperationEigen2x2<Function1DMaxPos0<real>>                              },
+  { "elem_operation:eigen_2x2:l0",                    CreateProxElemOperationEigen2x2<Function1DL0<real>>                                   },
+  { "elem_operation:eigen_2x2:huber",                 CreateProxElemOperationEigen2x2<Function1DHuber<real>>                                },
+  { "elem_operation:eigen_2x2:lq",                    CreateProxElemOperationEigen2x2<Function1DLq<real>>                                   },
+  { "elem_operation:eigen_2x2:lq_plus_eps",           CreateProxElemOperationEigen2x2<Function1DLqPlusEps<real>>                            },
+  { "elem_operation:eigen_2x2:trunclin",              CreateProxElemOperationEigen2x2<Function1DTruncLinear<real>>                          },
+  { "elem_operation:eigen_2x2:truncquad",             CreateProxElemOperationEigen2x2<Function1DTruncQuad<real>>                            },
+  { "elem_operation:eigen_3x3:zero",                  CreateProxElemOperationEigen3x3<Function1DZero<real>>                                 },
+  { "elem_operation:eigen_3x3:abs",                   CreateProxElemOperationEigen3x3<Function1DAbs<real>>                                  },
+  { "elem_operation:eigen_3x3:square",                CreateProxElemOperationEigen3x3<Function1DSquare<real>>                               },
+  { "elem_operation:eigen_3x3:ind_leq0",              CreateProxElemOperationEigen3x3<Function1DIndLeq0<real>>                              },
+  { "elem_operation:eigen_3x3:ind_geq0",              CreateProxElemOperationEigen3x3<Function1DIndGeq0<real>>                              },
+  { "elem_operation:eigen_3x3:ind_eq0",               CreateProxElemOperationEigen3x3<Function1DIndEq0<real>>                               },
+  { "elem_operation:eigen_3x3:ind_box01",             CreateProxElemOperationEigen3x3<Function1DIndBox01<real>>                             },
+  { "elem_operation:eigen_3x3:max_pos0",              CreateProxElemOperationEigen3x3<Function1DMaxPos0<real>>                              },
+  { "elem_operation:eigen_3x3:l0",                    CreateProxElemOperationEigen3x3<Function1DL0<real>>                                   },
+  { "elem_operation:eigen_3x3:huber",                 CreateProxElemOperationEigen3x3<Function1DHuber<real>>                                },
+  { "elem_operation:eigen_3x3:lq",                    CreateProxElemOperationEigen3x3<Function1DLq<real>>                                   },
+  { "elem_operation:eigen_3x3:lq_plus_eps",           CreateProxElemOperationEigen3x3<Function1DLqPlusEps<real>>                            },
+  { "elem_operation:eigen_3x3:trunclin",              CreateProxElemOperationEigen3x3<Function1DTruncLinear<real>>                          },
+  { "elem_operation:eigen_3x3:truncquad",             CreateProxElemOperationEigen3x3<Function1DTruncQuad<real>>                            },
   { "elem_operation:mass4",                           CreateProxElemOperationMass4<false>                                                   },
   { "elem_operation:ind_comass4_ball",                CreateProxElemOperationMass4<true>                                                    },
   { "elem_operation:mass5",                           CreateProxElemOperationMass5<false>                                                   },
@@ -318,6 +345,38 @@ CreateProxElemOperationSingularNx2(size_t idx, size_t size, bool diagsteps, cons
     idx, count, dim, interleaved, diagsteps, coeffs);   
 }
 
+template<class FUN_1D> 
+ProxElemOperation<real, ElemOperationEigen2x2<real, FUN_1D> >*
+CreateProxElemOperationEigen2x2(size_t idx, size_t size, bool diagsteps, const mxArray *data)
+{
+  size_t count = GetScalarFromCellArray<size_t>(data, 0);
+  size_t dim = GetScalarFromCellArray<size_t>(data, 1);
+  
+  bool interleaved = GetScalarFromCellArray<bool>(data, 2);
+
+  std::array<std::vector<real>, 7> coeffs;
+  GetCoefficients<7>(coeffs, mxGetCell(data, 3), count);
+
+  return new ProxElemOperation<real, ElemOperationEigen2x2<real, FUN_1D>>(
+    idx, count, dim, interleaved, diagsteps, coeffs);   
+}
+
+template<class FUN_1D> 
+ProxElemOperation<real, ElemOperationEigen3x3<real, FUN_1D> >*
+CreateProxElemOperationEigen3x3(size_t idx, size_t size, bool diagsteps, const mxArray *data)
+{
+  size_t count = GetScalarFromCellArray<size_t>(data, 0);
+  size_t dim = GetScalarFromCellArray<size_t>(data, 1);
+  
+  bool interleaved = GetScalarFromCellArray<bool>(data, 2);
+
+  std::array<std::vector<real>, 7> coeffs;
+  GetCoefficients<7>(coeffs, mxGetCell(data, 3), count);
+
+  return new ProxElemOperation<real, ElemOperationEigen3x3<real, FUN_1D>>(
+    idx, count, dim, interleaved, diagsteps, coeffs);   
+}
+
 
 ProxElemOperation<real, ElemOperationIndSimplex<real> >* 
 CreateProxElemOperationIndSimplex(size_t idx, size_t size, bool diagsteps, const mxArray *data) 
@@ -337,16 +396,6 @@ CreateProxElemOperationIndSum(size_t idx, size_t size, bool diagsteps, const mxA
   bool interleaved = GetScalarFromCellArray<bool>(data, 2);
 
   return new ProxElemOperation<real, ElemOperationIndSum<real> >(idx, count, dim, interleaved, diagsteps);   
-}
-    
-ProxElemOperation<real, ElemOperationIndPsdCone3x3<real> >*
-CreateProxElemOperationIndPsdCone3x3(size_t idx, size_t size, bool diagsteps, const mxArray *data)
-{
-    size_t count = GetScalarFromCellArray<size_t>(data, 0);
-    size_t dim = GetScalarFromCellArray<size_t>(data, 1);
-    bool interleaved = GetScalarFromCellArray<bool>(data, 2);
-        
-    return new ProxElemOperation<real, ElemOperationIndPsdCone3x3<real> >(idx, count, dim, interleaved, diagsteps);
 }
     
 ProxIndEpiQuad<real>* 
@@ -956,3 +1005,4 @@ struct InitRegistries {
 static InitRegistries initRegistries;
 
 } // namespace matlab
+
