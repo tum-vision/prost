@@ -94,6 +94,7 @@ set(SOURCES
   "../include/prost/prox/elemop/elem_operation_singular_nx2.hpp"
   "../include/prost/prox/elemop/elem_operation_eigen_2x2.hpp"
   "../include/prost/prox/elemop/elem_operation_eigen_3x3.hpp"
+  "../include/prost/prox/elemop/elem_operation_eigen_nxn.hpp"
   "../include/prost/prox/elemop/function_1d.hpp"
   "../include/prost/prox/elemop/function_2d.hpp"
 
@@ -109,4 +110,5 @@ set(SOURCES
 )
 
 cuda_add_library(prost STATIC ${SOURCES} ${PROST_CUSTOM_SOURCES})
+
 

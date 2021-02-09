@@ -29,6 +29,7 @@
 #include "prost/prox/elemop/elem_operation_singular_nx2.hpp"
 #include "prost/prox/elemop/elem_operation_eigen_2x2.hpp"
 #include "prost/prox/elemop/elem_operation_eigen_3x3.hpp"
+#include "prost/prox/elemop/elem_operation_eigen_nxn.hpp"
 #include "prost/prox/elemop/elem_operation_mass_norm.hpp"
 #include "prost/prox/elemop/function_1d.hpp"
 #include "prost/prox/elemop/function_2d.hpp"
@@ -121,6 +122,22 @@ template class ProxElemOperation<float, ElemOperationEigen3x3<float, Function1DL
 template class ProxElemOperation<float, ElemOperationEigen3x3<float, Function1DTruncQuad<float>>>;
 template class ProxElemOperation<float, ElemOperationEigen3x3<float, Function1DTruncLinear<float>>>;
 
+// ElemOperationEigenNxN
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DZero<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DAbs<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DSquare<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DIndLeq0<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DIndGeq0<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DIndEq0<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DIndBox01<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DMaxPos0<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DL0<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DHuber<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DLq<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DLqPlusEps<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DTruncQuad<float>>>;
+template class ProxElemOperation<float, ElemOperationEigenNxN<float, Function1DTruncLinear<float>>>;
+
 
 // Other
 template class ProxElemOperation<float, ElemOperationIndSimplex<float>>;
@@ -212,6 +229,23 @@ template class ProxElemOperation<double, ElemOperationEigen3x3<double, Function1
 template class ProxElemOperation<double, ElemOperationEigen3x3<double, Function1DTruncQuad<double>>>;
 template class ProxElemOperation<double, ElemOperationEigen3x3<double, Function1DTruncLinear<double>>>;
 
+// ElemOperationEigenNxN
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DZero<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DAbs<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DSquare<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DIndLeq0<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DIndGeq0<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DIndEq0<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DIndBox01<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DMaxPos0<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DL0<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DHuber<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DLq<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DLqPlusEps<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DTruncQuad<double>>>;
+template class ProxElemOperation<double, ElemOperationEigenNxN<double, Function1DTruncLinear<double>>>;
+
+
 
 // other
 template class ProxElemOperation<double, ElemOperationIndSimplex<double>>;
@@ -222,4 +256,5 @@ template class ProxElemOperation<double, ElemOperationMass5<double, true>>;
 template class ProxElemOperation<double, ElemOperationMass5<double, false>>;
 
 } // namespace prost
+
 

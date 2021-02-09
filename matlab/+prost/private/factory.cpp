@@ -86,6 +86,20 @@ static map<string, function<Prox<real>*(size_t, size_t, bool, const mxArray*)>> 
   { "elem_operation:eigen_3x3:lq_plus_eps",           CreateProxElemOperationEigen3x3<Function1DLqPlusEps<real>>                            },
   { "elem_operation:eigen_3x3:trunclin",              CreateProxElemOperationEigen3x3<Function1DTruncLinear<real>>                          },
   { "elem_operation:eigen_3x3:truncquad",             CreateProxElemOperationEigen3x3<Function1DTruncQuad<real>>                            },
+  { "elem_operation:eigen_nxn:zero",                  CreateProxElemOperationEigenNxN<Function1DZero<real>>                                 },
+  { "elem_operation:eigen_nxn:abs",                   CreateProxElemOperationEigenNxN<Function1DAbs<real>>                                  },
+  { "elem_operation:eigen_nxn:square",                CreateProxElemOperationEigenNxN<Function1DSquare<real>>                               },
+  { "elem_operation:eigen_nxn:ind_leq0",              CreateProxElemOperationEigenNxN<Function1DIndLeq0<real>>                              },
+  { "elem_operation:eigen_nxn:ind_geq0",              CreateProxElemOperationEigenNxN<Function1DIndGeq0<real>>                              },
+  { "elem_operation:eigen_nxn:ind_eq0",               CreateProxElemOperationEigenNxN<Function1DIndEq0<real>>                               },
+  { "elem_operation:eigen_nxn:ind_box01",             CreateProxElemOperationEigenNxN<Function1DIndBox01<real>>                             },
+  { "elem_operation:eigen_nxn:max_pos0",              CreateProxElemOperationEigenNxN<Function1DMaxPos0<real>>                              },
+  { "elem_operation:eigen_nxn:l0",                    CreateProxElemOperationEigenNxN<Function1DL0<real>>                                   },
+  { "elem_operation:eigen_nxn:huber",                 CreateProxElemOperationEigenNxN<Function1DHuber<real>>                                },
+  { "elem_operation:eigen_nxn:lq",                    CreateProxElemOperationEigenNxN<Function1DLq<real>>                                   },
+  { "elem_operation:eigen_nxn:lq_plus_eps",           CreateProxElemOperationEigenNxN<Function1DLqPlusEps<real>>                            },
+  { "elem_operation:eigen_nxn:trunclin",              CreateProxElemOperationEigenNxN<Function1DTruncLinear<real>>                          },
+  { "elem_operation:eigen_nxn:truncquad",             CreateProxElemOperationEigenNxN<Function1DTruncQuad<real>>                            },
   { "elem_operation:mass4",                           CreateProxElemOperationMass4<false>                                                   },
   { "elem_operation:ind_comass4_ball",                CreateProxElemOperationMass4<true>                                                    },
   { "elem_operation:mass5",                           CreateProxElemOperationMass5<false>                                                   },
@@ -374,6 +388,22 @@ CreateProxElemOperationEigen3x3(size_t idx, size_t size, bool diagsteps, const m
   GetCoefficients<7>(coeffs, mxGetCell(data, 3), count);
 
   return new ProxElemOperation<real, ElemOperationEigen3x3<real, FUN_1D>>(
+    idx, count, dim, interleaved, diagsteps, coeffs);   
+}
+
+template<class FUN_1D> 
+ProxElemOperation<real, ElemOperationEigenNxN<real, FUN_1D> >*
+CreateProxElemOperationEigenNxN(size_t idx, size_t size, bool diagsteps, const mxArray *data)
+{
+  size_t count = GetScalarFromCellArray<size_t>(data, 0);
+  size_t dim = GetScalarFromCellArray<size_t>(data, 1);
+  
+  bool interleaved = GetScalarFromCellArray<bool>(data, 2);
+
+  std::array<std::vector<real>, 7> coeffs;
+  GetCoefficients<7>(coeffs, mxGetCell(data, 3), count);
+
+  return new ProxElemOperation<real, ElemOperationEigenNxN<real, FUN_1D>>(
     idx, count, dim, interleaved, diagsteps, coeffs);   
 }
 
