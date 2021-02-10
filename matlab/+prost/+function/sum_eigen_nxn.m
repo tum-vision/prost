@@ -6,7 +6,7 @@ function [func] = sum_eigen_nxn(n, interleaved, fun, a, b, c, d, e, alpha, beta)
         error('n must be less than 32');
     end
     
-    dim = n*(n - 1) / 2 + n;
+    dim = n*n;
     
     switch nargin
     case 9

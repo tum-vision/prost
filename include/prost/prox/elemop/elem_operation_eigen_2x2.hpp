@@ -14,7 +14,7 @@ namespace prost {
     /// \brief Provides proximal operator for the indicator function of the cone of positive semidefinite matrices.
     /// The input has to be a vectorized real 3x3 matrix.
     template<typename T, class FUN_1D>
-    struct ElemOperationEigen2x2 : public ElemOperation<3, 7>
+    struct ElemOperationEigen2x2 : public ElemOperation<4, 7>
     {
         
     __host__ __device__ ElemOperationEigen2x2(T* coeffs, size_t dim, SharedMem<SharedMemType, GetSharedMemCount>& shared_mem) 
@@ -108,7 +108,7 @@ inline __host__ __device__
             double rt1, rt2;
             double cs, sn;
             
-            dsyev2(arg[0], arg[2], arg[1], &rt1, &rt2,
+            dsyev2(arg[0], (arg[1]+arg[2]) / 2, arg[3], &rt1, &rt2,
                    &cs, &sn);
             
             // compute step-size
@@ -137,8 +137,9 @@ inline __host__ __device__
             double t22 = rt1*SQR(sn) + rt2*SQR(cs);
 
             res[0] = t11;
-            res[1] = t22;
+            res[1] = t12;
             res[2] = t12;
+            res[3] = t22;
         }
         
         private:

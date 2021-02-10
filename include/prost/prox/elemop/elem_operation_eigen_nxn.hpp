@@ -277,14 +277,13 @@ namespace prost {
                         T tau_scal,
                         bool invert_tau)
         {
-            int n = (sqrt((float) 8. * dim_ + 1.) - 1.) / 2;
+            int n = sqrt((float) dim_);
      	    double V[N_MAX][N_MAX];
-            int k = 0;
+            
             for(int i = 0; i < n; i++) {
-                for(int j = 0; j < n - i; j++) {
-                    V[j][j+i] = arg[k];
-                    V[j+i][j] = arg[k];
-                    k++;
+                for(int j = i; j < n; j++) {
+                    V[j][i] = (arg[i*n + j] + arg[j*n + i]) / 2;
+                    V[i][j] = V[j][i];
                 }
             }
             double e[N_MAX];
@@ -317,15 +316,14 @@ namespace prost {
             }
                
             // compute T = V * S * V^T
-            k = 0;
             for(int i = 0; i < n; i++) {
-                for(int j = 0; j < n - i; j++) {
-                    res[k] = 0;
+                for(int j = i; j < n; j++) {
+                    res[i*n + j] = 0;
                     for(int r = 0; r < n; r++)
                         // V[j][j+i]
-                        res[k] += d[r]*V[j][r]*V[j+i][r];
-
-                    k++;
+                        res[i*n + j] += d[r]*V[j][r]*V[i][r];
+                    
+                    res[j*n + i] = res[i*n + j];
                 }
             }
         }
@@ -338,4 +336,5 @@ namespace prost {
 } // namespace prost
 
 #endif // PROST_ELEM_OPERATION_EIGEN_NXN_HPP_
+
 

@@ -2,8 +2,8 @@ function [passed] = test_prox_sum_eigen_nxn()
 
     % generate random points and project them onto the PSD cone
     N=30000;
-    n = 13;
-    dim = n*(n - 1) / 2 + n;
+    n = 5;
+    dim = n*n;
     
     P = randn(dim,N)*10;
 
@@ -12,12 +12,11 @@ function [passed] = test_prox_sum_eigen_nxn()
     for t=1:N
         M = zeros(n,n);
         
-        k = 1;
-        for i=0:n-1
-            for j=1:n-i
-                M(j, j+i) = P(k,t);
-                M(j+i, j) = P(k,t);
-                k = k + 1;
+        for i=1:n
+            for j=i:n
+                %[i, j, (i-1)*n+j]
+                M(i,j) = (P((i-1)*n+j, t) + P((j-1)*n+i, t)) / 2;
+                M(j,i) = M(i,j);
             end
         end
 
@@ -25,11 +24,10 @@ function [passed] = test_prox_sum_eigen_nxn()
        
         J = V*max(0,S)*Y';
         
-        k = 1;
-        for i=0:n-1
-            for j=1:n-i
-                R(k,t) = J(j, j+i);
-                k = k + 1;
+        for i=1:n
+            for j=i:n
+                R((i-1)*n+j,t) = J(i, j);
+                R((j-1)*n+i,t) = J(i, j);
             end
         end
     end
@@ -57,4 +55,5 @@ function [passed] = test_prox_sum_eigen_nxn()
         return;
     end
  end
+
 

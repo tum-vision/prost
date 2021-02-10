@@ -2,7 +2,7 @@ function [func] = sum_eigen_2x2(interleaved, fun, a, b, c, d, e, alpha, beta)
 % SUM_IND_PSD_CONE_3x3  func = sum_ind_psd_cone_3x3(interleaved)
 %
 
-    dim = 3;
+    dim = 4;
     
     switch nargin
     case 9
